@@ -1,0 +1,29 @@
+<!-- equipment 是设备 id为设备id name为设备name -->
+<!-- 	leftoptialfiber 是左光纤 color是光纤的颜色 isrj是 是否熔接（true或者false） startnodeid是头点id endnodeid是尾点id name光纤名称-->
+<!-- 	righoptialtfiber 是右光纤 color是光纤的颜色 isrj是 是否熔接（true或者false） startnodeid是头点id endnodeid是尾点id name光纤名称-->
+<root>
+	<equipment id='2009' name="a">
+		<left>
+			<leftoptialfiber  color="红" isrj='1' startnodeid='1' endnodeid='2' name='[四流南路14号东侧光机柜] 到 [人民一路站点]144芯光纤:01'/>
+			<leftoptialfiber  color="黄" isrj='1' startnodeid='1' endnodeid='2' name='[四流南路14号东侧光机柜] 到 [人民一路站点]144芯光纤:02'/>
+			<leftoptialfiber  color="绿" isrj='1' startnodeid='1' endnodeid='2' name='[四流南路14号东侧光机柜] 到 [人民一路站点]144芯光纤:03'/>
+		</left>
+		<right>
+			<righoptialtfiber   color="红" isrj='1' startnodeid='1' endnodeid='2' name='[四流南路14号东侧光机柜] 到 [人民一路站点]144芯光纤:01'/>
+			<righoptialtfiber   color="黄" isrj='1' startnodeid='1' endnodeid='2' name='[四流南路14号东侧光机柜] 到 [人民一路站点]144芯光纤:02'/>
+			<righoptialtfiber   color="绿" isrj='1' startnodeid='1' endnodeid='2' name='[四流南路14号东侧光机柜] 到 [人民一路站点]144芯光纤:03'/>
+		</right>
+	</equipment>
+	<equipment id='2009' name="b">
+		<left>
+			<leftoptialfiber  color="红" isrj='1' startnodeid='1' endnodeid='2' name='[四流南路15号东侧光机柜] 到 [人民一路站点]144芯光纤:01'/>
+			<leftoptialfiber  color="黑" isrj='1' startnodeid='1' endnodeid='2' name='[四流南路15号东侧光机柜] 到 [人民一路站点]144芯光纤:02'/>
+			<leftoptialfiber  color="蓝" isrj='1' startnodeid='1' endnodeid='2' name='[四流南路15号东侧光机柜] 到 [人民一路站点]144芯光纤:03'/>
+		</left>
+		<right>
+			<righoptialtfiber   color="红" isrj='1' startnodeid='1' endnodeid='2' name='[四流南路15号东侧光机柜] 到 [人民一路站点]144芯光纤:01'/>
+			<righoptialtfiber   color="黑" isrj='1' startnodeid='1' endnodeid='2' name='[四流南路15号东侧光机柜] 到 [人民一路站点]144芯光纤:02'/>
+			<righoptialtfiber   color="蓝" isrj='1' startnodeid='1' endnodeid='2' name='[四流南路15号东侧光机柜] 到 [人民一路站点]144芯光纤:03'/>
+		</right>
+	</equipment>
+</root>

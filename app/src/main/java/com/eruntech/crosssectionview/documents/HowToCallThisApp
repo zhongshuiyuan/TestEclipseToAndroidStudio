@@ -1,0 +1,29 @@
+怎么调用本程序？
+在需要调用本程序的地方加入以下代码：
+
+// tubeId是长整型
+long tubeId = 188826;//管道ID
+
+// "com.eruntech.crosssectionview.OPEN_TUBE_VIEW" 为intent-filter的action名，照写就行
+Intent tubeViewIntent = new Intent("com.eruntech.crosssectionview.OPEN_TUBE_VIEW");
+// "intent_extra_key_tube_id"为储存管道ID的key，照写就行
+tubeViewIntent.putExtra("intent_extra_key_tube_id", tubeId);
+
+/*
+ * 如果不是跨App调用，直接这样写
+ * Context context = someMethodGetContext();
+ * Intent tubeViewIntent = new Intent(context, TubeViewActivity.class);
+ * tubeViewIntent.putExtra("intent_extra_key_tube_id", tubeId);
+ * context.startActivity(tubeViewIntent);
+ */
+	
+// 检查是否安装了管道截面展开图，防止FC
+PackageManager packageManager = getPackageManager();
+List<ResolveInfo> activities = packageManager.queryIntentActivities(tubeViewIntent, 0);
+boolean isIntentSafe = activities.size() > 0;
+	
+if (isIntentSafe) {
+	startActivity(tubeViewIntent);
+} else {
+	Toast.makeText(this, "请先安装管道截面展开图查看程序", Toast.LENGTH_LONG).show();
+}

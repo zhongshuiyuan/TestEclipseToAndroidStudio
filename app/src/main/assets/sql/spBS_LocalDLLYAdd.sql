@@ -1,0 +1,1 @@
+insert into LocalDLLY (dllyid,dllyname,points,operator,time) values (null,@dllyname,@points,@operator,@time)

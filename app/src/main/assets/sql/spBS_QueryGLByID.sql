@@ -1,0 +1,1 @@
+select * from localguanglan where glid = @glid

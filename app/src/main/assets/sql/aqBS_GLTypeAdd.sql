@@ -1,0 +1,1 @@
+insert into GuangLanType (gltypeid,gltypename) values (null,@gltype)

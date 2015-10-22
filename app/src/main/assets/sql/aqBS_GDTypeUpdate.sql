@@ -1,0 +1,1 @@
+update LocalGuanDaoType set GuanDaoTypeName=@name,gdcolor=@gdcolor,gdcx=@gdcx where GuandaoTypeID=@id

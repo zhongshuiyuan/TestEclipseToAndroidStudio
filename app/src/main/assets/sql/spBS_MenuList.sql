@@ -1,0 +1,1 @@
+SELECT * FROM BS_Menu WHERE RoleID=@RoleID

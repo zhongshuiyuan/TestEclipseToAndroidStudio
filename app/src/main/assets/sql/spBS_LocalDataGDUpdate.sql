@@ -1,0 +1,1 @@
+update LocalGuandao set gdname = @name where gdid=@id

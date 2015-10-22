@@ -1,0 +1,1 @@
+select * from LocalGuandao where uid=@uid

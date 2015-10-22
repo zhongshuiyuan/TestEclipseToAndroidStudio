@@ -1,0 +1,1 @@
+SELECT * FROM BS_Function WHERE ParentID=0 AND IsUsed='1' ORDER BY FuncCode

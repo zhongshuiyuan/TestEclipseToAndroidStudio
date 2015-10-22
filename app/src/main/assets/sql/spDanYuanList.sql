@@ -1,0 +1,1 @@
+select * from danyuan where (roadname like @roadname or roadspell like @roadspell) and mph like @mph and lh like @lh and dyh like @dyh

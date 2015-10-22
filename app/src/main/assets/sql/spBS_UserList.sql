@@ -1,0 +1,1 @@
+SELECT * FROM BS_User WHERE RoleID=@RoleID AND IsUsed=1

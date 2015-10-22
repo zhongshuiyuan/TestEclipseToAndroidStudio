@@ -1,0 +1,1 @@
+SELECT * FROM Optical_Range_Att WHERE TT_ID=@TT_ID

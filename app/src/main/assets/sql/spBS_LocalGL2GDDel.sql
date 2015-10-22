@@ -1,0 +1,1 @@
+delete from LocalGD2GL where glid = @id

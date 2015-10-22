@@ -1,0 +1,1 @@
+update bs_extents set min_x = @min_x , min_y=@min_y , max_x=@max_x , max_y=@max_y where roleid=@roleid

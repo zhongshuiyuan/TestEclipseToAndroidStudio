@@ -1,0 +1,1 @@
+UPDATE BS_Role set RoleName=@RoleName where RoleID =@RoleID

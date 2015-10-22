@@ -1,0 +1,1 @@
+insert into bs_extents (min_x,min_y,max_x,max_y,roleid) values (@min_x,@min_y,@max_x,@max_y,@roleid)

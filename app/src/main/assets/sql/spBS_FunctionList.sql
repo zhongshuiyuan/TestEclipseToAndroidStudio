@@ -1,0 +1,1 @@
+SELECT * FROM BS_Function WHERE IsUsed=1 ORDER BY FuncCode

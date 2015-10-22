@@ -1,0 +1,1 @@
+SELECT * FROM BS_User WHERE UserNo=@UserNo AND Password=@Password

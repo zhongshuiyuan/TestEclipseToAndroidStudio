@@ -1,0 +1,1 @@
+select * from LocalGuanDaoType where guandaotypeid=@id

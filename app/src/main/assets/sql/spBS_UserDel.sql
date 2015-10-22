@@ -1,0 +1,1 @@
+DELETE FROM BS_User WHERE UserID=@UserID

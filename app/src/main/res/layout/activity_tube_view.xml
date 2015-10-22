@@ -1,0 +1,64 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingBottom="@dimen/activity_vertical_margin"
+    android:paddingLeft="@dimen/activity_horizontal_margin"
+    android:paddingRight="@dimen/activity_horizontal_margin"
+    android:paddingTop="@dimen/activity_vertical_margin"
+    android:orientation="horizontal" >
+    
+    <RelativeLayout 
+        android:id="@+id/tubeview_container_datagrid"
+        android:layout_width="0dp"
+        android:layout_height="fill_parent"
+        android:layout_weight="0" 
+        android:orientation="vertical">
+        
+        <com.eruntech.crosssectionview.widgets.datagrid.libs.TableFixHeaders
+        	android:id="@+id/tubeview_datagrid"
+        	android:layout_width="fill_parent"
+        	android:layout_height="wrap_content"
+        	android:layout_alignParentTop="true"
+        	android:layout_above="@+id/tubeview_container_tgbtn"/>
+        
+        
+       <LinearLayout
+           android:id="@+id/tubeview_container_tgbtn"
+            android:orientation="horizontal"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:layout_alignParentBottom="true">
+            <TextView android:layout_width="wrap_content" 
+                 android:layout_height="wrap_content"
+                 android:id="@+id/tubeview_tv_auto_hide_datagrid" 
+                 android:text="@string/tubeview_tgbtn_auto_hide_datagrid"/>
+            <ToggleButton
+                android:id="@+id/tubeview_tgbtn_auto_hide_datagrid"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:checked="true"
+                android:onClick="tubeViewOnClick"
+                android:text=""
+                android:textOff="@string/off"
+                android:textOn="@string/on" />
+
+            <Button style="?android:attr/buttonStyleToggle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/tubeview_btn_open_option_menu"
+                android:text="@string/tubeview_btn_open_option_menu"
+                android:onClick="tubeViewOnClick"/>
+		</LinearLayout>
+        
+    </RelativeLayout>
+    
+	<com.eruntech.crosssectionview.views.TubeView
+        android:id="@+id/tubeview_draw_table"
+        android:layout_width="0dp"
+        android:layout_height="fill_parent"
+        android:layout_marginLeft="0dp"
+        android:layout_weight="6" />
+    
+
+</LinearLayout>

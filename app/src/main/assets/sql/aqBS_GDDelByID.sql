@@ -1,0 +1,1 @@
+delete from LocalGuandao where gdid=@id

@@ -1,0 +1,143 @@
+<root>
+
+    <action
+        atti=" 171932"
+        result="true" >
+
+        <record atti="left" >
+
+            <field
+                name="color"
+                type="string"
+                value="蓝色" />
+
+            <field
+                name="gdname"
+                type="string"
+                value="[山东路（东）-60-井2] 到 [山东路（东）-60-井3]2芯光纤:01" />
+        </record>
+
+        <record atti="left" >
+
+            <field
+                name="color"
+                type="string"
+                value="红色" />
+
+            <field
+                name="gdname"
+                type="string"
+                value="[山东路（东）-60-井7] 到 [山东路（东）-60-井3]2芯光纤:01" />
+        </record>
+
+        <record atti="right" >
+
+            <field
+                name="color"
+                type="string"
+                value="蓝色" />
+
+            <field
+                name="gdname"
+                type="string"
+                value="[山东路（东）-60-井2] 到 [山东路（东）-60-井3]2芯光纤:01" />
+        </record>
+
+        <record atti="right" >
+
+            <field
+                name="color"
+                type="string"
+                value="红色" />
+
+            <field
+                name="gdname"
+                type="string"
+                value="[山东路（东）-60-井7] 到 [山东路（东）-60-井3]2芯光纤:01" />
+        </record>
+    </action>
+
+    <action
+        atti=" 171931"
+        result="true" >
+
+        <record atti="left" >
+
+            <field
+                name="color"
+                type="string"
+                value="蓝色" />
+
+            <field
+                name="gdname"
+                type="string"
+                value="[山东路（东）-60-井2] 到 [山东路（东）-60-井3]2芯光纤:01" />
+        </record>
+
+        <record atti="left" >
+
+            <field
+                name="color"
+                type="string"
+                value="红色" />
+
+            <field
+                name="gdname"
+                type="string"
+                value="[山东路（东）-60-井7] 到 [山东路（东）-60-井3]2芯光纤:01" />
+        </record>
+
+        <record atti="right" >
+
+            <field
+                name="color"
+                type="string"
+                value="蓝色" />
+
+            <field
+                name="gdname"
+                type="string"
+                value="[山东路（东）-60-井2] 到 [山东路（东）-60-井3]2芯光纤:01" />
+        </record>
+
+        <record atti="right" >
+
+            <field
+                name="color"
+                type="string"
+                value="红色" />
+
+            <field
+                name="gdname"
+                type="string"
+                value="[山东路（东）-60-井7] 到 [山东路（东）-60-井3]2芯光纤:01" />
+        </record>
+
+        <record atti="right" >
+
+            <field
+                name="color"
+                type="string"
+                value="橙色" />
+
+            <field
+                name="gdname"
+                type="string"
+                value="[山东路（东）-60-井3] 到 [山东路（东）-60-井5]4芯光纤:01" />
+        </record>
+
+        <record atti="right" >
+
+            <field
+                name="color"
+                type="string"
+                value="棕色" />
+
+            <field
+                name="gdname"
+                type="string"
+                value="[山东路（东）-60-井3] 到 [山东路（东）-60-井5]4芯光纤:01" />
+        </record>
+    </action>
+
+</root>

@@ -1,0 +1,1 @@
+select nodeid from nodes where nodename=%nodename

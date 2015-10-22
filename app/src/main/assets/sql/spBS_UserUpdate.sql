@@ -1,0 +1,1 @@
+UPDATE BS_User set UserNo=@UserNo, Password=@Password, UserName=@UserName where UserID =@UserID

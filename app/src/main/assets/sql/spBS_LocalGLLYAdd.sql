@@ -1,0 +1,1 @@
+insert into LocalGLLY (gllyid,gllyname,points,operator,time) values(null,@gllyname,@points,@operator,@time)

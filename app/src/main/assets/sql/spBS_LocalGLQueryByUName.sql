@@ -1,0 +1,1 @@
+select * from LocalGuanglan where Operator=@uname

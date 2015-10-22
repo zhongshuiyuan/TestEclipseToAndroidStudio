@@ -1,0 +1,1 @@
+INSERT INTO BS_Menu(MenuID, MenuName, MenuCode, FuncSrc, ParentID, RoleID, FuncID) VALUES(@MenuID, @MenuName, @MenuCode, @FuncSrc, @ParentID, @RoleID, @FuncID)

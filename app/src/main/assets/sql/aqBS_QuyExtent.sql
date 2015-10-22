@@ -1,0 +1,1 @@
+select * from bs_extents where roleid=@roleid

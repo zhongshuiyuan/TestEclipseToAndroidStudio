@@ -1,0 +1,125 @@
+<resources xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!--
+        Base application theme, dependent on API level. This theme is replaced
+        by AppBaseTheme from res/values-vXX/styles.xml on newer devices.
+    -->
+    <style name="AppBaseTheme" parent="android:Theme.Light">
+        <!--
+            Theme customizations available in newer API levels can go in
+            res/values-vXX/styles.xml, while customizations related to
+            backward-compatibility can go here.
+        -->
+    </style>
+
+    <!-- Application theme. -->
+    <style name="AppTheme" parent="AppBaseTheme">
+        <!-- All customizations that are NOT specific to a particular API-level can go here. -->
+    </style>
+
+    <style name="wait_animation">
+        <item name="android:indeterminateDrawable">@anim/wait_animation</item>
+    </style>
+
+    <style name="MyTopDialogAnim">
+        <item name="android:windowEnterAnimation">@anim/top_dialog_in</item>
+        <item name="android:windowExitAnimation">@anim/top_dialog_out</item>
+    </style>
+
+    <style name="MyTopDialog" parent="android:Theme.Dialog">
+        <item name="android:windowAnimationStyle">@style/MyTopDialogAnim</item>
+        <item name="android:windowFrame">@null</item>
+        <!-- 边框 -->
+        <item name="android:windowIsFloating">true</item>
+        <!-- 是否浮现在activity之上 -->
+        <item name="android:windowIsTranslucent">true</item>
+        <!-- 半透明 -->
+        <item name="android:windowNoTitle">true</item>
+        <!-- 无标题 -->
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <!-- 背景透明 -->
+        <item name="android:backgroundDimEnabled">false</item>
+        <!-- 模糊 -->
+    </style>
+
+    <style name="LightThemeSelector" parent="android:Theme.Holo.Light">
+        <item name="android:windowNoTitle">true</item>
+    </style>
+
+    <style name="MyTopDialog2" parent="android:Theme.Dialog">
+        <item name="android:windowAnimationStyle">@style/MyTopDialogAnim</item>
+        <item name="android:windowFrame">@null</item>
+        <!-- 边框 -->
+        <item name="android:windowIsFloating">true</item>
+        <!-- 是否浮现在activity之上 -->
+        <item name="android:windowIsTranslucent">false</item>
+        <!-- 半透明 -->
+        <item name="android:windowNoTitle">true</item>
+        <!-- 无标题 -->
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <!-- 背景透明 -->
+        <item name="android:backgroundDimEnabled">true</item>
+        <!-- 模糊 -->
+    </style>
+
+    <style name="ThemeActivity" mce_bogus="1" parent="@android:style/Theme.Black.NoTitleBar">
+  
+                                                                            <item name="android:windowAnimationStyle">@style/AnimationSlideActivity</item>
+  
+                                                                            <item name="android:windowNoTitle">true</item>
+  	</style>
+
+    <style name="AnimationSlideActivity" mce_bogus="1" parent="@android:style/Animation.Activity">
+        <item name="android:activityOpenEnterAnimation">@anim/anim_enter_activity</item>
+                                                            <item name="android:activityOpenExitAnimation">@anim/anim_exit_activity</item>
+          	                                                <item name="android:windowNoTitle">true</item>
+                                                            <item name="android:activityCloseEnterAnimation">@anim/anim_close_enter_activity</item>
+                                                            <item name="android:activityCloseExitAnimation">@anim/anim_close_exit_activity</item>
+    </style>
+
+    <style name="CustomDialog" parent="android:Theme.Dialog">
+
+        <!-- <item name="android:windowAnimationStyle">@style/AnimBottom</item> -->
+        <item name="android:windowFrame">@null</item>
+        <!-- 边框 -->
+        <item name="android:windowIsFloating">true</item>
+        <!-- 是否浮现在activity之上 -->
+        <item name="android:windowIsTranslucent">true</item>
+        <!-- 半透明 -->
+        <item name="android:windowNoTitle">true</item>
+        <!-- 无标题 -->
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <!-- 背景透明 -->
+        <item name="android:backgroundDimEnabled">true</item>
+        <!-- 模糊 -->
+    </style>
+
+    <style name="search_hint">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">30dp</item>
+        <item name="android:textSize">18sp</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:gravity">center</item>
+        <item name="android:background">@drawable/textview_hint_list</item>
+    </style>
+
+    <style name="CustomCheckboxTheme" parent="@android:style/Widget.CompoundButton.CheckBox">
+        <item name="android:button">@drawable/check_box_item</item>
+    </style>
+
+    <style name="AlertDialogCustom"></style>
+
+    <style name="dialog001" parent="@android:style/Theme.Dialog">
+        <item name="android:windowFrame">@null</item>
+        <item name="android:windowIsFloating">true</item>
+        <item name="android:windowIsTranslucent">false</item>
+        <item name="android:windowNoTitle">false</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:backgroundDimEnabled">true</item>
+    </style>
+
+    <style name="SettingTheme" parent="AppBaseTheme"></style>
+
+    <style name="TubeViewTheme" parent="@android:style/Theme.Light.NoTitleBar.Fullscreen"></style>
+
+</resources>

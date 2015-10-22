@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:eruntech="http://schemas.android.com/res/Eruntech.BirthStone.UI.Controls"
+    android:layout_width="fill_parent"
+    android:layout_height="match_parent"
+    android:gravity="center" >
+
+    <RelativeLayout
+        android:id="@+id/llFin"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center" >
+"
+
+        <Eruntech.BirthStone.UI.Controls.TextView
+            android:id="@+id/att_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentTop="true"
+            android:layout_marginTop="20dp"
+            android:gravity="left|center_vertical"
+            android:textAppearance="?android:attr/textAppearanceLarge"
+            android:textColor="@color/label_text_default"
+            android:textSize="16sp" />
+
+    </RelativeLayout>
+
+</RelativeLayout>

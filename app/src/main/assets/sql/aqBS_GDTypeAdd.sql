@@ -1,0 +1,1 @@
+insert into LocalGuanDaoType (GuandaoTypeID,GuanDaoTypeName,gdcolor,gdcx) values (null,@guandaotypename,@gdcolor,@gdcx)

@@ -1,0 +1,1 @@
+insert into LocalGuanglan (glid,glname,gltype,points,operator,operattime) values (@glid,@glname,@gltype,@points,@operator,@time)

@@ -1,0 +1,1 @@
+insert into LocalGD2GL (gdid,glid) values (@gdid,@glid)

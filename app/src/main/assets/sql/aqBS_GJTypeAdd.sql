@@ -1,0 +1,1 @@
+insert into GuangJingType(GJTypeID,GJTypeName,GJTypeImg) values (@gjtypeid,@gjtypename,@gjtypeimg)

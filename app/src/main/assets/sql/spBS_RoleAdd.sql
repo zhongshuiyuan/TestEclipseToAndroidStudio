@@ -1,0 +1,1 @@
+INSERT INTO BS_Role(RoleID, RoleName) VALUES(@RoleID, @RoleName)

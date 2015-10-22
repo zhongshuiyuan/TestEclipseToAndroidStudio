@@ -1,0 +1,1 @@
+select * from LocalGuanjing where x = @x and y =@y

@@ -1,0 +1,1 @@
+INSERT INTO BS_User(UserID, UserNo, Password, UserName, RoleID) VALUES(@UserID, @UserNo, @Password, @UserName, @RoleID)

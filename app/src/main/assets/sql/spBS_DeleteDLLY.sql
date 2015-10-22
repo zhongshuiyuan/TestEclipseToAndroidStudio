@@ -1,0 +1,1 @@
+delete from LocalDLLY where points = @points

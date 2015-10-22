@@ -1,0 +1,1 @@
+SELECT * FROM BS_Role WHERE IsUsed=1

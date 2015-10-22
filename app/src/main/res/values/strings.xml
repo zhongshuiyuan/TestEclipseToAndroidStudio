@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="hello">LocalTiledCacheLayer!</string>
+    <string name="app_name">青岛广电GIS系统</string>
+    <string name="drawer_open">open</string>
+    <string name="drawer_close">close</string>
+    <string name="title_activity_add">add</string>
+    <string name="drawer_title">titel</string>
+	
+	 <!-- Common Actions -->
+    <string name="on">打开</string>
+    <string name="off">关闭</string>
+
+    <!-- Action Bar -->
+    <string name="action_settings">设置</string>
+    
+    <!-- TubeView Activity -->
+    <string name="title_activity_tube_view">管道截面展开图</string>
+    <string name="tubeview_toast_fail_to_get_tubepad_data">获取管道信息失败</string>
+    <string name="tubeview_tgbtn_auto_hide_datagrid">自动隐藏表格</string>
+    <string name="tubeview_btn_open_option_menu">更多</string>
+
+    <!-- Setting Activity -->
+    <string name="title_activity_settings">设置</string>
+    <string name="setting_category_animation">动画</string>
+    <string name="setting_show_animation">使用过渡动画</string>
+    <string name="setting_introduce_show_animation">在截面图中是否使用过渡动画</string>
+
+    <!-- TubePad -->
+    <string name="tubepad_address_title_a">A端：</string>
+    <string name="tubepad_address_title_z">Z端：</string>
+    <string name="tubepad_hand_well">（手井）</string>
+    <string name="tubepad_person_well">（人井）</string>
+    
+    <!-- TubeViewService -->
+    <string name="tubeviewservice_toast_fail_to_get_tubepad_data">获取管道数据异常，网络异常或者管道ID错误或不存在</string>
+</resources>

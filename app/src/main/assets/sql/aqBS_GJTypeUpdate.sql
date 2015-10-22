@@ -1,0 +1,1 @@
+update GuangJingType set gjtypename=@name and GJTypeImg=@path where gjtypeid=@id

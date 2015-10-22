@@ -1,0 +1,1 @@
+update LocalGuanglan set glname=@name where glid=@id

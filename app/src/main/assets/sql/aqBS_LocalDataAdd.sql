@@ -1,0 +1,1 @@
+insert into LocalGuanjing (GJID,uid,GJNAME,X,Y,type,pq,operator,operattime) values(@gjid,@uid,@gjname,@x,@y,@type,@pq,@operator,@time)

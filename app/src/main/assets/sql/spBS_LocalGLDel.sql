@@ -1,0 +1,1 @@
+delete from LocalGuanglan where glid=@id

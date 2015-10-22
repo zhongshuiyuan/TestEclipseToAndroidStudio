@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:eruntech="http://schemas.android.com/res/Eruntech.BirthStone.UI.Controls"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent" >
+
+    <RelativeLayout
+        android:id="@+id/llFin"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:layout_marginTop="45dp"
+        android:gravity="center"
+        android:onClick="click" >
+
+        <LinearLayout
+            android:id="@+id/linearLayout01"
+            android:layout_width="fill_parent"
+            android:layout_height="140dp"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentTop="true"
+            android:background="@drawable/dialog_add_shape"
+            android:gravity="center_vertical"
+            android:onClick="click"
+            android:orientation="vertical"
+            android:paddingBottom="10dp"
+            android:paddingLeft="10dp"
+            android:paddingRight="10dp"
+            android:paddingTop="10dp" >
+
+            <Eruntech.BirthStone.UI.Controls.ActionButton.ButtonOpen
+                android:id="@+id/btnRole"
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:background="@drawable/button_lightgray_item"
+                android:ems="10"
+                android:text="角色管理"
+                android:textColor="@color/white"
+                android:textSize="18sp"
+                eruntech:openForm="com.qingdao.shiqu.arcgis.activity.BS_Role" >
+
+            </Eruntech.BirthStone.UI.Controls.ActionButton.ButtonOpen>
+
+            <Eruntech.BirthStone.UI.Controls.ActionButton.ButtonOpen
+                android:id="@+id/btnUser"
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:layout_marginTop="5dp"
+                android:background="@drawable/button_lightgray_item"
+                android:ems="10"
+                android:text="用户管理"
+                android:textColor="@color/white"
+                android:textSize="18sp"
+                eruntech:openForm="com.qingdao.shiqu.arcgis.activity.BS_User" >
+
+            </Eruntech.BirthStone.UI.Controls.ActionButton.ButtonOpen>
+
+        </LinearLayout>
+    </RelativeLayout>
+
+</RelativeLayout>

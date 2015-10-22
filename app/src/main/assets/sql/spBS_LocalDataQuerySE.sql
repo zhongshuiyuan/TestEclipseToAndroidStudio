@@ -1,0 +1,1 @@
+select * from LocalGuandao where (sx=@sx1 and sy=@sy1 and ex=@ex1 and ey=@ey1) or (sx=@sx2 and sy=@sy2 and ex=@ex2 and ey=@ey2)

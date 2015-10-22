@@ -1,0 +1,1 @@
+DELETE FROM BS_Menu WHERE RoleID=@RoleID AND FuncID=@FuncID

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<animation-list android:oneshot="false"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- 
+    <item android:duration="150" android:drawable="@drawable/wait01" />
+    <item android:duration="150" android:drawable="@drawable/wait02" />
+    <item android:duration="150" android:drawable="@drawable/wait03" />
+    <item android:duration="150" android:drawable="@drawable/wait04" />
+    <item android:duration="150" android:drawable="@drawable/wait05" />
+    <item android:duration="150" android:drawable="@drawable/wait06" />
+    <item android:duration="150" android:drawable="@drawable/wait07" />
+    <item android:duration="150" android:drawable="@drawable/wait08" />
+    <item android:duration="150" android:drawable="@drawable/wait09" />
+    <item android:duration="150" android:drawable="@drawable/wait10" />
+    <item android:duration="150" android:drawable="@drawable/wait11" />
+    <item android:duration="150" android:drawable="@drawable/wait12" /> -->
+    <item android:duration="150" android:drawable="@drawable/wait_100" />
+    <item android:duration="150" android:drawable="@drawable/wait_101" />
+    <item android:duration="150" android:drawable="@drawable/wait_102" />
+    <item android:duration="150" android:drawable="@drawable/wait_103" />
+    <item android:duration="150" android:drawable="@drawable/wait_104" />
+    <item android:duration="150" android:drawable="@drawable/wait_105" />
+    <item android:duration="150" android:drawable="@drawable/wait_106" />
+    <item android:duration="150" android:drawable="@drawable/wait_107" />
+    <item android:duration="150" android:drawable="@drawable/wait_108" />
+    <item android:duration="150" android:drawable="@drawable/wait_109" />
+    <item android:duration="150" android:drawable="@drawable/wait_110" />
+    <item android:duration="150" android:drawable="@drawable/wait_111" />
+</animation-list> 

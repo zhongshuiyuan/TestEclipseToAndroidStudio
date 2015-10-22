@@ -1,0 +1,1 @@
+select * from LocalGuandao where sid=@sid or eid=@eid

@@ -1,0 +1,102 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:orientation="vertical" >
+
+    <LinearLayout
+        android:layout_width="fill_parent"
+        android:layout_height="40dp"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:textColor="#98FB98"
+            android:text="光缆名称：" />
+
+        <View 
+            android:layout_width="1dp"
+            android:layout_height="fill_parent"
+            android:background="#97FFFF"/>
+        <EditText
+            android:id="@+id/glname"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="" />
+    </LinearLayout>
+    <LinearLayout
+        android:layout_width="fill_parent"
+        android:layout_height="40dp"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:textColor="#98FB98"
+            android:text="光缆名称：" />
+
+        <View 
+            android:layout_width="1dp"
+            android:layout_height="fill_parent"
+            android:background="#97FFFF"/>
+        <TextView
+            android:id="@+id/gltype"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:textColor="#98FB98"
+            android:text="" />
+    </LinearLayout>
+    <LinearLayout
+        android:layout_width="fill_parent"
+        android:layout_height="40dp"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:textColor="#98FB98"
+            android:text="操 作 员 ：" />
+
+        <View 
+            android:layout_width="1dp"
+            android:layout_height="fill_parent"
+            android:background="#97FFFF"/>
+        <TextView
+            android:id="@+id/operator"
+            android:layout_width="0dp"
+            android:textColor="#98FB98"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="" />
+    </LinearLayout>
+    <LinearLayout
+        android:layout_width="fill_parent"
+        android:layout_height="40dp"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:textColor="#98FB98"
+            android:layout_weight="1"
+            android:text="操作时间：" />
+        <View 
+            android:layout_width="1dp"
+            android:layout_height="fill_parent"
+            android:background="#97FFFF"/>
+
+        <TextView
+            android:id="@+id/time"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:textColor="#98FB98"
+            android:layout_weight="1"
+            android:text="" />
+    </LinearLayout>
+
+</LinearLayout>

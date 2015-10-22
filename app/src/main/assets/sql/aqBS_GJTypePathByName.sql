@@ -1,0 +1,1 @@
+select * from GuangJingType where GJTypeName=@name

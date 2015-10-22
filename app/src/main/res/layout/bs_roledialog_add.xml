@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:eruntech="http://schemas.android.com/res/Eruntech.BirthStone.UI.Controls"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/tran" >
+
+    <RelativeLayout
+        android:id="@+id/llFin"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:layout_marginTop="45dp"
+        android:background="@color/tran"
+        android:gravity="center"
+        android:onClick="click" >
+
+        <LinearLayout
+            android:id="@+id/linearLayout01"
+            android:layout_width="fill_parent"
+            android:layout_height="70dp"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentTop="true"
+            android:background="@drawable/dialog_add_shape"
+            android:gravity="center_vertical"
+            android:onClick="click"
+            android:orientation="horizontal"
+            android:paddingBottom="10dp"
+            android:paddingLeft="10dp"
+            android:paddingRight="10dp"
+            android:paddingTop="10dp" >
+
+            <Eruntech.BirthStone.UI.Controls.TextView
+                android:id="@+id/RoleID"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="#fff"
+                android:textSize="16sp" 
+                android:visibility="gone"/>
+
+            <Eruntech.BirthStone.UI.Controls.TextBox
+                android:id="@+id/RoleName"
+                android:layout_width="wrap_content"
+                android:layout_height="50dp"
+                android:layout_weight="10"
+                android:background="@drawable/edittext_shape"
+                android:ems="10"
+                android:hint="请输入角色名"
+                eruntech:isRequired="false" >
+
+            </Eruntech.BirthStone.UI.Controls.TextBox>
+
+            <Button
+                android:id="@+id/BtnOK"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:layout_marginBottom="2dp"
+                android:layout_marginLeft="2dp"
+                android:layout_weight="5"
+                android:background="#53C5E7"
+                android:onClick="click"
+                android:text="完成"
+                android:textColor="@color/white" />
+
+        </LinearLayout>
+    </RelativeLayout>
+
+</RelativeLayout>

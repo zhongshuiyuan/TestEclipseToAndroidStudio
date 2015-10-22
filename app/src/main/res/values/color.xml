@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <color name="textview_title_delfault">#5e7c85</color>
+    <color name="edittext_txt_editable">#d3d4d7</color>
+    <color name="edittext_txt_edit">#77787b</color>
+
+    <drawable name="red">#fc0101</drawable>
+
+    <color name="button_txt_jieshao">#FFFFFF</color>
+    <color name="textview_txt_pindao">#000000</color>
+    <color name="textview_txt_userinfo">#0970c0</color>
+    <color name="txtview_txt_felfault">#A0A0A0</color>
+    <color name="textview_title_default">#FDFDFD</color>
+    <color name="textview_title_favorite">#FFFFFF</color>
+    <color name="textview_text_default">#070B10</color>
+    <color name="label_text_default">#40BDFF</color>
+    <color name="textview_text_selected">#8E837F</color>
+    <color name="listview_text_default">#000000</color>
+    <color name="listview_text_read">#B1B1B1</color>
+    <color name="divider">#EC8006</color>
+    <color name="red">#FF0000</color>
+    <color name="blue">#274198</color>
+    <color name="huibai">#F5F5F5</color>
+    <color name="white">#FFFFFF</color>
+    <color name="tran">#00000000</color>
+    <color name="wuwangse">#7bbfea</color>
+    <color name="glistcolor">#EEC900</color>
+    <color name="login_text_default">#60B9E6</color>
+    <color name="viewfinder_frame">#ff000000</color>
+    <color name="viewfinder_laser">#ffff0000</color>
+    <color name="viewfinder_mask">#60000000</color>
+    <color name="result_view">#b0000000</color>
+    <color name="possible_result_points">#c0ffff00</color>
+    <color name="menu_main">#444D54</color>
+	<color name="menu_child">#555E65</color>
+	<color name="linear_menu_pressed">#aca9a9</color>
+	
+	<color name="datagird_shadow_start">#80000000</color>
+    <color name="datagird_shadow_end">#00000000</color>
+</resources>

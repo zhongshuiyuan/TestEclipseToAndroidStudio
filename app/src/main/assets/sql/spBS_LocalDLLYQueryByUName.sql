@@ -1,0 +1,1 @@
+select * from LocalDLLY where operator = @uname
