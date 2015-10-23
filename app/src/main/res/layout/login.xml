@@ -1,126 +1,125 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:eruntech="http://schemas.android.com/res/Eruntech.BirthStone.UI.Controls"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/login_background"
     android:gravity="center_vertical|center_horizontal" >
 
     <LinearLayout
-        android:id="@+id/linearLayout01"
-        android:layout_width="450dp"
-        android:layout_height="200dp"
-        android:layout_alignParentBottom="false"
-        android:layout_alignParentLeft="false"
-        android:layout_alignParentRight="false"
-        android:layout_alignParentTop="false"
-        android:layout_centerHorizontal="false"
+        android:id="@+id/login_ll_login"
+        android:layout_width="480dp"
+        android:layout_height="wrap_content"
         android:layout_centerInParent="true"
-        android:layout_centerVertical="false"
-        android:layout_marginBottom="80dp"
         android:background="@drawable/dialog_add_shape"
         android:gravity="center_vertical"
         android:orientation="vertical"
-        android:paddingBottom="10dp"
-        android:paddingLeft="10dp"
-        android:paddingRight="10dp"
-        android:paddingTop="10dp"
+        android:paddingBottom="16dp"
+        android:paddingLeft="16dp"
+        android:paddingRight="16dp"
+        android:paddingTop="16dp"
         android:visibility="invisible" >
 
         <Eruntech.BirthStone.UI.Controls.TextBox
             android:id="@+id/userNo"
             android:layout_width="match_parent"
-            android:layout_height="50dp"
+            android:layout_height="48dp"
             android:background="@drawable/edittext_shape"
             android:drawableLeft="@drawable/login_user"
             android:ems="10"
             android:hint="用户名"
-            android:paddingLeft="10dp"
+            android:paddingLeft="16dp"
             eruntech:collectSign="ForSave"
-            eruntech:isRequired="false" >
+            eruntech:isRequired="false" />
             <!-- android:text="e401"> -->
-
-        </Eruntech.BirthStone.UI.Controls.TextBox>
 
         <Eruntech.BirthStone.UI.Controls.TextBox
             android:id="@+id/password"
             android:layout_width="match_parent"
-            android:layout_height="50dp"
+            android:layout_height="48dp"
             android:layout_marginTop="8dp"
             android:background="@drawable/edittext_shape"
             android:drawableLeft="@drawable/login_password"
             android:ems="10"
             android:hint="密码"
-            android:paddingLeft="10dp"
+            android:paddingLeft="16dp"
             android:password="true"
             eruntech:collectSign="ForSave"
             eruntech:isRequired="false" />
             <!-- android:text="123456"/> -->
 
-        <Button
-            android:id="@+id/btnLogin"
+        <!--<Button-->
+            <!--android:id="@+id/btnLogin"-->
+            <!--android:layout_width="match_parent"-->
+            <!--android:layout_height="40dp"-->
+            <!--android:layout_marginTop="20dp"-->
+            <!--android:background="@drawable/button_login_item"-->
+            <!--android:onClick="click"-->
+            <!--android:text="登录"-->
+            <!--android:textColor="@color/white" />-->
+
+        <RelativeLayout
             android:layout_width="match_parent"
-            android:layout_height="40dp"
-            android:layout_marginTop="20dp"
-            android:background="@drawable/button_login_item"
-            android:onClick="click"
-            android:text="登录"
-            android:textColor="@color/white" />
-<!--         <com.gc.materialdesign.views.ButtonRectangle -->
-<!--                 android:id="@+id/btnLogin" -->
-<!--                 android:layout_width="match_parent" -->
-<!--                 android:layout_height="60dp" -->
-<!--                 android:layout_marginTop="20dp" -->
-<!--                 android:background="#1E88E5" -->
-<!--                 android:onClick="click" -->
-<!--                 android:text="登录" /> -->
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:background="#1E88E5">
+            <com.gc.materialdesign.views.ButtonFlat
+                android:id="@+id/btnLogin"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:background="@color/white"
+                android:text="登录" />
+        </RelativeLayout>
+
     </LinearLayout>
 
     <TextView
         android:id="@+id/filename"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_above="@+id/linearLayout01"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentRight="true"
+        android:layout_alignParentTop="true"
         android:layout_centerHorizontal="true"
-        android:layout_marginBottom="40dp"
-        android:gravity="center_vertical|center_horizontal"
+        android:layout_marginTop="@dimen/activity_vertical_margin"
+        android:gravity="center_horizontal"
         android:text="@string/app_name"
         android:textColor="@color/white"
         android:textColorLink="@color/white"
-        android:textSize="32sp" />
+        android:textSize="@dimen/text_size_display1" />
 
     <TextView
-        android:id="@+id/textView1"
+        android:id="@+id/login_tv_version"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:layout_alignParentRight="true"
-        android:layout_marginRight="16dp"
+        android:layout_alignParentEnd="true"
+        android:layout_marginRight="@dimen/activity_horizontal_margin"
+        android:layout_marginEnd="@dimen/activity_horizontal_margin"
         android:text="版本:1.0.1"
+        android:textSize="@dimen/text_size_caption"
         android:textColor="@color/white" />
 
     <TextView
-        android:id="@+id/textView2"
+        android:id="@+id/login_tv_developer"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
+        android:layout_above="@id/login_tv_version"
+        android:layout_marginBottom="@dimen/activity_horizontal_margin"
         android:layout_centerHorizontal="true"
         android:text="山东青岛盛天科技有限公司"
         android:textAppearance="?android:attr/textAppearanceLarge"
         android:textColor="@color/white"
-        android:textSize="16sp" />
+        android:textSize="@dimen/text_size_body" />
 
     <TextView
-        android:id="@+id/textView3"
+        android:id="@+id/login_tv_user"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_above="@+id/textView2"
+        android:layout_above="@+id/login_tv_developer"
         android:layout_centerHorizontal="true"
         android:text="山东广电网络有限公司青岛分公司"
-        android:textAppearance="?android:attr/textAppearanceLarge"
         android:textColor="@color/white"
-        android:textSize="16sp" />
+        android:textSize="@dimen/text_size_body" />
 
 </RelativeLayout>

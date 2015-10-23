@@ -8,29 +8,27 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Timer;
-import java.util.TimerTask;
 
 import Eruntech.BirthStone.Base.Forms.Activity;
 import Eruntech.BirthStone.Base.Forms.ActivityManager;
-import Eruntech.BirthStone.Base.Forms.Helper.FormHelper;
 import Eruntech.BirthStone.Base.Forms.Helper.MessageBox;
-import Eruntech.BirthStone.Base.Forms.Parse.CollectForm;
 import Eruntech.BirthStone.Core.Helper.File;
 import Eruntech.BirthStone.Core.Parse.Data;
 import Eruntech.BirthStone.Core.Parse.DataCollection;
 import Eruntech.BirthStone.Core.Parse.DataTable;
 import Eruntech.BirthStone.Core.Sqlite.SQLiteDatabase;
+import at.markushi.ui.ActionView;
+import at.markushi.ui.action.BackAction;
+import at.markushi.ui.action.DrawerAction;
+
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.app.AlertDialog.Builder;
 import android.app.ProgressDialog;
-import android.content.ContentResolver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
@@ -50,32 +48,16 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
-import android.provider.ContactsContract;
-import android.provider.Settings;
-import android.provider.ContactsContract.PhoneLookup;
-import android.support.v4.app.ActionBarDrawerToggle;
 import android.support.v4.widget.DrawerLayout;
 import android.util.Log;
-import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.View;
-import android.view.ViewGroup;
-import android.view.View.OnClickListener;
 import android.widget.AdapterView;
-import android.widget.AbsListView.LayoutParams;
 import android.widget.AdapterView.OnItemClickListener;
-import android.widget.AbsListView;
-import android.widget.ArrayAdapter;
-import android.widget.BaseExpandableListAdapter;
-import android.widget.EditText;
-import android.widget.ExpandableListAdapter;
+import android.widget.Button;
 import android.widget.ExpandableListView;
-import android.widget.ExpandableListView.OnChildClickListener;
-import android.widget.CheckBox;
 import android.widget.ImageButton;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -90,31 +72,19 @@ import com.esri.core.geodatabase.Geodatabase;
 import com.esri.core.geodatabase.GeodatabaseFeatureTable;
 import com.esri.core.geometry.Envelope;
 import com.esri.core.geometry.Geometry;
-import com.esri.core.geometry.GeometryEngine;
-import com.esri.core.geometry.Line;
 import com.esri.core.geometry.Point;
-import com.esri.core.geometry.Polygon;
 import com.esri.core.geometry.Polyline;
-import com.esri.core.geometry.SpatialReference;
-import com.esri.core.io.UserCredentials;
-import com.esri.core.map.CallbackListener;
-import com.esri.core.map.Feature;
-import com.esri.core.map.FeatureResult;
-import com.esri.core.map.Field;
 import com.esri.core.map.Graphic;
 import com.esri.core.symbol.MarkerSymbol;
 import com.esri.core.symbol.PictureMarkerSymbol;
 import com.esri.core.symbol.SimpleLineSymbol;
-import com.esri.core.symbol.SimpleMarkerSymbol;
-import com.esri.core.table.TableException;
-import com.esri.core.tasks.ags.query.Query;
+import com.gc.materialdesign.views.ButtonIcon;
 import com.qingdao.shiqu.arcgis.R;
 import com.qingdao.shiqu.arcgis.adapter.ContentAdapter;
 import com.qingdao.shiqu.arcgis.adapter.MyExpandableListAdapter;
 import com.qingdao.shiqu.arcgis.dialog.Dialog;
 import com.qingdao.shiqu.arcgis.helper.FunctionHelper;
 import com.qingdao.shiqu.arcgis.layer.LayerOpter;
-import com.qingdao.shiqu.arcgis.listener.DrawerItemClickListener;
 import com.qingdao.shiqu.arcgis.listener.LocalLocationListener;
 import com.qingdao.shiqu.arcgis.listener.MapTouchListener;
 import com.qingdao.shiqu.arcgis.listener.MapTouchListener.OnMapListener;
@@ -122,7 +92,6 @@ import com.qingdao.shiqu.arcgis.mode.ContentModel;
 import com.qingdao.shiqu.arcgis.mode.Take;
 import com.qingdao.shiqu.arcgis.sqlite.DoAction;
 import com.qingdao.shiqu.arcgis.utils.DBOpterate;
-import com.qingdao.shiqu.arcgis.utils.Initalize;
 import com.qingdao.shiqu.arcgis.utils.LocalDataModify;
 import com.qingdao.shiqu.arcgis.utils.NSXAsyncTask;
 import com.qingdao.shiqu.arcgis.utils.Session;
@@ -157,6 +126,9 @@ public class Main extends Activity implements OnMapListener
 	/**
 	 * 控件初始
 	 */
+	private ActionView mActionView;
+	private ButtonIcon mBtnToc;
+
 	ImageButton locationIco;
 	TextView NumSatellites;
 	TextView scale, coordinate;
@@ -186,7 +158,7 @@ public class Main extends Activity implements OnMapListener
 	private DrawerLayout drawerLayout;
 	private RelativeLayout leftLayout;
 	private RelativeLayout rightLayout;
-	private List<ContentModel> listc;
+	private List<ContentModel> listLeftDrawer;
 	private ContentAdapter adapter;  
 
 	private LocationManager lm;
@@ -202,7 +174,9 @@ public class Main extends Activity implements OnMapListener
 	protected void onCreate(Bundle savedInstanceState)
 	{
 		titles.add("MAP10");
-		setContentView(R.layout.main);
+
+		setContentView(R.layout.main_new);
+
 		onCreateView();
 		//		openGPSSetting();
 		initLocation();
@@ -221,86 +195,102 @@ public class Main extends Activity implements OnMapListener
 		double scale2 = map.getScale();
 		int scaleStr = (int) scale2;
 		scale.setText("比例1:" + scaleStr + "");
+
 		super.onCreate(savedInstanceState);
 	}
 	/**
 	 * 添加抽屉
 	 */
 	public void loadDrawer(){
-		drawerLayout = (DrawerLayout) findViewById(R.id.drawerlayout);
-		leftLayout=(RelativeLayout) findViewById(R.id.left);
-		rightLayout=(RelativeLayout) findViewById(R.id.right);
-		final ListView listView_left=(ListView) leftLayout.findViewById(R.id.left_listview);
 
+		drawerLayout = (DrawerLayout) findViewById(R.id.drawerlayout);
+		drawerLayout.setDrawerListener(new DrawerLayout.SimpleDrawerListener() {
+			@Override
+			public void onDrawerOpened(View drawerView) {
+				super.onDrawerOpened(drawerView);
+				mActionView.setAction(new BackAction(), ActionView.ROTATE_CLOCKWISE);
+				//mBtnToc.setDrawableIcon(getResources().getDrawable(R.drawable.ic_highlight_off_black_48dp, null));
+			}
+
+			@Override
+			public void onDrawerClosed(View drawerView) {
+				super.onDrawerClosed(drawerView);
+				mActionView.setAction(new DrawerAction(), ActionView.ROTATE_CLOCKWISE);
+				//mBtnToc.setDrawableIcon(getResources().getDrawable(R.drawable.ic_layers_black_48dp, null));
+			}
+		});
+
+
+		leftLayout=(RelativeLayout) findViewById(R.id.left);
+		final ListView listView_left = (ListView) leftLayout.findViewById(R.id.left_listview);
 		initData();
-		adapter=new ContentAdapter(this, listc);
+		adapter = new ContentAdapter(this, listLeftDrawer);
 		listView_left.setAdapter(adapter);
 		listView_left.setOnItemClickListener(new OnItemClickListener() {
 
 			@Override
 			public void onItemClick(AdapterView<?> arg0, View arg1, int index,
-					long arg3) {
+									long arg3) {
 				// TODO 自动生成的方法存根
 				switch (index) {
-				case 0:
-					if (functions.contains("001001"))
-					{
-						Intent intentAuthority = new Intent(Main.this, Dialog_Authority.class);
-						startActivityForResult(intentAuthority, 1);
+					case 0:
+						if (functions.contains("001001")) {
+							Intent intentAuthority = new Intent(Main.this, Dialog_Authority.class);
+							startActivityForResult(intentAuthority, 1);
+							drawerLayout.closeDrawers();
+							overridePendingTransition(R.anim.zoomin, R.anim.zoomout);
+						} else {
+							Toast.makeText(Main.this, "权限不够，请管理员提高权限！", Toast.LENGTH_SHORT).show();
+						}
+
+						break;
+					case 1:
+						Intent iii = new Intent(Main.this, PopWindowSpinnerActivity.class/*GuanjingActivity.class*/);
+						startActivityForResult(iii, requestCode);
 						drawerLayout.closeDrawers();
-						overridePendingTransition(R.anim.zoomin, R.anim.zoomout);
-					}
-					else
-					{
-						Toast.makeText(Main.this, "权限不够，请管理员提高权限！", Toast.LENGTH_SHORT).show();
-					}
-					
-					break;
-				case 1:
-					Intent iii = new Intent(Main.this,PopWindowSpinnerActivity.class/*GuanjingActivity.class*/);
-					startActivityForResult(iii,requestCode);
-					drawerLayout.closeDrawers();
-					break;
-				case 2:
-					drawerLayout.closeDrawers();
+						break;
+					case 2:
+						drawerLayout.closeDrawers();
 					/*Intent iii2 = new Intent(Main.this,GuanglanActivity.class);
 					startActivityForResult(iii2,requestCode);*/
-					GL_TYPE = "default";
-					touchListener.setDrawGL(true);
-					touchListener.setGltype(GL_TYPE);
-					GL_TYPE = "";
-					break;
-				case 3:
-					touchListener.setDrawglly(true);
-					drawerLayout.closeDrawers();
-					break;
-				case 4:
-					touchListener.setDrawdlly(true);
-					drawerLayout.closeDrawers();
-					break;
-				case 5:
-					touchListener.setShowglly(true);
-					drawerLayout.closeDrawers();
-					break;
-				default:
-					break;
+						GL_TYPE = "default";
+						touchListener.setDrawGL(true);
+						touchListener.setGltype(GL_TYPE);
+						GL_TYPE = "";
+						break;
+					case 3:
+						touchListener.setDrawglly(true);
+						drawerLayout.closeDrawers();
+						break;
+					case 4:
+						touchListener.setDrawdlly(true);
+						drawerLayout.closeDrawers();
+						break;
+					case 5:
+						touchListener.setShowglly(true);
+						drawerLayout.closeDrawers();
+						break;
+					default:
+						break;
 				}
 			}
 		});
+
+		rightLayout=(RelativeLayout) findViewById(R.id.right);
 		showLys();
 	}
 	private void initData() {
-		listc=new ArrayList<ContentModel>();
+		listLeftDrawer =new ArrayList<ContentModel>();
 
-		/*listc.add(new ContentModel(R.drawable.doctoradvice2, "新闻"));
-		listc.add(new ContentModel(R.drawable.infusion_selected, "查阅"));*/
-		listc.add(new ContentModel(R.drawable.mypatient_selected, "权限控制"));
-		listc.add(new ContentModel(R.drawable.personal_selected, "编辑管井"));
-		listc.add(new ContentModel(R.drawable.nursingcareplan2, "编辑光缆"));
-		listc.add(new ContentModel(R.drawable.infusion_selected, "编辑光缆路由图"));
-		listc.add(new ContentModel(R.drawable.infusion_selected, "编辑电缆路由图"));
-		listc.add(new ContentModel(R.drawable.infusion_selected, "查看管道光缆走向"));
-		//		listc.add(new ContentModel(R.drawable.infusion_selected, "井/管道类型"));
+		/*listLeftDrawer.add(new ContentModel(R.drawable.doctoradvice2, "新闻"));
+		listLeftDrawer.add(new ContentModel(R.drawable.infusion_selected, "查阅"));*/
+		listLeftDrawer.add(new ContentModel(R.drawable.mypatient_selected, "权限控制"));
+		listLeftDrawer.add(new ContentModel(R.drawable.personal_selected, "编辑管井"));
+		listLeftDrawer.add(new ContentModel(R.drawable.nursingcareplan2, "编辑光缆"));
+		listLeftDrawer.add(new ContentModel(R.drawable.infusion_selected, "编辑光缆路由图"));
+		listLeftDrawer.add(new ContentModel(R.drawable.infusion_selected, "编辑电缆路由图"));
+		listLeftDrawer.add(new ContentModel(R.drawable.infusion_selected, "查看管道光缆走向"));
+		//		listLeftDrawer.add(new ContentModel(R.drawable.infusion_selected, "井/管道类型"));
 
 	}
 	private void showLys(){
@@ -449,7 +439,12 @@ public class Main extends Activity implements OnMapListener
 	 */
 	public void onCreateView()
 	{
+		//顶部动作条
+		mActionView = (ActionView) findViewById(R.id.main_av_menu);
+		//mBtnToc = (ButtonIcon) findViewById(R.id.main_btn_toc);
+
 		map = (MapView) findViewById(R.id.map);
+		map.setEsriLogoVisible(false);
 		scale = (TextView) findViewById(R.id.scale);
 		coordinate = (TextView) findViewById(R.id.coordinate);
 		NumSatellites = (TextView) findViewById(R.id.tv_num_satellites);
@@ -1025,76 +1020,81 @@ public class Main extends Activity implements OnMapListener
 	{
 		switch (view.getId())
 		{
-		case R.id.Zoomin: // 缩小地图
-			map.zoomin();
-			break;
-		case R.id.Zoomout: // 放大地图
-			map.zoomout();
-			break;
-		case R.id.LinearLength: // 计算长度
-			touchListener.setGeoType(Geometry.Type.POLYLINE);
-			break;
-		case R.id.LinearClear: // 清空计算长度画的线和点
-			drawLayer.removeAll();
-			touchListener.setGeoType(null);
-			daoLuLayer.removeAll();
-			map.postInvalidate();
-			break;
-		case R.id.rj:
-			touchListener.setGeoType(Geometry.Type.POLYGON);
-			touchListener.setFeatureLayers(null);
-			break;
-		case R.id.LinearSearch: // 搜索功能
-			Intent intent = new Intent(Main.this, Search.class);
-			startActivityForResult(intent, requestCode);
-			//			overridePendingTransition(android.R.anim.accelerate_interpolator, 
-			//					android.R.anim.accelerate_interpolator); 
-			// startActivity(intent);
-			break;
-		case R.id.back: // 后退操作
-			List<Take> takes = Session.getTakes();
-			int size = takes.size();
-			if (index > 0 && size > 0)
-			{
-				index--;
-				Take take = takes.get(index);
-				Point point2 = take.getPoint();
-				map.setScale(take.getZoom());
-				map.centerAt(take.getPoint(), true);
-			}
-			break;
-		case R.id.advance: // 前进操作
-			List<Take> t = Session.getTakes();
-			int s = t.size();
-			if (index < s - 1)
-			{
-				index++;
-				Take take = t.get(index);
-				Point point2 = take.getPoint();
-				map.setScale(take.getZoom());
-				map.centerAt(take.getPoint(), true);
-			}
-			break;
-		case R.id.btn_location_ico: // 将地图中心移动到定位坐标点
-			createGPS();
-			map.centerAt(point, true);
-			// if (point != null)
-			// {
-			// map.centerAt(point.getY(), point.getX(), true);
-			// map.centerAt(point, true);
-			// Point center = map.getCenter();
-			// double x = center.getX();
-			// double y = center.getY();
+			case R.id.Zoomin: // 缩小地图
+				map.zoomin();
+				break;
+			case R.id.Zoomout: // 放大地图
+				map.zoomout();
+				break;
+			case R.id.LinearLength: // 计算长度
+				touchListener.setGeoType(Geometry.Type.POLYLINE);
+				break;
+			case R.id.LinearClear: // 清空计算长度画的线和点
+				drawLayer.removeAll();
+				touchListener.setGeoType(null);
+				daoLuLayer.removeAll();
+				map.postInvalidate();
+				break;
+			case R.id.rj:
+				touchListener.setGeoType(Geometry.Type.POLYGON);
+				touchListener.setFeatureLayers(null);
+				break;
+			case R.id.main_iv_search:// 搜索功能
+				onSearchClick();
+				break;
+			case R.id.main_tv_search:// 搜索功能
+				onSearchClick();
+				break;
+			case R.id.back: // 后退操作
+				List<Take> takes = Session.getTakes();
+				int size = takes.size();
+				if (index > 0 && size > 0)
+				{
+					index--;
+					Take take = takes.get(index);
+					Point point2 = take.getPoint();
+					map.setScale(take.getZoom());
+					map.centerAt(take.getPoint(), true);
+				}
+				break;
+			case R.id.advance: // 前进操作
+				List<Take> t = Session.getTakes();
+				int s = t.size();
+				if (index < s - 1)
+				{
+					index++;
+					Take take = t.get(index);
+					Point point2 = take.getPoint();
+					map.setScale(take.getZoom());
+					map.centerAt(take.getPoint(), true);
+				}
+				break;
+			case R.id.btn_location_ico: // 将地图中心移动到定位坐标点
+				createGPS();
+				map.centerAt(point, true);
+				// if (point != null)
+				// {
+				// map.centerAt(point.getY(), point.getX(), true);
+				// map.centerAt(point, true);
+				// Point center = map.getCenter();
+				// double x = center.getX();
+				// double y = center.getY();
 
-			// }
-			break;
+				// }
+				break;
 			/*case R.id.btnAuthority:
 			Intent intentAuthority = new Intent(Main.this, Dialog_Authority.class);
 			startActivityForResult(intentAuthority, 1);
 			break;*/
-		case R.id.btnAll:
-			seeAll();
-			break;
+			case R.id.btnAll:
+				seeAll();
+				break;
+//			case R.id.main_btn_toc:
+//				onBtnTocClick();
+//				break;
+			case R.id.main_av_menu:
+				onActionViewClick();
+				break;
 		}
 	}
 
@@ -1397,7 +1397,7 @@ public class Main extends Activity implements OnMapListener
 
 		DataCollection params = new DataCollection();
 		params.add(new Data("min_x",xmin));
-		params.add(new Data("min_y",ymin));
+		params.add(new Data("min_y", ymin));
 		params.add(new Data("max_x", xmax));
 		params.add(new Data("max_y", ymax));
 		params.add(new Data("roleid", FunctionHelper.USER_ROLE.get("userno").Value.toString()));
@@ -1501,7 +1501,7 @@ public class Main extends Activity implements OnMapListener
 	 */
 	private DataTable QuyExtent(){
 		DataCollection params = new DataCollection();
-		params.add(new Data("roleid",FunctionHelper.USER_ROLE.get("userno").Value.toString()));
+		params.add(new Data("roleid", FunctionHelper.USER_ROLE.get("userno").Value.toString()));
 		db = new SQLiteDatabase(Main.this);
 
 		DataTable table = db.executeTable("aqBS_QuyExtent", params);
@@ -1532,7 +1532,7 @@ public class Main extends Activity implements OnMapListener
 		db = new SQLiteDatabase(this);
 		DataCollection params = new DataCollection();
 		params.add(new Data("operator",FunctionHelper.userName));
-		DataTable result = db.executeTable("aqBS_LocalDataQuery",params);
+		DataTable result = db.executeTable("aqBS_LocalDataQuery", params);
 		for(int i=0;i<result.size();i++){
 			DataCollection dc = result.next();
 			String xmi = dc.get("x").Value.toString();
@@ -1568,7 +1568,7 @@ public class Main extends Activity implements OnMapListener
 		Graphic tempGraphic ;
 		db = new SQLiteDatabase(this);
 		DataCollection params = new DataCollection();
-		params.add(new Data("operator",FunctionHelper.userName));
+		params.add(new Data("operator", FunctionHelper.userName));
 		DataTable rst = db.executeTable("spBS_LocalGDQuery", params);
 		for(int i=0;i<rst.size();i++){
 			Polyline pl = new Polyline();
@@ -1674,5 +1674,32 @@ public class Main extends Activity implements OnMapListener
 
 			newdlly.addGraphic(tempGraphic);
 		}
+	}
+
+	/**
+	 * 按下图层按钮
+	 */
+	private void onBtnTocClick() {
+		if (drawerLayout.isDrawerOpen(rightLayout)) {
+			drawerLayout.closeDrawer(rightLayout);
+		} else {
+			drawerLayout.openDrawer(rightLayout);
+		}
+	}
+
+	/**
+	 * 按下菜单按钮
+	 */
+	private void onActionViewClick() {
+		if (drawerLayout.isDrawerOpen(leftLayout)) {
+			drawerLayout.closeDrawer(leftLayout);
+		} else {
+			drawerLayout.openDrawer(leftLayout);
+		}
+	}
+
+	private void onSearchClick() {
+		Intent intent = new Intent(Main.this, Search.class);
+		startActivityForResult(intent, requestCode);
 	}
 }

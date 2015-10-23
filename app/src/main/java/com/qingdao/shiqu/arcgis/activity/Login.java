@@ -9,18 +9,16 @@ import Eruntech.BirthStone.Core.Parse.DataTable;
 import Eruntech.BirthStone.Core.Sqlite.SQLiteDatabase;
 import Eruntech.BirthStone.UI.Controls.TextBox;
 import android.os.Bundle;
+import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.animation.Animation;
 import android.view.animation.Animation.AnimationListener;
 import android.view.animation.AnimationUtils;
-import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
-import com.qingdao.shiqu.arcgis.ActivityHelper;
-import com.qingdao.shiqu.arcgis.AssetHelper;
-//import com.gc.materialdesign.views.Button;
+import com.gc.materialdesign.views.ButtonFlat;
 import com.qingdao.shiqu.arcgis.R;
 import com.qingdao.shiqu.arcgis.helper.FunctionHelper;
 import com.qingdao.shiqu.arcgis.utils.DBOpterate;
@@ -30,7 +28,7 @@ public class Login extends Activity
 {
 	SQLiteDatabase db = null;
 	LinearLayout linearLayout;
-	Button btnLogin;
+	ButtonFlat btnLogin;
 	TextBox userNo, password;
 
 	@Override
@@ -46,10 +44,10 @@ public class Login extends Activity
 
 	public void onCreateView()
 	{
-		linearLayout = (LinearLayout) findViewById(R.id.linearLayout01);
+		linearLayout = (LinearLayout) findViewById(R.id.login_ll_login);
 		userNo = (TextBox) findViewById(R.id.userNo);
 		password = (TextBox) findViewById(R.id.password);
-		btnLogin = (Button) findViewById(R.id.btnLogin);
+		btnLogin = (ButtonFlat) findViewById(R.id.btnLogin);
 		btnLogin.setOnClickListener(btnLoginOnClickListener);
 		super.onCreateView();
 	}
@@ -114,27 +112,33 @@ public class Login extends Activity
 	{
 		Animation animation = AnimationUtils.loadAnimation(Login.this, R.anim.splash_translate);
 		linearLayout.setAnimation(animation);
-		animation.setAnimationListener(new AnimationListener()
-		{
+		animation.setAnimationListener(new AnimationListener() {
 			@Override
-			public void onAnimationStart(Animation animation)
-			{
+			public void onAnimationStart(Animation animation) {
 
 			}
 
 			@Override
-			public void onAnimationRepeat(Animation animation)
-			{
+			public void onAnimationRepeat(Animation animation) {
 
 			}
 
 			@Override
-			public void onAnimationEnd(Animation animation)
-			{
+			public void onAnimationEnd(Animation animation) {
 				linearLayout.setVisibility(View.VISIBLE);
 			}
 		});
 
+	}
+
+	@Override
+	public boolean onKeyDown(int keyCode, KeyEvent event) {
+		if (keyCode == KeyEvent.KEYCODE_BACK)
+		{
+			// TODO: 2015-10-23 添加退出程序的提示 
+		}
+		
+		return super.onKeyDown(keyCode, event);
 	}
 
 }

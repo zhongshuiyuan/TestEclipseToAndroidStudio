@@ -19,6 +19,6 @@
         android:layout_weight="5"
         android:gravity="center"
         android:textSize="20sp"
-        android:textColor="@color/textviewcol"
+        android:textColor="@drawable/textview_selector"
         android:singleLine="true"/>
 </LinearLayout>

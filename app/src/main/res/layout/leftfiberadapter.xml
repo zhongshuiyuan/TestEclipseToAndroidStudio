@@ -12,7 +12,7 @@
         android:gravity="center"
         android:singleLine="true"
         android:textSize="20sp"
-        android:textColor="@color/textviewcol"/>
+        android:textColor="@drawable/textview_selector"/>
     <TextView 
         android:id="@+id/color"
         android:layout_width="0dp"
