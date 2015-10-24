@@ -54,7 +54,6 @@ import android.view.KeyEvent;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
-import android.widget.Button;
 import android.widget.ExpandableListView;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
@@ -208,15 +207,20 @@ public class Main extends Activity implements OnMapListener
 			@Override
 			public void onDrawerOpened(View drawerView) {
 				super.onDrawerOpened(drawerView);
-				mActionView.setAction(new BackAction(), ActionView.ROTATE_CLOCKWISE);
-				//mBtnToc.setDrawableIcon(getResources().getDrawable(R.drawable.ic_highlight_off_black_48dp, null));
+				if (drawerView.equals(leftLayout)) {
+					mActionView.setAction(new BackAction(), ActionView.ROTATE_CLOCKWISE);
+					//mBtnToc.setDrawableIcon(getResources().getDrawable(R.drawable.ic_layers_white_48dp));
+				} else if (drawerView.equals(rightLayout)) {
+					mActionView.setAction(new DrawerAction(), ActionView.ROTATE_CLOCKWISE);
+					//mBtnToc.setDrawableIcon(getResources().getDrawable(R.drawable.ic_highlight_off_white_48dp));
+				}
 			}
 
 			@Override
 			public void onDrawerClosed(View drawerView) {
 				super.onDrawerClosed(drawerView);
+				//mBtnToc.setDrawableIcon(getResources().getDrawable(R.drawable.ic_layers_white_48dp));
 				mActionView.setAction(new DrawerAction(), ActionView.ROTATE_CLOCKWISE);
-				//mBtnToc.setDrawableIcon(getResources().getDrawable(R.drawable.ic_layers_black_48dp, null));
 			}
 		});
 
@@ -441,7 +445,7 @@ public class Main extends Activity implements OnMapListener
 	{
 		//顶部动作条
 		mActionView = (ActionView) findViewById(R.id.main_av_menu);
-		//mBtnToc = (ButtonIcon) findViewById(R.id.main_btn_toc);
+		mBtnToc = (ButtonIcon) findViewById(R.id.main_btn_toc);
 
 		map = (MapView) findViewById(R.id.map);
 		map.setEsriLogoVisible(false);
@@ -1039,10 +1043,7 @@ public class Main extends Activity implements OnMapListener
 				touchListener.setGeoType(Geometry.Type.POLYGON);
 				touchListener.setFeatureLayers(null);
 				break;
-			case R.id.main_iv_search:// 搜索功能
-				onSearchClick();
-				break;
-			case R.id.main_tv_search:// 搜索功能
+			case R.id.main_ll_search:// 搜索功能
 				onSearchClick();
 				break;
 			case R.id.back: // 后退操作
@@ -1089,9 +1090,9 @@ public class Main extends Activity implements OnMapListener
 			case R.id.btnAll:
 				seeAll();
 				break;
-//			case R.id.main_btn_toc:
-//				onBtnTocClick();
-//				break;
+			case R.id.main_btn_toc:
+				onBtnTocClick();
+				break;
 			case R.id.main_av_menu:
 				onActionViewClick();
 				break;
@@ -1679,7 +1680,8 @@ public class Main extends Activity implements OnMapListener
 	/**
 	 * 按下图层按钮
 	 */
-	private void onBtnTocClick() {
+	private void
+	onBtnTocClick() {
 		if (drawerLayout.isDrawerOpen(rightLayout)) {
 			drawerLayout.closeDrawer(rightLayout);
 		} else {
@@ -1692,8 +1694,10 @@ public class Main extends Activity implements OnMapListener
 	 */
 	private void onActionViewClick() {
 		if (drawerLayout.isDrawerOpen(leftLayout)) {
+			mActionView.setAction(new DrawerAction(), ActionView.ROTATE_CLOCKWISE);
 			drawerLayout.closeDrawer(leftLayout);
 		} else {
+			mActionView.setAction(new BackAction(), ActionView.ROTATE_CLOCKWISE);
 			drawerLayout.openDrawer(leftLayout);
 		}
 	}

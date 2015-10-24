@@ -22,35 +22,42 @@
             android:layout_height="56dp"
             android:padding="16dip"
             android:onClick="click"
-            app:av_color="@android:color/black"
+            app:av_color="@android:color/white"
             app:av_action="drawer"/>
 
-        <ImageView
-            android:id="@+id/main_iv_search"
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:id="@+id/main_ll_search"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginLeft="8dp"
-            android:background="@color/white"
+            android:layout_weight="1"
             android:layout_gravity="center_vertical"
-            android:src="@drawable/common_icon_searchbox_magnifier" />
+            android:orientation="horizontal"
+            android:onClick="click"
+            android:background="@drawable/ll">
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="8dp"
+                android:layout_gravity="center_vertical"
+                android:src="@drawable/common_icon_searchbox_magnifier" />
 
-        <TextView
-            android:id="@+id/main_tv_search"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginLeft="8dp"
-            android:layout_gravity="center_vertical"
-            android:text="搜单位、道路，光机、井"
-            android:background="@color/white"
-            android:textColor="#666"
-            android:textSize="16sp" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="8dp"
+                android:layout_gravity="center_vertical"
+                android:text="搜单位、道路，光机、井"
+                android:textColor="#666"
+                android:textSize="16sp" />
+        </LinearLayout>
 
         <com.gc.materialdesign.views.ButtonIcon
             android:id="@+id/main_btn_toc"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:background="#1E88E5"
-            app:iconDrawable="@drawable/common_icon_searchbox_magnifier" />
+            android:onClick="click"
+            android:background="#fffffe"
+            app:iconDrawable="@drawable/ic_layers_white_48dp" />
 
     </LinearLayout>
 
@@ -69,11 +76,9 @@
             android:orientation="vertical" >
 
             <com.esri.android.map.MapView
-                xmlns:android="http://schemas.android.com/apk/res/android"
                 android:id="@+id/map"
                 android:layout_width="fill_parent"
-                android:layout_height="fill_parent" >
-            </com.esri.android.map.MapView>
+                android:layout_height="fill_parent" />
 
             <RelativeLayout
                 android:layout_width="fill_parent"
