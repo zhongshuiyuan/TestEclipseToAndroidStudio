@@ -12,10 +12,14 @@ import android.view.View;
 import android.widget.CheckBox;
 import android.widget.Toast;
 
+/**
+ * 打开GPS提示Dialog
+ */
 public class Dialog extends Activity
 {
 	CheckBox checkBox;
-	   @Override
+
+	@Override
 	protected void onCreate(Bundle savedInstanceState)
 	{
 		super.onCreate(savedInstanceState);
@@ -23,7 +27,9 @@ public class Dialog extends Activity
 		
 		checkBox = (CheckBox) findViewById(R.id.checkBox);
 	}
-	@SuppressLint("NewApi") public void click(View view)
+
+	@SuppressLint("NewApi")
+	public void click(View view)
 	{
 		boolean checked = checkBox.isChecked();
 		SharedPreferences sharedPreferences = getSharedPreferences("dialog", MODE_PRIVATE);
@@ -33,10 +39,10 @@ public class Dialog extends Activity
 		edit.apply();
 		switch (view.getId())
 		{
-			case R.id.btnCancel: //ȡ��
+			case R.id.btnCancel: //取消
 				this.finish();
 				break;
-			case R.id.btnSure: //ȷ��
+			case R.id.btnSure: //确认
 				startActivity(new Intent(Settings.ACTION_SETTINGS));
 				break;
 		}
