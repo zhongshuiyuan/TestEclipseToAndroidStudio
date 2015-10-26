@@ -11,9 +11,8 @@
         android:id="@+id/main_actionbar"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:background="#1E88E5"
+        android:background="@color/app_design_background"
         android:layout_alignParentTop="true"
-        android:onClick="click"
         android:orientation="horizontal" >
 
         <at.markushi.ui.ActionView
@@ -56,7 +55,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:onClick="click"
-            android:background="#fffffe"/>
+            android:background="#991E44c5"/>
             <!--app:iconDrawable="@drawable/ic_layers_white_48dp" />-->
 
     </LinearLayout>
