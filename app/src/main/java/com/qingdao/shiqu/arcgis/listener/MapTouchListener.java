@@ -996,7 +996,6 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 
 	@Override
 	public boolean onDoubleTap(MotionEvent point) {
-		// TODO 自动生成的方法存根
 		if(drawglly){
 			//保存光缆路由数据
 			drawglly = false;
@@ -1254,6 +1253,7 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 		 */
 		public void onMoveAndZoom();
 	}
+
 	private void showAlertDialog( final String[] nList,String title) {
 		ListAdapter mAdapter = new ArrayAdapter(context, R.layout.item, nList);
 		LayoutInflater inflater = LayoutInflater.from(context);  
@@ -1429,7 +1429,7 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 	}
 	void AlertMsg(String str, Object... arg) {
 		String msg = String.format(str, arg);
-		Toast.makeText(context, msg, 2).show();
+		Toast.makeText(context, msg, Toast.LENGTH_LONG).show();
 		Log.i("AlertMsg", msg);
 	}
 	public void loadGLLY(){

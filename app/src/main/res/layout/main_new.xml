@@ -56,8 +56,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:onClick="click"
-            android:background="#fffffe"
-            app:iconDrawable="@drawable/ic_layers_white_48dp" />
+            android:background="#fffffe"/>
+            <!--app:iconDrawable="@drawable/ic_layers_white_48dp" />-->
 
     </LinearLayout>
 
@@ -101,8 +101,8 @@
                     android:layout_height="wrap_content"
                     android:layout_above="@+id/btn_location_ico"
                     android:layout_alignLeft="@+id/btn_location_ico"/>
-                <!-- 定位按钮 -->
 
+                <!-- 定位按钮 -->
                 <ImageButton
                     android:id="@+id/btn_location_ico"
                     android:layout_width="wrap_content"

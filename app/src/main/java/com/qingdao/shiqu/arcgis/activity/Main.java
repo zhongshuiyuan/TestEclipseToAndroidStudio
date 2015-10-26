@@ -106,7 +106,6 @@ public class Main extends Activity implements OnMapListener
 	private final String TAG = "Main";
 	private int requestCode = 100;
 	int index = 1;
-	boolean bool = false;
 	double xmin,xmax,ymin,ymax;
 	SQLiteDatabase db = null;
 
@@ -115,13 +114,26 @@ public class Main extends Activity implements OnMapListener
 	 * arcgis 地图初始
 	 */
 	MapView map = null;
-	ArcGISLocalTiledLayer local;
+	ArcGISLocalTiledLayer mLocalTiledLayer;
 
-	GraphicsLayer graphicsLayer,newGraphicLayer,newgdlayer,newgllayer,newglly,newdlly;
+	/** 第一次加载地图时需要全图显示 **/
+	private boolean mIsFullExtentNeeded = true;
+
+	/** 地图模式 **/
+	private int mMapState;
+	/** 普通模式 **/
+	private int MAP_STATE_NORMAL = 0;
+	/** 实时定位模式 **/
+	private int MAP_STATE_NAVIGATION = 1;
+
+	/** 定位标志图层 **/
+	GraphicsLayer mLocationGraphicsLayer;
+	GraphicsLayer newGraphicLayer,newgdlayer,newgllayer,newglly,newdlly;
 	// 方向传感器初始化
 	SensorManager sensorManager;
 	// 定位坐标初始
 	LocationManager locationManager;
+
 	/**
 	 * 控件初始
 	 */
@@ -129,10 +141,10 @@ public class Main extends Activity implements OnMapListener
 	private ButtonIcon mBtnToc;
 
 	ImageButton locationIco;
-	TextView NumSatellites;
-	TextView scale, coordinate;
+	TextView mTvNumSatellites;
+	TextView mTvScale, mTvCoordinate;
 	ProgressDialog mProgressDialog = null;
-	Point point;// 定位
+	Point mCurrentLocationPoint;// 定位
 	// 定位点添加的graphicID
 	int id = 0;
 	// 定位点添加的graphic图片资源
@@ -158,14 +170,12 @@ public class Main extends Activity implements OnMapListener
 	private RelativeLayout leftLayout;
 	private RelativeLayout rightLayout;
 	private List<ContentModel> listLeftDrawer;
-	private ContentAdapter adapter;  
+	private ContentAdapter adapter;
 
 	private LocationManager lm;
 	private String GL_TYPE = "";
 	private ArrayList<ArrayList<Layer>> childs = new ArrayList<ArrayList<Layer>>(); //USE IN MyExpandableListAdapter CLASS
 	private ArrayList<String> titles = new ArrayList<String>(); //USE IN MyExpandableListAdapter CLASS
-	private TextView zuobiao ;
-	private String zuobiao_str;
 
 
 	@Override
@@ -181,26 +191,106 @@ public class Main extends Activity implements OnMapListener
 		initLocation();
 		//		loadDrawList();
 		//		timer.schedule(task, 10000);
-		loadDrawer();
+		createDrawer();
 		createGPS();
-//		seeAll();
-		map.setScale(182612);
-		Point point = new Point();
-		point.setX(236038.1424072377);
-		point.setY(109233.05352031846);
-		map.zoomToScale(point, 175590);
-		map.centerAt(point, true);
-		map.getScale();
-		double scale2 = map.getScale();
-		int scaleStr = (int) scale2;
-		scale.setText("比例1:" + scaleStr + "");
+		seeAll();
 
 		super.onCreate(savedInstanceState);
 	}
+
+	/**
+	 * 初始化类和控件
+	 */
+	public void onCreateView()
+	{
+		mMapState = MAP_STATE_NORMAL;
+
+		//顶部动作条
+		mActionView = (ActionView) findViewById(R.id.main_av_menu);
+		mBtnToc = (ButtonIcon) findViewById(R.id.main_btn_toc);
+		mBtnToc.setDrawableIcon(getResources().getDrawable(R.drawable.ic_layers_white_48dp));
+
+		map = (MapView) findViewById(R.id.map);
+
+		mTvScale = (TextView) findViewById(R.id.scale);
+		mTvCoordinate = (TextView) findViewById(R.id.coordinate);
+		mTvNumSatellites = (TextView) findViewById(R.id.tv_num_satellites);
+		locationIco = (ImageButton) findViewById(R.id.btn_location_ico);
+		sensorManager = (SensorManager) this.getSystemService(Context.SENSOR_SERVICE);
+		locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
+		// 讲解密后的文件写入sd卡
+		// writeFiles();
+		mLocalTiledLayer = new ArcGISLocalTiledLayer("file:///" + "sdcard/layers");
+		//		mLocalTiledLayer = new ArcGISLocalTiledLayer("file:///mnt/sdcard/Layers");
+		//		mLocalTiledLayer = new ArcGISLocalTiledLayer(Environment.getExternalStorageDirectory().getAbsolutePath()+"/layers");
+		mLocationGraphicsLayer = new GraphicsLayer();
+		mLocationGraphicsLayer.setName("定位图层");
+		newGraphicLayer = new GraphicsLayer();
+		newGraphicLayer.setName("新加节点图层");
+		newgdlayer = new GraphicsLayer();
+		newgdlayer.setName("新加管道图层");
+		newgllayer = new GraphicsLayer();
+		newgllayer.setName("新加光缆图层");
+		drawLayer = new GraphicsLayer();
+		newglly = new GraphicsLayer();
+		newglly.setName("新加光缆路由");
+		newdlly = new GraphicsLayer();
+		newdlly.setName("新加电缆路由");
+		drawLayer.setName("绘制图层");
+		daoLuLayer = new GraphicsLayer();
+		daoLuLayer.setName("道路图层");
+		mLocalTiledLayer.setName("青岛底图");
+		// 添加底图
+		map.setMapBackground(0xffffff, 0xffffff, 0, 0);
+		double lms = mLocalTiledLayer.getMinScale();
+		//		mLocalTiledLayer.setMinScale(0);
+		map.addLayer(mLocalTiledLayer);
+		//		mLocalTiledLayer.getExtent().queryEnvelope(extend_el);
+
+		// 添加绘画图层
+		map.addLayer(mLocationGraphicsLayer); // 定位图层
+		map.addLayer(daoLuLayer);
+
+		//map.setallow
+
+		// mTvScale.setText(mMapTouchListenerMapTouchListenerMapTouchListenerMapTouchListenerMapTouchListenerMapTouchListenerMapTouchListenerap.getScale() + "");
+		touchListener = new MapTouchListener(Main.this, map);
+		touchListener.setLayer(drawLayer);
+		touchListener.setNewEleLayer(newGraphicLayer);
+		touchListener.setNewgdlayer(newgdlayer);
+		touchListener.setNewGLLayer(newgllayer);
+		touchListener.setNewglly(newglly);
+		touchListener.setNewdlly(newdlly);
+		map.setOnTouchListener(touchListener); // 地图手势操作监听事件
+		map.setOnZoomListener(touchListener); // 地图缩放监听事件
+		//		btnAuthority = (LinearLayout) this.findViewById(R.id.btnAuthority);
+		initGeodatabase();
+		loadExtraLayers();
+		map.addLayer(drawLayer);
+		map.addLayer(newGraphicLayer);
+		map.addLayer(newgdlayer);
+		map.addLayer(newgllayer);
+		map.addLayer(newglly);
+		map.addLayer(newdlly);
+
+		for(int i=0;i<map.getLayers().length;i++){
+			if(map.getLayer(i).getName().equals("新加管道图层") || map.getLayer(i).getName().equals("新加节点图层")
+					||map.getLayer(i).getName().equals("新加光缆路由") ||map.getLayer(i).getName().equals("新加电缆路由") )
+				map.getLayer(i).setMinScale(8000);
+			if(map.getLayer(i).getName().equals("定位图层")){
+				map.getLayer(i).setMinScale(0);
+				map.getLayer(i).setMaxScale(0);
+			}
+		}
+		//		zuobiao.setText(zuobiao_str);
+		super.onCreateView();
+
+	}
+
 	/**
 	 * 添加抽屉
 	 */
-	public void loadDrawer(){
+	public void createDrawer(){
 
 		drawerLayout = (DrawerLayout) findViewById(R.id.drawerlayout);
 		drawerLayout.setDrawerListener(new DrawerLayout.SimpleDrawerListener() {
@@ -209,23 +299,28 @@ public class Main extends Activity implements OnMapListener
 				super.onDrawerOpened(drawerView);
 				if (drawerView.equals(leftLayout)) {
 					mActionView.setAction(new BackAction(), ActionView.ROTATE_CLOCKWISE);
-					//mBtnToc.setDrawableIcon(getResources().getDrawable(R.drawable.ic_layers_white_48dp));
+					mBtnToc.setDrawableIcon(getResources().getDrawable(R.drawable.ic_layers_white_48dp));
+					drawerLayout.closeDrawer(rightLayout);
 				} else if (drawerView.equals(rightLayout)) {
 					mActionView.setAction(new DrawerAction(), ActionView.ROTATE_CLOCKWISE);
-					//mBtnToc.setDrawableIcon(getResources().getDrawable(R.drawable.ic_highlight_off_white_48dp));
+					mBtnToc.setDrawableIcon(getResources().getDrawable(R.drawable.ic_highlight_off_white_48dp));
+					drawerLayout.closeDrawer(leftLayout);
 				}
 			}
 
 			@Override
 			public void onDrawerClosed(View drawerView) {
 				super.onDrawerClosed(drawerView);
-				//mBtnToc.setDrawableIcon(getResources().getDrawable(R.drawable.ic_layers_white_48dp));
-				mActionView.setAction(new DrawerAction(), ActionView.ROTATE_CLOCKWISE);
+				if (drawerView.equals(leftLayout)) {
+					mActionView.setAction(new DrawerAction(), ActionView.ROTATE_CLOCKWISE);
+				} else if (drawerView.equals(rightLayout)) {
+					mBtnToc.setDrawableIcon(getResources().getDrawable(R.drawable.ic_layers_white_48dp));
+				}
 			}
 		});
 
 
-		leftLayout=(RelativeLayout) findViewById(R.id.left);
+		leftLayout = (RelativeLayout) findViewById(R.id.left);
 		final ListView listView_left = (ListView) leftLayout.findViewById(R.id.left_listview);
 		initData();
 		adapter = new ContentAdapter(this, listLeftDrawer);
@@ -302,6 +397,7 @@ public class Main extends Activity implements OnMapListener
 		MyExpandableListAdapter mela = new MyExpandableListAdapter(Main.this, titles, childs);
 		elv.setAdapter(mela);
 	}
+
 	/**
 	 * 进行GPS定位
 	 */
@@ -312,36 +408,40 @@ public class Main extends Activity implements OnMapListener
 			startActivity(intent);
 			return;
 		}
+
 		String bestProvider = lm.getBestProvider(getCriteria(), true);
 		//获取位置信息
 		//如果不设置查询要求，getLastKnownLocation方法传人的参数为LocationManager.GPS_PROVIDER
-		Location location= lm.getLastKnownLocation(bestProvider);    
+		Location location = lm.getLastKnownLocation(bestProvider);
 		updateView(location);
 		//监听状态
-		lm.addGpsStatusListener(listener);
-		//绑定监听，有4个参数    
-		//参数1，设备：有GPS_PROVIDER和NETWORK_PROVIDER两种
-		//参数2，位置信息更新周期，单位毫秒    
-		//参数3，位置变化最小距离：当位置距离变化超过此值时，将更新位置信息    
-		//参数4，监听    
-		//备注：参数2和3，如果参数3不为0，则以参数3为准；参数3为0，则通过时间来定时更新；两者为0，则随时刷新   
+		lm.addGpsStatusListener(mGpsStatusListener);
 
+		// 绑定监听，有4个参数
+		// 参数1，设备：有GPS_PROVIDER和NETWORK_PROVIDER两种
+		// 参数2，位置信息更新周期，单位毫秒
+		// 参数3，位置变化最小距离：当位置距离变化超过此值时，将更新位置信息
+		// 参数4，监听器
+		// 备注：参数2和3，如果参数3不为0，则以参数3为准；参数3为0，则通过时间来定时更新；两者为0，则随时刷新
 		// 1秒更新一次，或最小位移变化超过1米更新一次；
-		//注意：此处更新准确度非常低，推荐在service里面启动一个Thread，在run中sleep(10000);然后执行handler.sendMessage(),更新位置
+		// 注意：此处更新准确度非常低，推荐在service里面启动一个Thread，在run中sleep(10000);然后执行handler.sendMessage(),更新位置
 		lm.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 1, locationListener);
 	}
-	//位置监听
-	private LocationListener locationListener=new LocationListener() {
+
+	/** 位置监听器 **/
+	private LocationListener locationListener = new LocationListener() {
 
 		/**
 		 * 位置信息变化时触发
 		 */
 		public void onLocationChanged(Location location) {
-			updateView(location);
-			Log.i(TAG, "时间："+location.getTime()); 
-			Log.i(TAG, "经度："+location.getLongitude()); 
-			Log.i(TAG, "纬度："+location.getLatitude()); 
-			Log.i(TAG, "海拔："+location.getAltitude()); 
+			if (mMapState == MAP_STATE_NAVIGATION) {
+				updateView(location);
+			}
+			Log.i(TAG, "时间："+location.getTime());
+			Log.i(TAG, "经度："+location.getLongitude());
+			Log.i(TAG, "纬度："+location.getLatitude());
+			Log.i(TAG, "海拔："+location.getAltitude());
 		}
 
 		/**
@@ -349,18 +449,18 @@ public class Main extends Activity implements OnMapListener
 		 */
 		public void onStatusChanged(String provider, int status, Bundle extras) {
 			switch (status) {
-			//GPS状态为可见时
-			case LocationProvider.AVAILABLE:
-				Log.i(TAG, "当前GPS状态为可见状态");
-				break;
+				//GPS状态为可见时
+				case LocationProvider.AVAILABLE:
+					Log.i(TAG, "当前GPS状态为可见状态");
+					break;
 				//GPS状态为服务区外时
-			case LocationProvider.OUT_OF_SERVICE:
-				Log.i(TAG, "当前GPS状态为服务区外状态");
-				break;
+				case LocationProvider.OUT_OF_SERVICE:
+					Log.i(TAG, "当前GPS状态为服务区外状态");
+					break;
 				//GPS状态为暂停服务时
-			case LocationProvider.TEMPORARILY_UNAVAILABLE:
-				Log.i(TAG, "当前GPS状态为暂停服务状态");
-				break;
+				case LocationProvider.TEMPORARILY_UNAVAILABLE:
+					Log.i(TAG, "当前GPS状态为暂停服务状态");
+					break;
 			}
 		}
 
@@ -368,7 +468,7 @@ public class Main extends Activity implements OnMapListener
 		 * GPS开启时触发
 		 */
 		public void onProviderEnabled(String provider) {
-			Location location=lm.getLastKnownLocation(provider);
+			Location location = lm.getLastKnownLocation(provider);
 			updateView(location);
 		}
 
@@ -383,145 +483,74 @@ public class Main extends Activity implements OnMapListener
 	};
 
 	//状态监听
-	GpsStatus.Listener listener = new GpsStatus.Listener() {
+	GpsStatus.Listener mGpsStatusListener = new GpsStatus.Listener() {
 		public void onGpsStatusChanged(int event) {
 			switch (event) {
-			//第一次定位
-			case GpsStatus.GPS_EVENT_FIRST_FIX:
-				Log.i(TAG, "第一次定位");
-				break;
+				//第一次定位
+				case GpsStatus.GPS_EVENT_FIRST_FIX:
+					Log.i(TAG, "第一次定位");
+					break;
 				//卫星状态改变
-			case GpsStatus.GPS_EVENT_SATELLITE_STATUS:
-				Log.i(TAG, "卫星状态改变");
-				//获取当前状态
-				GpsStatus gpsStatus=lm.getGpsStatus(null);
-				//获取卫星颗数的默认最大值
-				int maxSatellites = gpsStatus.getMaxSatellites();
-				//创建一个迭代器保存所有卫星 
-				Iterator<GpsSatellite> iters = gpsStatus.getSatellites().iterator();
-				int count = 0;     
-				while (iters.hasNext() && count <= maxSatellites) {     
-					GpsSatellite s = iters.next();     
-					count++;     
-				}   
-				System.out.println("搜索到："+count+"颗卫星");
-				break;
+				case GpsStatus.GPS_EVENT_SATELLITE_STATUS:
+					Log.i(TAG, "卫星状态改变");
+					//获取当前状态
+					GpsStatus gpsStatus = lm.getGpsStatus(null);
+					//获取卫星颗数的默认最大值
+					int maxSatellites = gpsStatus.getMaxSatellites();
+					//创建一个迭代器保存所有卫星
+					Iterator<GpsSatellite> iters = gpsStatus.getSatellites().iterator();
+					int count = 0;
+					while (iters.hasNext() && count <= maxSatellites) {
+						GpsSatellite s = iters.next();
+						count++;
+					}
+					System.out.println("搜索到："+count+"颗卫星");
+					break;
 				//定位启动
-			case GpsStatus.GPS_EVENT_STARTED:
-				Log.i(TAG, "定位启动");
-				break;
+				case GpsStatus.GPS_EVENT_STARTED:
+					Log.i(TAG, "定位启动");
+					break;
 				//定位结束
-			case GpsStatus.GPS_EVENT_STOPPED:
-				Log.i(TAG, "定位结束");
-				break;
+				case GpsStatus.GPS_EVENT_STOPPED:
+					Log.i(TAG, "定位结束");
+					break;
 			}
 		};
 	};
+
 	/**
 	 * 返回查询条件
 	 * @return
 	 */
 	private Criteria getCriteria(){
-		Criteria criteria=new Criteria();
-		//设置定位精确度 Criteria.ACCURACY_COARSE比较粗略，Criteria.ACCURACY_FINE则比较精细 
-		criteria.setAccuracy(Criteria.ACCURACY_FINE);    
+		Criteria criteria = new Criteria();
+		//设置定位精确度 Criteria.ACCURACY_COARSE比较粗略，Criteria.ACCURACY_FINE则比较精细
+		criteria.setAccuracy(Criteria.ACCURACY_FINE);
 		//设置是否要求速度
 		criteria.setSpeedRequired(false);
-		// 设置是否允许运营商收费  
+		// 设置是否允许运营商收费
 		criteria.setCostAllowed(false);
 		//设置是否需要方位信息
 		criteria.setBearingRequired(false);
 		//设置是否需要海拔信息
 		criteria.setAltitudeRequired(false);
-		// 设置对电源的需求  
+		// 设置对电源的需求
 		criteria.setPowerRequirement(Criteria.POWER_LOW);
 		return criteria;
 	}
 
-	/**
-	 * 初始化类和控件
-	 */
-	public void onCreateView()
-	{
-		//顶部动作条
-		mActionView = (ActionView) findViewById(R.id.main_av_menu);
-		mBtnToc = (ButtonIcon) findViewById(R.id.main_btn_toc);
+	@Override
+	public void onWindowFocusChanged(boolean hasFocus) {
+		super.onWindowFocusChanged(hasFocus);
 
-		map = (MapView) findViewById(R.id.map);
-		map.setEsriLogoVisible(false);
-		scale = (TextView) findViewById(R.id.scale);
-		coordinate = (TextView) findViewById(R.id.coordinate);
-		NumSatellites = (TextView) findViewById(R.id.tv_num_satellites);
-		locationIco = (ImageButton) findViewById(R.id.btn_location_ico);
-		sensorManager = (SensorManager) this.getSystemService(Context.SENSOR_SERVICE);
-		locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
-		zuobiao = (TextView)findViewById(R.id.coordinate);
-		// 讲解密后的文件写入sd卡
-		// writeFiles();
-		local = new ArcGISLocalTiledLayer("file:///" + "sdcard/layers");
-		//		local = new ArcGISLocalTiledLayer("file:///mnt/sdcard/Layers");
-		//		local = new ArcGISLocalTiledLayer(Environment.getExternalStorageDirectory().getAbsolutePath()+"/layers");
-		graphicsLayer = new GraphicsLayer();
-		graphicsLayer.setName("定位图层");
-		newGraphicLayer = new GraphicsLayer();
-		newGraphicLayer.setName("新加节点图层");
-		newgdlayer = new GraphicsLayer();
-		newgdlayer.setName("新加管道图层");
-		newgllayer = new GraphicsLayer();
-		newgllayer.setName("新加光缆图层");
-		drawLayer = new GraphicsLayer();
-		newglly = new GraphicsLayer();
-		newglly.setName("新加光缆路由");
-		newdlly = new GraphicsLayer();
-		newdlly.setName("新加电缆路由");
-		drawLayer.setName("绘制图层");
-		daoLuLayer = new GraphicsLayer();
-		daoLuLayer.setName("道路图层");
-		local.setName("青岛底图");
-		// 添加底图
-		map.setMapBackground(0xffffff, 0xffffff, 0, 0);
-		double lms = local.getMinScale();
-		//		local.setMinScale(0);
-		map.addLayer(local);
-		//		local.getExtent().queryEnvelope(extend_el);
-
-		// 添加绘画图层
-		map.addLayer(graphicsLayer); // 定位图层
-		map.addLayer(daoLuLayer);
-
-		//map.setallow
-
-		// scale.setText(mMapTouchListenerMapTouchListenerMapTouchListenerMapTouchListenerMapTouchListenerMapTouchListenerMapTouchListenerap.getScale() + "");
-		touchListener = new MapTouchListener(Main.this, map);
-		touchListener.setLayer(drawLayer);
-		touchListener.setNewEleLayer(newGraphicLayer);
-		touchListener.setNewgdlayer(newgdlayer);
-		touchListener.setNewGLLayer(newgllayer);
-		touchListener.setNewglly(newglly);
-		touchListener.setNewdlly(newdlly);
-		map.setOnTouchListener(touchListener); // 地图手势操作监听事件
-		map.setOnZoomListener(touchListener); // 地图缩放监听事件
-		//		btnAuthority = (LinearLayout) this.findViewById(R.id.btnAuthority);
-		initGeodatabase();
-		loadExtraLayers();
-		map.addLayer(drawLayer);
-		map.addLayer(newGraphicLayer);
-		map.addLayer(newgdlayer);
-		map.addLayer(newgllayer);
-		map.addLayer(newglly);
-		map.addLayer(newdlly);
-
-		for(int i=0;i<map.getLayers().length;i++){
-			if(map.getLayer(i).getName().equals("新加管道图层") || map.getLayer(i).getName().equals("新加节点图层")
-					||map.getLayer(i).getName().equals("新加光缆路由") ||map.getLayer(i).getName().equals("新加电缆路由") )
-				map.getLayer(i).setMinScale(8000);
-			if(map.getLayer(i).getName().equals("定位图层")){
-				map.getLayer(i).setMinScale(0);
-				map.getLayer(i).setMaxScale(0);
+		if (hasFocus) {
+			// 第一次加载地图时全图显示
+			if (mIsFullExtentNeeded) {
+				seeAll();
+				map.setEsriLogoVisible(false);
+				mIsFullExtentNeeded = false;
 			}
 		}
-		//		zuobiao.setText(zuobiao_str);
-		super.onCreateView();
 
 	}
 
@@ -613,21 +642,21 @@ public class Main extends Activity implements OnMapListener
 		}
 		//是否显示道路
 		/**
-		if (functions.contains("002006"))
-		{
-			if(daolu != null)
-			{
-				daolu.setVisible(true);
-				touchListener.setGuanDao(daolu);
-			}
-		}
-		else
-		{
-			if(daolu != null)
-			{
-				daolu.setVisible(false);
-			}
-		}**/
+		 if (functions.contains("002006"))
+		 {
+		 if(daolu != null)
+		 {
+		 daolu.setVisible(true);
+		 touchListener.setGuanDao(daolu);
+		 }
+		 }
+		 else
+		 {
+		 if(daolu != null)
+		 {
+		 daolu.setVisible(false);
+		 }
+		 }**/
 		touchListener.setFeatureLayers(featureLayers);
 		// 是否显示权限按钮
 		/*if (functions.contains("001001"))
@@ -644,7 +673,7 @@ public class Main extends Activity implements OnMapListener
 	}
 
 	/**
-	 * 
+	 *
 	 * 功 能：初始化Geodatabase
 	 */
 	private void initGeodatabase()
@@ -948,7 +977,7 @@ public class Main extends Activity implements OnMapListener
 				}
 			}*/
 		}
-		
+
 		childs.add(ep);
 
 	}
@@ -985,9 +1014,9 @@ public class Main extends Activity implements OnMapListener
 	}
 
 	/**
-	 * 
+	 *
 	 * 功 能： 在地图上一个点创建图层并附带属性，并获取该图层
-	 * 
+	 *
 	 * @param point
 	 * @param map
 	 * @return
@@ -995,16 +1024,16 @@ public class Main extends Activity implements OnMapListener
 	private Graphic getGraphic(Point point, Map<String, Object> map)
 	{
 		GraphicsLayer layer = getGraphicsLayer();
-		Drawable image = this.getResources().getDrawable(R.drawable.icon_track_map_bar);
+		image = this.getResources().getDrawable(R.drawable.icon_track_map_bar);
 		PictureMarkerSymbol symbol = new PictureMarkerSymbol(image);
 		Graphic graphic = new Graphic(point, symbol, map);
 		return graphic;
 	}
 
 	/**
-	 * 
+	 *
 	 * 功 能：在地图上添加图层，并获取该图层
-	 * 
+	 *
 	 * @return
 	 */
 	private GraphicsLayer getGraphicsLayer()
@@ -1015,9 +1044,9 @@ public class Main extends Activity implements OnMapListener
 	}
 
 	/**
-	 * 
+	 *
 	 * 功 能：单击事件
-	 * 
+	 *
 	 * @param view
 	 */
 	public void click(View view)
@@ -1072,16 +1101,7 @@ public class Main extends Activity implements OnMapListener
 				break;
 			case R.id.btn_location_ico: // 将地图中心移动到定位坐标点
 				createGPS();
-				map.centerAt(point, true);
-				// if (point != null)
-				// {
-				// map.centerAt(point.getY(), point.getX(), true);
-				// map.centerAt(point, true);
-				// Point center = map.getCenter();
-				// double x = center.getX();
-				// double y = center.getY();
-
-				// }
+				//map.centerAt(mCurrentLocationPoint, true);
 				break;
 			/*case R.id.btnAuthority:
 			Intent intentAuthority = new Intent(Main.this, Dialog_Authority.class);
@@ -1116,45 +1136,45 @@ public class Main extends Activity implements OnMapListener
 		}else{*/
 		switch (resultCode)
 		{
-		case RESULT_OK:
-			String value = data.getStringExtra("value");
-			String type = data.getStringExtra("type");
-			String jtype = data.getStringExtra("jtype");
-			String gtype = data.getStringExtra("gltype");
-			String gdcq = data.getStringExtra("gdcq");
-			if(jtype != null){
-				touchListener.setAddEle(true);
-				touchListener.setJtype(jtype);
-				touchListener.setGdcq(gdcq);
-			}else if(gtype != null || GL_TYPE.equalsIgnoreCase("default")){
-				//不需要设置光缆类型，所以不用选择光缆类型
-				touchListener.setDrawGL(true);
-				touchListener.setGltype(GL_TYPE);
-				GL_TYPE = "";
-			}
-			else{        
-				if ("道路".equals(type))
-				{
-					List<Point> list = Util.convertLines(value);
-					LayerOpter opter = new LayerOpter(this, daoLuLayer);
-					//				opter.drawRoad(list);
-					opter.DrawRoad(list);
-					map.centerAt(list.get(list.size() / 2), true);
-					map.setScale(1200.0000);
-				}else
-				{
-					Point point = Util.convertPoint(value);
-					LayerOpter opter = new LayerOpter(this, daoLuLayer);
-					Drawable drawable = Main.this.getResources().getDrawable(R.drawable.sendtocar_balloon);
-					opter.drwaPoint(point, drawable);
-					map.centerAt(point, true);
-					map.setScale(1200.0000);
-					//map.set
+			case RESULT_OK:
+				String value = data.getStringExtra("value");
+				String type = data.getStringExtra("type");
+				String jtype = data.getStringExtra("jtype");
+				String gtype = data.getStringExtra("gltype");
+				String gdcq = data.getStringExtra("gdcq");
+				if(jtype != null){
+					touchListener.setAddEle(true);
+					touchListener.setJtype(jtype);
+					touchListener.setGdcq(gdcq);
+				}else if(gtype != null || GL_TYPE.equalsIgnoreCase("default")){
+					//不需要设置光缆类型，所以不用选择光缆类型
+					touchListener.setDrawGL(true);
+					touchListener.setGltype(GL_TYPE);
+					GL_TYPE = "";
+				}
+				else{
+					if ("道路".equals(type))
+					{
+						List<Point> list = Util.convertLines(value);
+						LayerOpter opter = new LayerOpter(this, daoLuLayer);
+						//				opter.drawRoad(list);
+						opter.DrawRoad(list);
+						map.centerAt(list.get(list.size() / 2), true);
+						map.setScale(1200.0000);
+					}else
+					{
+						Point point = Util.convertPoint(value);
+						LayerOpter opter = new LayerOpter(this, daoLuLayer);
+						Drawable drawable = Main.this.getResources().getDrawable(R.drawable.sendtocar_balloon);
+						opter.drwaPoint(point, drawable);
+						map.centerAt(point, true);
+						map.setScale(1200.0000);
+						//map.set
+					}
+
 				}
 
-			}
-
-			break;
+				break;
 		}
 		//		}
 
@@ -1172,19 +1192,18 @@ public class Main extends Activity implements OnMapListener
 			Double geoLat = location.getLatitude();
 			Double geoLng = location.getLongitude();
 			// Toast.makeText(Main.this, str, Toast.LENGTH_LONG).show();
-			point = new Point(location.getLongitude(), location.getLatitude());
-			point = Util.checkPoint(point); // 校正坐标点
+			mCurrentLocationPoint = new Point(location.getLongitude(), location.getLatitude());
+			mCurrentLocationPoint = Util.checkPoint(mCurrentLocationPoint); // 校正坐标点
 
-			// map.centerAt(point, true);
+			// map.centerAt(mCurrentLocationPoint, true);
 			if (isFirst)
 			{// 第一次加
-				map.centerAt(point, true);
+				map.centerAt(mCurrentLocationPoint, true);
 				map.setScale(1200.0000);
-
-				image = Main.this.getResources().getDrawable(R.drawable.dw);
+				image = this.getResources().getDrawable(R.drawable.icon_track_map_bar);
 				pictureMarkerSymbol = new PictureMarkerSymbol(image);
-				Graphic graphic = new Graphic(point, pictureMarkerSymbol);
-				id = graphicsLayer.addGraphic(graphic);
+				Graphic graphic = new Graphic(mCurrentLocationPoint, pictureMarkerSymbol);
+				id = mLocationGraphicsLayer.addGraphic(graphic);
 				isFirst = false;
 
 				/**
@@ -1193,19 +1212,20 @@ public class Main extends Activity implements OnMapListener
 
 			}
 			else
-			{// 移动式改变位
-				map.centerAt(point, true);
+			{
+				// 移动式改变位
+				map.centerAt(mCurrentLocationPoint, true);
 				map.setScale(1200.0000);
-				image = Main.this.getResources().getDrawable(R.drawable.dw);
+				image = this.getResources().getDrawable(R.drawable.icon_track_map_bar);
 				pictureMarkerSymbol = new PictureMarkerSymbol(image);
-				Graphic graphic = new Graphic(point, pictureMarkerSymbol);
-				graphicsLayer.updateGraphic(id, graphic);
+				Graphic graphic = new Graphic(mCurrentLocationPoint, pictureMarkerSymbol);
+				mLocationGraphicsLayer.updateGraphic(id, graphic);
 			}
 			map.getScale();
 			double scale2 = map.getScale();
 			int scaleStr = (int) scale2;
-			scale.setText("比例1:" + scaleStr + "");
-			zuobiao.setText(String.valueOf(point.getX()).substring(0,8)+","+String.valueOf(point.getY()).substring(0,8));
+			mTvScale.setText("比例1:" + scaleStr + "");
+			mTvCoordinate.setText(String.valueOf(mCurrentLocationPoint.getX()).substring(0, 8) + "," + String.valueOf(mCurrentLocationPoint.getY()).substring(0, 8));
 		}
 		else
 		{
@@ -1214,7 +1234,7 @@ public class Main extends Activity implements OnMapListener
 	}
 
 	/**
-	 * 
+	 *
 	 * 方向传感监听
 	 */
 	private final class SensorListener implements SensorEventListener
@@ -1260,19 +1280,19 @@ public class Main extends Activity implements OnMapListener
 					e.printStackTrace();
 				}
 				float degree = (Float) msg.obj;
-				Toast.makeText(Main.this, degree + ";x:" + point.getX() + "y:" + point.getY(), Toast.LENGTH_SHORT)
-				.show();
+				Toast.makeText(Main.this, degree + ";x:" + mCurrentLocationPoint.getX() + "y:" + mCurrentLocationPoint.getY(), Toast.LENGTH_SHORT)
+						.show();
 				// float degree = (Float)msg.obj;
 				MarkerSymbol setAngle = pictureMarkerSymbol.setAngle(degree);
-				Graphic graphic = new Graphic(point, pictureMarkerSymbol);
-				graphicsLayer.updateGraphic(id, graphic);
+				Graphic graphic = new Graphic(mCurrentLocationPoint, pictureMarkerSymbol);
+				mLocationGraphicsLayer.updateGraphic(id, graphic);
 			}
 		};
 	};
 
 	/**
 	 * ************************************ 功 能： 定位Handler处理
-	 *************************************** 
+	 ***************************************
 	 */
 	private class LocalHandler extends Handler
 	{
@@ -1298,14 +1318,19 @@ public class Main extends Activity implements OnMapListener
 
 			double scale2 = map.getScale();
 			int scaleStr = (int) scale2;
-			scale.setText("比例1:" + scaleStr + "");
-			zuobiao.setText(String.valueOf(mapPoint.getX()).substring(0,8)+","+String.valueOf(mapPoint.getY()).substring(0,8));
+			mTvScale.setText("比例1:" + scaleStr + "");
+			mTvCoordinate.setText(String.valueOf(mapPoint.getX()).substring(0, 8) + "," + String.valueOf(mapPoint.getY()).substring(0, 8));
 
 			Take take = new Take();
 			take.setPoint(mapPoint);
 			take.setZoom(scale2);
 			Session.getTakes().add(take);
 			index = Session.getTakes().size() - 1;
+
+			// 2015-10-26 add
+			Log.v(TAG, "进行地图移动或者缩放操作");
+			// 退出实时导航模式
+			mMapState = MAP_STATE_NORMAL;
 		}
 		catch (Exception e)
 		{
@@ -1409,37 +1434,37 @@ public class Main extends Activity implements OnMapListener
 
 
 	}
-	/**  
+	/**
 	 * 复制单个文件  
 	 * @param oldPath String 原文件路径 如：c:/fqf.txt  
 	 * @param newPath String 复制后路径 如：f:/fqf.txt  
-	 * @return boolean  
-	 */   
-	public void copyFile(String oldPath, String newPath) {   
-		try {   
-			int bytesum = 0;   
-			int byteread = 0;   
-			File oldfile = new File();   
+	 * @return boolean
+	 */
+	public void copyFile(String oldPath, String newPath) {
+		try {
+			int bytesum = 0;
+			int byteread = 0;
+			File oldfile = new File();
 			if (oldfile.exists(oldPath)) { //文件存在时   
 				InputStream inStream = new FileInputStream(oldPath); //读入原文件   
-				FileOutputStream fs = new FileOutputStream(newPath);   
-				byte[] buffer = new byte[1444];   
-				int length;   
-				while ( (byteread = inStream.read(buffer)) != -1) {   
+				FileOutputStream fs = new FileOutputStream(newPath);
+				byte[] buffer = new byte[1444];
+				int length;
+				while ( (byteread = inStream.read(buffer)) != -1) {
 					bytesum += byteread; //字节数 文件大小   
-					System.out.println(bytesum);   
-					fs.write(buffer, 0, byteread);   
-				}   
-				inStream.close();   
-			}   
-		}   
-		catch (Exception e) {   
-			System.out.println("复制单个文件操作出错");   
-			e.printStackTrace();   
+					System.out.println(bytesum);
+					fs.write(buffer, 0, byteread);
+				}
+				inStream.close();
+			}
+		}
+		catch (Exception e) {
+			System.out.println("复制单个文件操作出错");
+			e.printStackTrace();
 
-		}   
+		}
 
-	}  
+	}
 	/**
 	 * 说 明：加载上次退出时的地图范围
 	 */
@@ -1470,31 +1495,32 @@ public class Main extends Activity implements OnMapListener
 	 */
 	private void seeAll(){
 		/*map.setScale(196681);
-		Point point = new Point();
-		point.setX(236038.1424072377);
-		point.setY(109233.05352031846);
-		map.centerAt(point, true);
+		Point mCurrentLocationPoint = new Point();
+		mCurrentLocationPoint.setX(236038.1424072377);
+		mCurrentLocationPoint.setY(109233.05352031846);
+		map.centerAt(mCurrentLocationPoint, true);
 		double scale2 = map.getScale();
 		int scaleStr = (int) scale2;
-		scale.setText("比例1:" + scaleStr + "");*/
+		mTvScale.setText("比例1:" + scaleStr + "");*/
 		/*map.setScale(249980);
-		Point point = new Point();
-		point.setX(236038.1424072377);
-		point.setY(109233.05352031846);
-		map.centerAt(point, true);*/
-		
+		Point mCurrentLocationPoint = new Point();
+		mCurrentLocationPoint.setX(236038.1424072377);
+		mCurrentLocationPoint.setY(109233.05352031846);
+		map.centerAt(mCurrentLocationPoint, true);*/
+
 		map.setScale(175590);
 		Point point = new Point();
 		point.setX(236038.1424072377);
 		point.setY(109233.05352031846);
 		map.centerAt(point, true);
 		map.zoomToScale(point, 175590);
-		
+
 		map.getScale();
 		double scale2 = map.getScale();
 		int scaleStr = (int) scale2;
-		scale.setText("比例1:" + scaleStr + "");
+		mTvScale.setText("比例1:" + scaleStr + "");
 	}
+
 	/**
 	 * 说 明：查询该用户是否首次登陆
 	 * @return
@@ -1510,7 +1536,7 @@ public class Main extends Activity implements OnMapListener
 	}
 
 	private void markLocation(Location location)
-	{		
+	{
 		drawLayer.removeAll();
 		double locx = location.getLongitude();
 		double locy = location.getLatitude();
@@ -1683,8 +1709,10 @@ public class Main extends Activity implements OnMapListener
 	private void
 	onBtnTocClick() {
 		if (drawerLayout.isDrawerOpen(rightLayout)) {
+			mBtnToc.setDrawableIcon(getResources().getDrawable(R.drawable.ic_layers_white_48dp));
 			drawerLayout.closeDrawer(rightLayout);
 		} else {
+			mBtnToc.setDrawableIcon(getResources().getDrawable(R.drawable.ic_highlight_off_white_48dp));
 			drawerLayout.openDrawer(rightLayout);
 		}
 	}
