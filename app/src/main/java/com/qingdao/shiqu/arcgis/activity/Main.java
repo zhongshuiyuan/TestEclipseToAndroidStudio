@@ -55,7 +55,6 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ExpandableListView;
-import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
@@ -77,6 +76,7 @@ import com.esri.core.map.Graphic;
 import com.esri.core.symbol.MarkerSymbol;
 import com.esri.core.symbol.PictureMarkerSymbol;
 import com.esri.core.symbol.SimpleLineSymbol;
+import com.gc.materialdesign.views.ButtonFloat;
 import com.gc.materialdesign.views.ButtonIcon;
 import com.qingdao.shiqu.arcgis.R;
 import com.qingdao.shiqu.arcgis.adapter.ContentAdapter;
@@ -122,9 +122,9 @@ public class Main extends Activity implements OnMapListener
 	/** 地图模式 **/
 	private int mMapState;
 	/** 普通模式 **/
-	private int MAP_STATE_NORMAL = 0;
+	private final int MAP_STATE_NORMAL = 0;
 	/** 实时定位模式 **/
-	private int MAP_STATE_NAVIGATION = 1;
+	private final int MAP_STATE_NAVIGATION = 1;
 
 	/** 定位标志图层 **/
 	GraphicsLayer mLocationGraphicsLayer;
@@ -140,7 +140,7 @@ public class Main extends Activity implements OnMapListener
 	private ActionView mActionView;
 	private ButtonIcon mBtnToc;
 
-	ImageButton locationIco;
+	ButtonFloat mBtnLocation;
 	TextView mTvNumSatellites;
 	TextView mTvScale, mTvCoordinate;
 	ProgressDialog mProgressDialog = null;
@@ -184,7 +184,7 @@ public class Main extends Activity implements OnMapListener
 	{
 		titles.add("MAP10");
 
-		setContentView(R.layout.main_new);
+		setContentView(R.layout.main);
 
 		onCreateView();
 		//		openGPSSetting();
@@ -215,7 +215,10 @@ public class Main extends Activity implements OnMapListener
 		mTvScale = (TextView) findViewById(R.id.scale);
 		mTvCoordinate = (TextView) findViewById(R.id.coordinate);
 		mTvNumSatellites = (TextView) findViewById(R.id.tv_num_satellites);
-		locationIco = (ImageButton) findViewById(R.id.btn_location_ico);
+
+		mBtnLocation = (ButtonFloat) findViewById(R.id.btn_location);
+		mBtnLocation.setDrawableIcon(getResources().getDrawable(R.drawable.ic_my_location_white_48dp));
+
 		sensorManager = (SensorManager) this.getSystemService(Context.SENSOR_SERVICE);
 		locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
 		// 讲解密后的文件写入sd卡
@@ -413,19 +416,26 @@ public class Main extends Activity implements OnMapListener
 		//获取位置信息
 		//如果不设置查询要求，getLastKnownLocation方法传人的参数为LocationManager.GPS_PROVIDER
 		Location location = lm.getLastKnownLocation(bestProvider);
-		updateView(location);
-		//监听状态
-		lm.addGpsStatusListener(mGpsStatusListener);
+		if (location != null) {
+			updateView(location);
+			//监听状态
+			lm.addGpsStatusListener(mGpsStatusListener);
 
-		// 绑定监听，有4个参数
-		// 参数1，设备：有GPS_PROVIDER和NETWORK_PROVIDER两种
-		// 参数2，位置信息更新周期，单位毫秒
-		// 参数3，位置变化最小距离：当位置距离变化超过此值时，将更新位置信息
-		// 参数4，监听器
-		// 备注：参数2和3，如果参数3不为0，则以参数3为准；参数3为0，则通过时间来定时更新；两者为0，则随时刷新
-		// 1秒更新一次，或最小位移变化超过1米更新一次；
-		// 注意：此处更新准确度非常低，推荐在service里面启动一个Thread，在run中sleep(10000);然后执行handler.sendMessage(),更新位置
-		lm.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 1, locationListener);
+			// 绑定监听，有4个参数
+			// 参数1，设备：有GPS_PROVIDER和NETWORK_PROVIDER两种
+			// 参数2，位置信息更新周期，单位毫秒
+			// 参数3，位置变化最小距离：当位置距离变化超过此值时，将更新位置信息
+			// 参数4，监听器
+			// 备注：参数2和3，如果参数3不为0，则以参数3为准；参数3为0，则通过时间来定时更新；两者为0，则随时刷新
+			// 1秒更新一次，或最小位移变化超过1米更新一次；
+			// 注意：此处更新准确度非常低，推荐在service里面启动一个Thread，在run中sleep(10000);然后执行handler.sendMessage(),更新位置
+			lm.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 1, locationListener);
+		} else {
+			mMapState = MAP_STATE_NORMAL;
+			onMapStateChanged();
+			Toast.makeText(Main.this, "定位失败", Toast.LENGTH_SHORT).show();
+		}
+
 	}
 
 	/** 位置监听器 **/
@@ -468,8 +478,10 @@ public class Main extends Activity implements OnMapListener
 		 * GPS开启时触发
 		 */
 		public void onProviderEnabled(String provider) {
-			Location location = lm.getLastKnownLocation(provider);
-			updateView(location);
+			if (mMapState == MAP_STATE_NAVIGATION) {
+				Location location = lm.getLastKnownLocation(provider);
+				updateView(location);
+			}
 		}
 
 		/**
@@ -1099,9 +1111,8 @@ public class Main extends Activity implements OnMapListener
 					map.centerAt(take.getPoint(), true);
 				}
 				break;
-			case R.id.btn_location_ico: // 将地图中心移动到定位坐标点
-				createGPS();
-				//map.centerAt(mCurrentLocationPoint, true);
+			case R.id.btn_location: // 将地图中心移动到定位坐标点
+				onBtnNavigationClick();
 				break;
 			/*case R.id.btnAuthority:
 			Intent intentAuthority = new Intent(Main.this, Dialog_Authority.class);
@@ -1299,8 +1310,10 @@ public class Main extends Activity implements OnMapListener
 		@Override
 		public void handleMessage(Message msg)
 		{
-			Location location = (Location) msg.obj;
-			updateView(location);
+			if (mMapState == MAP_STATE_NAVIGATION) {
+				Location location = (Location) msg.obj;
+				updateView(location);
+			}
 		}
 	}
 
@@ -1331,6 +1344,7 @@ public class Main extends Activity implements OnMapListener
 			Log.v(TAG, "进行地图移动或者缩放操作");
 			// 退出实时导航模式
 			mMapState = MAP_STATE_NORMAL;
+			onMapStateChanged();
 		}
 		catch (Exception e)
 		{
@@ -1733,5 +1747,30 @@ public class Main extends Activity implements OnMapListener
 	private void onSearchClick() {
 		Intent intent = new Intent(Main.this, Search.class);
 		startActivityForResult(intent, requestCode);
+	}
+
+	private void onBtnNavigationClick() {
+		if (mMapState == MAP_STATE_NORMAL) {
+			mMapState = MAP_STATE_NAVIGATION;
+			onMapStateChanged();
+			createGPS();
+			//map.centerAt(mCurrentLocationPoint, true);
+		} else if (mMapState == MAP_STATE_NAVIGATION) {
+
+		}
+	}
+
+	/**  **/
+	private void onMapStateChanged() {
+		switch (mMapState) {
+			case MAP_STATE_NORMAL:
+				mBtnLocation.setDrawableIcon(getResources().getDrawable(R.drawable.ic_my_location_white_48dp));
+				break;
+			case MAP_STATE_NAVIGATION:
+				mBtnLocation.setDrawableIcon(getResources().getDrawable(R.drawable.ic_navigation_white_48dp));
+				break;
+			default:
+				// do nothing.
+		}
 	}
 }

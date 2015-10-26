@@ -38,4 +38,6 @@
 	
 	<color name="datagird_shadow_start">#80000000</color>
     <color name="datagird_shadow_end">#00000000</color>
+
+    <color name="app_design_background">#1E88E5</color>
 </resources>
