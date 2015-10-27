@@ -111,10 +111,9 @@ public class Main extends Activity implements OnMapListener
     SQLiteDatabase db = null;
 
 
-    /**
-     * arcgis 地图初始
-     */
+    /** 地图控件 **/
     MapView map = null;
+    /** 本地离线切片图层 **/
     ArcGISLocalTiledLayer mLocalTiledLayer;
 
     /** 第一次加载地图时需要全图显示 **/
@@ -129,22 +128,25 @@ public class Main extends Activity implements OnMapListener
 
     /** 是否开启了实时更新位置模式（只更新位置图标，不会移动屏幕位置） **/
     private boolean mIsUpdatePositionStarted;
+    /** 实时更新位置模式专用线程 **/
     private Thread mUpdatePositionThread;
+    /** 最近通过GPS定位获取的位置 **/
     private Location mLastLocationFromGps;
-
-
 
     /** 定位标志图层 **/
     GraphicsLayer mLocationGraphicsLayer;
+
+    // TODO 弄明白这些 GraphicsLayer 到底是啥
     GraphicsLayer newGraphicLayer,newgdlayer,newgllayer,newglly,newdlly;
-    // 方向传感器初始化
+    GraphicsLayer drawLayer;
+    GraphicsLayer daoLuLayer;
+
+    /** 方向传感器初始化 **/
     SensorManager sensorManager;
-    // 定位坐标初始
+    /** 定位坐标初始 **/
     LocationManager locationManager;
 
-    /**
-     * 控件初始
-     */
+    // 控件声明
     private ActionView mActionView;
     private ButtonIcon mBtnToc;
 
@@ -156,42 +158,43 @@ public class Main extends Activity implements OnMapListener
     private TextView mTvLongitude;
     private TextView mTvLatitude;
 
-    ProgressDialog mProgressDialog = null;
-    Point mCurrentLocationPoint;// 定位
-    // 定位点添加的graphicID
-    int id = 0;
-    // 定位点添加的graphic图片资源
-    Drawable image;
-    boolean isFirst = true;// 是否为第一次加载graphic
-    SensorListener sensorListener = new SensorListener();// 方向监听事件
-    LocalLocationListener localLocationListener = new LocalLocationListener(new LocalHandler());// 定位监听
-    PictureMarkerSymbol pictureMarkerSymbol;
-    SharedPreferences sharedPreferences;
-    GraphicsLayer drawLayer;
-    MapTouchListener touchListener;
-    GraphicsLayer daoLuLayer;
-    LinearLayout btnAuthority;
-    boolean is = false;
-    List<String> functions = new ArrayList<String>();
-    FeatureLayer featureLayer3;
-    // 初始化可以控制的图层
-    FeatureLayer danyuan, guangjigui, guanjing, Segment, guanli, guangji,guanglan,daolu,pda,pda1;
-    List<FeatureLayer> featureLayers = new ArrayList<FeatureLayer>();
-    PictureMarkerSymbol locationSymbol;
-    DBOpterate dbo = null;
     private DrawerLayout drawerLayout;
     private RelativeLayout leftLayout;
     private RelativeLayout rightLayout;
     private List<ContentModel> listLeftDrawer;
     private ContentAdapter adapter;
-
-    private LocationManager lm;
     private String GL_TYPE = "";
     // TOC 的子数据源
     private ArrayList<ArrayList<Layer>> childs = new ArrayList<ArrayList<Layer>>(); //USE IN MyExpandableListAdapter CLASS
     // TOC 的数据源
     private ArrayList<String> titles = new ArrayList<String>(); //USE IN MyExpandableListAdapter CLASS
 
+
+    ProgressDialog mProgressDialog = null;
+    Point mCurrentLocationPoint;// 定位
+    // 定位点添加的graphicID
+    int mLocationGraphicId = 0;
+    // 定位点添加的graphic图片资源
+    Drawable mLocationDrawable;
+    /** 是否为第一次将graphic显示到地图上 **/
+    boolean isFirst = true;
+
+    PictureMarkerSymbol pictureMarkerSymbol;
+
+    SensorListener sensorListener = new SensorListener();// 方向监听事件
+    LocalLocationListener localLocationListener = new LocalLocationListener(new LocalHandler());// 定位监听
+
+    SharedPreferences sharedPreferences;
+
+    MapTouchListener touchListener;
+
+    List<String> functions = new ArrayList<String>();
+
+    // 初始化可以控制的图层
+    FeatureLayer danyuan, guangjigui, guanjing, Segment, guanli, guangji,guanglan,daolu,pda,pda1;
+    List<FeatureLayer> featureLayers = new ArrayList<FeatureLayer>();
+    PictureMarkerSymbol locationSymbol;
+    DBOpterate dbo = null;
 
     @Override
     @SuppressLint("NewApi")
@@ -202,9 +205,7 @@ public class Main extends Activity implements OnMapListener
         setContentView(R.layout.main);
 
         onCreateView();
-        initLocation();
-        createDrawer();
-        createGPS();
+
         seeAll();
 
         super.onCreate(savedInstanceState);
@@ -234,13 +235,15 @@ public class Main extends Activity implements OnMapListener
         mBtnLocation = (ButtonFloat) findViewById(R.id.btn_location);
         mBtnLocation.setDrawableIcon(getResources().getDrawable(R.drawable.ic_my_location_white_48dp));
 
+        createDrawer();
+
         sensorManager = (SensorManager) this.getSystemService(Context.SENSOR_SERVICE);
         locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
         // 讲解密后的文件写入sd卡
         // writeFiles();
         mLocalTiledLayer = new ArcGISLocalTiledLayer("file:///" + "sdcard/layers");
-        //		mLocalTiledLayer = new ArcGISLocalTiledLayer("file:///mnt/sdcard/Layers");
-        //		mLocalTiledLayer = new ArcGISLocalTiledLayer(Environment.getExternalStorageDirectory().getAbsolutePath()+"/layers");
+        //mLocalTiledLayer = new ArcGISLocalTiledLayer("file:///mnt/sdcard/Layers");
+        //mLocalTiledLayer = new ArcGISLocalTiledLayer(Environment.getExternalStorageDirectory().getAbsolutePath()+"/layers");
         mLocationGraphicsLayer = new GraphicsLayer();
         mLocationGraphicsLayer.setName("定位图层");
         newGraphicLayer = new GraphicsLayer();
@@ -261,16 +264,13 @@ public class Main extends Activity implements OnMapListener
         // 添加底图
         map.setMapBackground(0xffffff, 0xffffff, 0, 0);
         double lms = mLocalTiledLayer.getMinScale();
-        //		mLocalTiledLayer.setMinScale(0);
+        //mLocalTiledLayer.setMinScale(0);
         map.addLayer(mLocalTiledLayer);
-        //		mLocalTiledLayer.getExtent().queryEnvelope(extend_el);
+        //mLocalTiledLayer.getExtent().queryEnvelope(extend_el);
 
         // 添加绘画图层
         map.addLayer(daoLuLayer);
 
-        //map.setallow
-
-        // mTvScale.setText(mMapTouchListenerMapTouchListenerMapTouchListenerMapTouchListenerMapTouchListenerMapTouchListenerMapTouchListenerap.getScale() + "");
         touchListener = new MapTouchListener(Main.this, map);
         touchListener.setLayer(drawLayer);
         touchListener.setNewEleLayer(newGraphicLayer);
@@ -300,14 +300,13 @@ public class Main extends Activity implements OnMapListener
                 map.getLayer(i).setMaxScale(0);
             }
         }
-        //		zuobiao.setText(zuobiao_str);
-        super.onCreateView();
 
+        mLocationDrawable = this.getResources().getDrawable(R.drawable.icon_track_map_bar);
+
+        super.onCreateView();
     }
 
-    /**
-     * 添加抽屉
-     */
+    /** 为DrawerLayout添加抽屉 **/
     public void createDrawer(){
 
         drawerLayout = (DrawerLayout) findViewById(R.id.drawerlayout);
@@ -348,7 +347,6 @@ public class Main extends Activity implements OnMapListener
             @Override
             public void onItemClick(AdapterView<?> arg0, View arg1, int index,
                                     long arg3) {
-                // TODO 自动生成的方法存根
                 switch (index) {
                     case 0:
                         if (functions.contains("001001")) {
@@ -420,21 +418,21 @@ public class Main extends Activity implements OnMapListener
      * 进行GPS定位
      */
     public void createGPS(){
-        lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-        if(!lm.isProviderEnabled(LocationManager.GPS_PROVIDER)){
+        locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        if(!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)){
             Intent intent = new Intent(Main.this, Dialog.class);
             startActivity(intent);
             return;
         }
 
-        String bestProvider = lm.getBestProvider(getCriteria(), true);
+        String bestProvider = locationManager.getBestProvider(getCriteria(), true);
         //获取位置信息
         //如果不设置查询要求，getLastKnownLocation方法传人的参数为LocationManager.GPS_PROVIDER
-        Location location = lm.getLastKnownLocation(bestProvider);
+        Location location = locationManager.getLastKnownLocation(bestProvider);
         if (location != null) {
             updateLocation(location, true);
             //监听状态
-            lm.addGpsStatusListener(mGpsStatusListener);
+            locationManager.addGpsStatusListener(mGpsStatusListener);
 
             // 绑定监听，有4个参数
             // 参数1，设备：有GPS_PROVIDER和NETWORK_PROVIDER两种
@@ -444,7 +442,7 @@ public class Main extends Activity implements OnMapListener
             // 备注：参数2和3，如果参数3不为0，则以参数3为准；参数3为0，则通过时间来定时更新；两者为0，则随时刷新
             // 1秒更新一次，或最小位移变化超过1米更新一次；
             // 注意：此处更新准确度非常低，推荐在service里面启动一个Thread，在run中sleep(10000);然后执行handler.sendMessage(),更新位置
-            lm.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 1, locationListener);
+            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 1, locationListener);
         } else {
             mMapState = MAP_STATE_NORMAL;
             onMapStateChanged();
@@ -494,7 +492,7 @@ public class Main extends Activity implements OnMapListener
          */
         public void onProviderEnabled(String provider) {
             if (mMapState == MAP_STATE_NAVIGATION) {
-                Location location = lm.getLastKnownLocation(provider);
+                Location location = locationManager.getLastKnownLocation(provider);
                 updateLocation(location, true);
             }
         }
@@ -521,7 +519,7 @@ public class Main extends Activity implements OnMapListener
                 case GpsStatus.GPS_EVENT_SATELLITE_STATUS:
                     Log.i(TAG, "卫星状态改变");
                     //获取当前状态
-                    GpsStatus gpsStatus = lm.getGpsStatus(null);
+                    GpsStatus gpsStatus = locationManager.getGpsStatus(null);
                     //获取卫星颗数的默认最大值
                     int maxSatellites = gpsStatus.getMaxSatellites();
                     //创建一个迭代器保存所有卫星
@@ -967,7 +965,6 @@ public class Main extends Activity implements OnMapListener
         try {
             tempGeodatabase = new Geodatabase(path);
         } catch (FileNotFoundException e1) {
-            // TODO 自动生成的 catch 块
             e1.printStackTrace();
         }
         List<GeodatabaseFeatureTable> tempTables = tempGeodatabase.getGeodatabaseTables();
@@ -1010,7 +1007,6 @@ public class Main extends Activity implements OnMapListener
 					//				ob = tempLayer.getFeatureTable().getFeature(x).getAttributeValue("站点名称");
 					//				Log.i("zdmc", String.valueOf(ob));
 				} catch (TableException e) {
-					// TODO 自动生成的 catch 块
 					e.printStackTrace();
 				}
 			}*/
@@ -1037,20 +1033,6 @@ public class Main extends Activity implements OnMapListener
         }
     }
 
-    private void initLocation()
-    {
-        /**
-         * 添加gps监听
-         */
-        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, localLocationListener);
-        Location lastKnownLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-        if (lastKnownLocation == null)
-        {
-
-        }
-
-    }
-
     /**
      *
      * 功 能： 在地图上一个点创建图层并附带属性，并获取该图层
@@ -1062,8 +1044,8 @@ public class Main extends Activity implements OnMapListener
     private Graphic getGraphic(Point point, Map<String, Object> map)
     {
         GraphicsLayer layer = getGraphicsLayer();
-        image = this.getResources().getDrawable(R.drawable.icon_track_map_bar);
-        PictureMarkerSymbol symbol = new PictureMarkerSymbol(image);
+        mLocationDrawable = this.getResources().getDrawable(R.drawable.icon_track_map_bar);
+        PictureMarkerSymbol symbol = new PictureMarkerSymbol(mLocationDrawable);
         Graphic graphic = new Graphic(point, symbol, map);
         return graphic;
     }
@@ -1269,7 +1251,7 @@ public class Main extends Activity implements OnMapListener
                 // float degree = (Float)msg.obj;
                 MarkerSymbol setAngle = pictureMarkerSymbol.setAngle(degree);
                 Graphic graphic = new Graphic(mCurrentLocationPoint, pictureMarkerSymbol);
-                mLocationGraphicsLayer.updateGraphic(id, graphic);
+                mLocationGraphicsLayer.updateGraphic(mLocationGraphicId, graphic);
             }
         };
     };
@@ -1453,12 +1435,12 @@ public class Main extends Activity implements OnMapListener
     /**
      * 说 明：加载上次退出时的地图范围
      */
-    private void loadLastExtent(){
+    private void loadLastExtent() {
         db = new SQLiteDatabase(Main.this);
         DataCollection params = new DataCollection();
         params.add(new Data("roleid", FunctionHelper.USER_ROLE.get("userno").Value.toString()));
         DataTable result = db.executeTable("aqBS_ListExtent", params);
-        for(int i=0;i<result.size();i++){
+        for(int i=0;i<result.size();i++) {
             DataCollection dc = result.next();
             String xmi = dc.get("min_x").Value.toString();
             String ymi = dc.get("min_y").Value.toString();
@@ -1467,18 +1449,17 @@ public class Main extends Activity implements OnMapListener
             xmax = Double.valueOf(xma); ymax = Double.valueOf(yma);
             xmin = Double.valueOf(xmi); ymin = Double.valueOf(ymi);
         }
-        if(result.size()>0){
+        if (result.size()>0) {
             Envelope en = new Envelope();
             en.setXMax(xmax);en.setYMax(ymax);en.setXMin(xmin);en.setYMin(ymin);
             map.setExtent(en);
-        }else
+        } else {
             seeAll();
-
+        }
     }
-    /**
-     * 说 明：显示地图全图
-     */
-    private void seeAll(){
+
+    /** 显示地图全图 **/
+    private void seeAll() {
         map.setScale(175590);
         Point point = new Point();
         point.setX(236038.1424072377);
@@ -1504,8 +1485,7 @@ public class Main extends Activity implements OnMapListener
         return table;
     }
 
-    private void markLocation(Location location)
-    {
+    private void markLocation(Location location) {
         drawLayer.removeAll();
         double locx = location.getLongitude();
         double locy = location.getLatitude();
@@ -1522,7 +1502,8 @@ public class Main extends Activity implements OnMapListener
         map.centerAt(wgspoint, true);
         map.setScale(1200.0000);
     }
-    public void loadMyDraw(){
+
+    public void loadMyDraw() {
         PictureMarkerSymbol pms = null;
         Drawable img = null;
         db = new SQLiteDatabase(this);
@@ -1560,7 +1541,8 @@ public class Main extends Activity implements OnMapListener
         loadGLLY();
         loadDLLY();
     }
-    public void loadSegment(){
+
+    public void loadSegment() {
         Graphic tempGraphic ;
         db = new SQLiteDatabase(this);
         DataCollection params = new DataCollection();
@@ -1590,7 +1572,8 @@ public class Main extends Activity implements OnMapListener
             newgdlayer.addGraphic(tempGraphic);
         }
     }
-    public void loadGL(){
+
+    public void loadGL() {
         Graphic tempGraphic ;
         db = new SQLiteDatabase(this);
         DataCollection params = new DataCollection();
@@ -1615,7 +1598,8 @@ public class Main extends Activity implements OnMapListener
             newgllayer.addGraphic(tempGraphic);
         }
     }
-    public void loadGLLY(){
+
+    public void loadGLLY() {
         Graphic tempGraphic ;
         db = new SQLiteDatabase(this);
         DataCollection params = new DataCollection();
@@ -1643,7 +1627,8 @@ public class Main extends Activity implements OnMapListener
             newglly.addGraphic(tempGraphic);
         }
     }
-    public void loadDLLY(){
+
+    public void loadDLLY() {
         Graphic tempGraphic ;
         db = new SQLiteDatabase(this);
         DataCollection params = new DataCollection();
@@ -1672,11 +1657,8 @@ public class Main extends Activity implements OnMapListener
         }
     }
 
-    /**
-     * 按下图层按钮
-     */
-    private void
-    onBtnTocClick() {
+    /** 按下动作条的图层按钮 **/
+    private void onBtnTocClick() {
         if (drawerLayout.isDrawerOpen(rightLayout)) {
             mBtnToc.setDrawableIcon(getResources().getDrawable(R.drawable.ic_layers_white_48dp));
             drawerLayout.closeDrawer(rightLayout);
@@ -1686,9 +1668,7 @@ public class Main extends Activity implements OnMapListener
         }
     }
 
-    /**
-     * 按下菜单按钮
-     */
+    /** 按下动作条的菜单按钮 **/
     private void onActionViewClick() {
         if (drawerLayout.isDrawerOpen(leftLayout)) {
             mActionView.setAction(new DrawerAction(), ActionView.ROTATE_CLOCKWISE);
@@ -1699,11 +1679,13 @@ public class Main extends Activity implements OnMapListener
         }
     }
 
+    /** 按下动作条的搜索栏 **/
     private void onSearchClick() {
         Intent intent = new Intent(Main.this, Search.class);
         startActivityForResult(intent, requestCode);
     }
 
+    /** 按下定位按钮 **/
     private void onBtnNavigationClick() {
         if (mMapState == MAP_STATE_NORMAL) {
             mMapState = MAP_STATE_NAVIGATION;
@@ -1887,20 +1869,18 @@ public class Main extends Activity implements OnMapListener
                     map.centerAt(mCurrentLocationPoint, true);
                     map.setScale(1200.0000);
                 }
-                image = this.getResources().getDrawable(R.drawable.icon_track_map_bar);
-                pictureMarkerSymbol = new PictureMarkerSymbol(image);
+                pictureMarkerSymbol = new PictureMarkerSymbol(mLocationDrawable);
                 Graphic graphic = new Graphic(mCurrentLocationPoint, pictureMarkerSymbol);
-                id = mLocationGraphicsLayer.addGraphic(graphic);
+                mLocationGraphicId = mLocationGraphicsLayer.addGraphic(graphic);
                 isFirst = false;
             } else {
                 if (isMapMoved) {
                     map.centerAt(mCurrentLocationPoint, true);
                     map.setScale(1200.0000);
                 }
-                image = this.getResources().getDrawable(R.drawable.icon_track_map_bar);
-                pictureMarkerSymbol = new PictureMarkerSymbol(image);
+                pictureMarkerSymbol = new PictureMarkerSymbol(mLocationDrawable);
                 Graphic graphic = new Graphic(mCurrentLocationPoint, pictureMarkerSymbol);
-                mLocationGraphicsLayer.updateGraphic(id, graphic);
+                mLocationGraphicsLayer.updateGraphic(mLocationGraphicId, graphic);
             }
             forceUpdateScale(1200);
             forceUpdateCoordinate(mCurrentLocationPoint.getX(), mCurrentLocationPoint.getY());
