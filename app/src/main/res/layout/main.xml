@@ -166,7 +166,7 @@
                         android:layout_width="fill_parent"
                         android:layout_height="2dp"
                         android:layout_marginTop="144dp"
-                        android:background="@color/app_design_shadow_dark" />
+                        android:background="@color/app_design_shadow" />
                     <!-- 左 -->
                     <View
                         android:layout_width="2dp"

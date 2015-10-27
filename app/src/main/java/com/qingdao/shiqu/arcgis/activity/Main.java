@@ -56,7 +56,6 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ExpandableListView;
-import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -85,7 +84,6 @@ import com.qingdao.shiqu.arcgis.adapter.MyExpandableListAdapter;
 import com.qingdao.shiqu.arcgis.dialog.Dialog;
 import com.qingdao.shiqu.arcgis.helper.FunctionHelper;
 import com.qingdao.shiqu.arcgis.layer.LayerOpter;
-import com.qingdao.shiqu.arcgis.listener.LocalLocationListener;
 import com.qingdao.shiqu.arcgis.listener.MapTouchListener;
 import com.qingdao.shiqu.arcgis.listener.MapTouchListener.OnMapListener;
 import com.qingdao.shiqu.arcgis.mode.ContentModel;
@@ -182,7 +180,6 @@ public class Main extends Activity implements OnMapListener
     PictureMarkerSymbol pictureMarkerSymbol;
 
     SensorListener sensorListener = new SensorListener();// 方向监听事件
-    LocalLocationListener localLocationListener = new LocalLocationListener(new LocalHandler());// 定位监听
 
     SharedPreferences sharedPreferences;
 
@@ -207,6 +204,8 @@ public class Main extends Activity implements OnMapListener
         onCreateView();
 
         seeAll();
+
+        startUpdatePositionMode();
 
         super.onCreate(savedInstanceState);
     }
@@ -414,156 +413,6 @@ public class Main extends Activity implements OnMapListener
         elv.setAdapter(mela);
     }
 
-    /**
-     * 进行GPS定位
-     */
-    public void createGPS(){
-        locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-        if(!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)){
-            Intent intent = new Intent(Main.this, Dialog.class);
-            startActivity(intent);
-            return;
-        }
-
-        String bestProvider = locationManager.getBestProvider(getCriteria(), true);
-        //获取位置信息
-        //如果不设置查询要求，getLastKnownLocation方法传人的参数为LocationManager.GPS_PROVIDER
-        Location location = locationManager.getLastKnownLocation(bestProvider);
-        if (location != null) {
-            updateLocation(location, true);
-            //监听状态
-            locationManager.addGpsStatusListener(mGpsStatusListener);
-
-            // 绑定监听，有4个参数
-            // 参数1，设备：有GPS_PROVIDER和NETWORK_PROVIDER两种
-            // 参数2，位置信息更新周期，单位毫秒
-            // 参数3，位置变化最小距离：当位置距离变化超过此值时，将更新位置信息
-            // 参数4，监听器
-            // 备注：参数2和3，如果参数3不为0，则以参数3为准；参数3为0，则通过时间来定时更新；两者为0，则随时刷新
-            // 1秒更新一次，或最小位移变化超过1米更新一次；
-            // 注意：此处更新准确度非常低，推荐在service里面启动一个Thread，在run中sleep(10000);然后执行handler.sendMessage(),更新位置
-            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 1, locationListener);
-        } else {
-            mMapState = MAP_STATE_NORMAL;
-            onMapStateChanged();
-            Toast.makeText(Main.this, "定位失败", Toast.LENGTH_SHORT).show();
-        }
-
-    }
-
-    /** 位置监听器 **/
-    private LocationListener locationListener = new LocationListener() {
-
-        /**
-         * 位置信息变化时触发
-         */
-        public void onLocationChanged(Location location) {
-            if (mMapState == MAP_STATE_NAVIGATION) {
-                updateLocation(location, true);
-            }
-            Log.i(TAG, "时间："+location.getTime());
-            Log.i(TAG, "经度："+location.getLongitude());
-            Log.i(TAG, "纬度："+location.getLatitude());
-            Log.i(TAG, "海拔："+location.getAltitude());
-        }
-
-        /**
-         * GPS状态变化时触发
-         */
-        public void onStatusChanged(String provider, int status, Bundle extras) {
-            switch (status) {
-                //GPS状态为可见时
-                case LocationProvider.AVAILABLE:
-                    Log.i(TAG, "当前GPS状态为可见状态");
-                    break;
-                //GPS状态为服务区外时
-                case LocationProvider.OUT_OF_SERVICE:
-                    Log.i(TAG, "当前GPS状态为服务区外状态");
-                    break;
-                //GPS状态为暂停服务时
-                case LocationProvider.TEMPORARILY_UNAVAILABLE:
-                    Log.i(TAG, "当前GPS状态为暂停服务状态");
-                    break;
-            }
-        }
-
-        /**
-         * GPS开启时触发
-         */
-        public void onProviderEnabled(String provider) {
-            if (mMapState == MAP_STATE_NAVIGATION) {
-                Location location = locationManager.getLastKnownLocation(provider);
-                updateLocation(location, true);
-            }
-        }
-
-        /**
-         * GPS禁用时触发
-         */
-        public void onProviderDisabled(String provider) {
-            updateLocation(null, true);
-        }
-
-
-    };
-
-    //状态监听
-    GpsStatus.Listener mGpsStatusListener = new GpsStatus.Listener() {
-        public void onGpsStatusChanged(int event) {
-            switch (event) {
-                //第一次定位
-                case GpsStatus.GPS_EVENT_FIRST_FIX:
-                    Log.i(TAG, "第一次定位");
-                    break;
-                //卫星状态改变
-                case GpsStatus.GPS_EVENT_SATELLITE_STATUS:
-                    Log.i(TAG, "卫星状态改变");
-                    //获取当前状态
-                    GpsStatus gpsStatus = locationManager.getGpsStatus(null);
-                    //获取卫星颗数的默认最大值
-                    int maxSatellites = gpsStatus.getMaxSatellites();
-                    //创建一个迭代器保存所有卫星
-                    Iterator<GpsSatellite> iters = gpsStatus.getSatellites().iterator();
-                    int count = 0;
-                    while (iters.hasNext() && count <= maxSatellites) {
-                        GpsSatellite s = iters.next();
-                        count++;
-                    }
-                    System.out.println("搜索到："+count+"颗卫星");
-                    break;
-                //定位启动
-                case GpsStatus.GPS_EVENT_STARTED:
-                    Log.i(TAG, "定位启动");
-                    break;
-                //定位结束
-                case GpsStatus.GPS_EVENT_STOPPED:
-                    Log.i(TAG, "定位结束");
-                    break;
-            }
-        };
-    };
-
-    /**
-     * 返回查询条件
-     * @return
-     */
-    private Criteria getCriteria(){
-        Criteria criteria = new Criteria();
-        //设置定位精确度 Criteria.ACCURACY_COARSE比较粗略，Criteria.ACCURACY_FINE则比较精细
-        criteria.setAccuracy(Criteria.ACCURACY_FINE);
-        //设置是否要求速度
-        criteria.setSpeedRequired(false);
-        // 设置是否允许运营商收费
-        criteria.setCostAllowed(false);
-        //设置是否需要方位信息
-        criteria.setBearingRequired(false);
-        //设置是否需要海拔信息
-        criteria.setAltitudeRequired(false);
-        // 设置对电源的需求
-        criteria.setPowerRequirement(Criteria.POWER_LOW);
-        return criteria;
-    }
-
     @Override
     public void onWindowFocusChanged(boolean hasFocus) {
         super.onWindowFocusChanged(hasFocus);
@@ -585,7 +434,7 @@ public class Main extends Activity implements OnMapListener
         super.onResume();
 
         // 实时更新位置
-        mIsUpdatePositionStarted = true;
+        startUpdatePositionMode();
         
         functions = Activity.getFunction();
         featureLayers = new ArrayList<FeatureLayer>();
@@ -705,7 +554,7 @@ public class Main extends Activity implements OnMapListener
     protected void onPause() {
         super.onPause();
 
-        mIsUpdatePositionStarted = false;
+        stopUpdatePositionMode();
     }
 
     /**
@@ -1603,7 +1452,7 @@ public class Main extends Activity implements OnMapListener
         Graphic tempGraphic ;
         db = new SQLiteDatabase(this);
         DataCollection params = new DataCollection();
-        params.add(new Data("uname",FunctionHelper.userName));
+        params.add(new Data("uname", FunctionHelper.userName));
         DataTable rst = db.executeTable("spBS_LocalGLLYQueryByUName", params);
         for(int i=0;i<rst.size();i++){
             Polyline pl = new Polyline();
@@ -1688,9 +1537,9 @@ public class Main extends Activity implements OnMapListener
     /** 按下定位按钮 **/
     private void onBtnNavigationClick() {
         if (mMapState == MAP_STATE_NORMAL) {
+            updateLocation(mLastLocationFromGps, true);
             mMapState = MAP_STATE_NAVIGATION;
             onMapStateChanged();
-            createGPS();
         } else if (mMapState == MAP_STATE_NAVIGATION) {
             mMapState = MAP_STATE_NORMAL;
             onMapStateChanged();
@@ -1711,29 +1560,6 @@ public class Main extends Activity implements OnMapListener
         }
     }
 
-    /**
-     * 通过GPS获取当前位置
-     * @return 当前位置
-     */
-    @Nullable
-    private Location getLocationFromGps() {
-        LocationManager locationManager = getLocationManager();
-        if(!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)){
-            Intent intent = new Intent(Main.this, Dialog.class);
-            startActivity(intent);
-            return null;
-        }
-
-        String bestProvider = locationManager.getBestProvider(getCriteria(), true);
-        mLastLocationFromGps = locationManager.getLastKnownLocation(bestProvider);
-        return mLastLocationFromGps;
-    }
-
-    /** 获取LocationManager实例 **/
-    private LocationManager getLocationManager() {
-        return (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-    }
-
     /** 开启导航（实时跟踪位置）模式 **/
     private void startNavigationMode() {
 
@@ -1743,53 +1569,6 @@ public class Main extends Activity implements OnMapListener
     private void stopNavigationMode() {
 
     }
-
-    /** 开启实时更新位置模式（只更新位置图标，不会移动屏幕位置） **/
-    private void startUpdatePositionMode() {
-        if (mUpdatePositionThread == null) {
-            mUpdatePositionThread = new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    updatePositionHandler.sendEmptyMessage(0);
-                    while (mIsUpdatePositionStarted) {
-                        try {
-                            Thread.sleep(1000);
-                        } catch (InterruptedException e) {
-                            Log.e(TAG, "mUpdatePositionThread sleep exception:" + e.getMessage());
-                        }
-
-                        updatePositionHandler.sendEmptyMessage(1);
-                    }
-                    updatePositionHandler.sendEmptyMessage(-1);
-                }
-            });
-            mUpdatePositionThread.start();
-        }
-    }
-
-    private Handler updatePositionHandler = new Handler() {
-        @Override
-        public void handleMessage(Message msg) {
-            switch (msg.what) {
-                case 0:
-                    break;
-                case 1:
-                    Location currentLocation = getLocationFromGps();
-                    if (currentLocation != null) {
-                        boolean isMapMoved = mMapState == MAP_STATE_NAVIGATION ? true : false;
-                        updateLocation(currentLocation, isMapMoved);
-                    }
-                    break;
-                case -1:
-                    mUpdatePositionThread.interrupt();
-                    mUpdatePositionThread = null;
-                    break;
-                default:
-                    break;
-            }
-            super.handleMessage(msg);
-        }
-    };
 
     /** 更新Activity的UI **/
     private void updateUi() {
@@ -1823,7 +1602,13 @@ public class Main extends Activity implements OnMapListener
     private void updateLongitude() {
         if (mLastLocationFromGps != null) {
             double longitude = mLastLocationFromGps.getLongitude();
-            mTvLongitude.setText("经度：" + longitude);
+            String longitudeStr = String.valueOf(longitude).substring(0, 7);
+            if (longitude > 0) {
+                longitudeStr += "°E";
+            } else {
+                longitudeStr += "°W";
+            }
+            mTvLongitude.setText("经度：" + longitudeStr);
         }
 
     }
@@ -1832,7 +1617,13 @@ public class Main extends Activity implements OnMapListener
     private void updateLatitude() {
         if (mLastLocationFromGps != null) {
             double latitude = mLastLocationFromGps.getLatitude();
-            mTvLatitude.setText("纬度：" + latitude);
+            String latitudeStr = String.valueOf(latitude).substring(0, 7);
+            if (latitude > 0) {
+                latitudeStr += "°N";
+            } else {
+                latitudeStr += "°S";
+            }
+            mTvLatitude.setText("纬度：" + latitudeStr);
         }
     }
 
@@ -1855,7 +1646,6 @@ public class Main extends Activity implements OnMapListener
      * @param isMapMoved 如果为true，则移动地图，以当前位置为中心；如果为false，则只更新显示当前位置
      */
     private void updateLocation(Location location, boolean isMapMoved) {
-
         if (location != null)
         {
             mCurrentLocationPoint = new Point(location.getLongitude(), location.getLatitude());
@@ -1886,10 +1676,154 @@ public class Main extends Activity implements OnMapListener
             forceUpdateCoordinate(mCurrentLocationPoint.getX(), mCurrentLocationPoint.getY());
             updateUi();
         }
-        else
-        {
+    }
+
+    /** 实时更新位置模式 **/
+    private void stopUpdatePositionMode() {
+        mIsUpdatePositionStarted = false;
+        locationManager.removeGpsStatusListener(mGpsStatusListener);
+        locationManager.removeUpdates(mLocationListener);
+    }
+
+    /** 开启实时更新位置模式（只更新位置图标，不会移动屏幕位置） **/
+    private void startUpdatePositionMode() {
+        locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        if(!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)){
+            Intent intent = new Intent(Main.this, Dialog.class);
+            startActivity(intent);
+            return;
+        }
+
+        String bestProvider = locationManager.getBestProvider(getCriteria(), true);
+        //获取位置信息
+        //如果不设置查询要求，getLastKnownLocation方法传人的参数为LocationManager.GPS_PROVIDER
+        Location location = locationManager.getLastKnownLocation(bestProvider);
+        if (location != null) {
+            mLastLocationFromGps = location;
+            updateLocation(location, true);
+            //监听状态
+            locationManager.addGpsStatusListener(mGpsStatusListener);
+
+            // 绑定监听，有4个参数
+            // 参数1，设备：有GPS_PROVIDER和NETWORK_PROVIDER两种
+            // 参数2，位置信息更新周期，单位毫秒
+            // 参数3，位置变化最小距离：当位置距离变化超过此值时，将更新位置信息，单位为米
+            // 参数4，监听器
+            // 备注：参数2和3，如果参数3不为0，则以参数3为准；参数3为0，则通过时间来定时更新；两者为0，则随时刷新
+            // 1秒更新一次，或最小位移变化超过1米更新一次；
+            // 注意：此处更新准确度非常低，推荐在service里面启动一个Thread，在run中sleep(10000);然后执行handler.sendMessage(),更新位置
+            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 0, mLocationListener);
+        } else {
+            mMapState = MAP_STATE_NORMAL;
+            onMapStateChanged();
             Toast.makeText(Main.this, "定位失败", Toast.LENGTH_SHORT).show();
         }
+    }
+
+    /** 位置变化监听器 **/
+    private LocationListener mLocationListener = new LocationListener() {
+
+        /** 位置信息变化时触发 **/
+        public void onLocationChanged(Location location) {
+            mLastLocationFromGps = location;
+            updateUi();
+            boolean isMapMoved;
+            isMapMoved = mMapState == MAP_STATE_NAVIGATION ? true : false;
+            updateLocation(location, isMapMoved);
+
+            Log.v(TAG, "时间：" + location.getTime());
+            Log.v(TAG, "经度：" + location.getLongitude());
+            Log.v(TAG, "纬度：" + location.getLatitude());
+            Log.v(TAG, "海拔：" + location.getAltitude());
+            Log.v(TAG, "精度：" + location.getAccuracy());
+            Log.v(TAG, "速度" + location.getSpeed());
+
+        }
+
+        /** GPS状态变化时触发 **/
+        public void onStatusChanged(String provider, int status, Bundle extras) {
+            switch (status) {
+                //GPS状态为可见时
+                case LocationProvider.AVAILABLE:
+                    Log.i(TAG, "当前GPS状态为可见状态");
+                    break;
+                //GPS状态为服务区外时
+                case LocationProvider.OUT_OF_SERVICE:
+                    Log.i(TAG, "当前GPS状态为服务区外状态");
+                    break;
+                //GPS状态为暂停服务时
+                case LocationProvider.TEMPORARILY_UNAVAILABLE:
+                    Log.i(TAG, "当前GPS状态为暂停服务状态");
+                    break;
+            }
+        }
+
+        /** GPS开启时触发 **/
+        public void onProviderEnabled(String provider) {
+            // TODO 判断GPS开启时是否需要做些事
+        }
+
+        /** GPS禁用时触发 **/
+        public void onProviderDisabled(String provider) {
+            // TODO 判断GPS禁用时是否需要做些事
+        }
+    };
+
+    /** GPS状态变化监听器 **/
+    GpsStatus.Listener mGpsStatusListener = new GpsStatus.Listener() {
+        public void onGpsStatusChanged(int event) {
+            switch (event) {
+                // 第一次定位成功
+                case GpsStatus.GPS_EVENT_FIRST_FIX:
+                    Log.i(TAG, "第一次定位");
+                    break;
+                // 卫星状态改变
+                case GpsStatus.GPS_EVENT_SATELLITE_STATUS:
+                    Log.v(TAG, "卫星状态改变");
+                    //获取当前状态
+                    GpsStatus gpsStatus = locationManager.getGpsStatus(null);
+                    //获取卫星颗数的默认最大值
+                    int maxSatellites = gpsStatus.getMaxSatellites();
+                    //创建一个迭代器保存所有卫星
+                    Iterator<GpsSatellite> iters = gpsStatus.getSatellites().iterator();
+                    int count = 0;
+                    while (iters.hasNext() && count <= maxSatellites) {
+                        GpsSatellite s = iters.next();
+                        count++;
+                    }
+                    Log.v(TAG, "搜索到：" + count + "颗卫星");
+                    break;
+                // 启动定位
+                case GpsStatus.GPS_EVENT_STARTED:
+                    Log.v(TAG, "启动定位");
+                    break;
+                // 中止定位
+                case GpsStatus.GPS_EVENT_STOPPED:
+                    Log.v(TAG, "中止定位");
+                    break;
+            }
+        }
+    };
+
+    /**
+     * 返回查询条件
+     * @return
+     */
+    private Criteria getCriteria(){
+        Criteria criteria = new Criteria();
+        //设置定位精确度 Criteria.ACCURACY_COARSE比较粗略，Criteria.ACCURACY_FINE则比较精细
+        criteria.setAccuracy(Criteria.ACCURACY_FINE);
+        //设置是否要求速度
+        criteria.setSpeedRequired(false);
+        // 设置是否允许运营商收费
+        criteria.setCostAllowed(false);
+        //设置是否需要方位信息
+        criteria.setBearingRequired(false);
+        //设置是否需要海拔信息
+        criteria.setAltitudeRequired(false);
+        // 设置对电源的需求
+        criteria.setPowerRequirement(Criteria.POWER_LOW);
+        return criteria;
     }
 
 }
