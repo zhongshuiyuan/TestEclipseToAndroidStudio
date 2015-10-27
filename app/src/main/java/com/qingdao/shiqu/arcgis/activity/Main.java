@@ -127,6 +127,13 @@ public class Main extends Activity implements OnMapListener
     /** 实时定位模式 **/
     private final int MAP_STATE_NAVIGATION = 1;
 
+    /** 是否开启了实时更新位置模式（只更新位置图标，不会移动屏幕位置） **/
+    private boolean mIsUpdatePositionStarted;
+    private Thread mUpdatePositionThread;
+    private Location mLastLocationFromGps;
+
+
+
     /** 定位标志图层 **/
     GraphicsLayer mLocationGraphicsLayer;
     GraphicsLayer newGraphicLayer,newgdlayer,newgllayer,newglly,newdlly;
@@ -180,7 +187,9 @@ public class Main extends Activity implements OnMapListener
 
     private LocationManager lm;
     private String GL_TYPE = "";
+    // TOC 的子数据源
     private ArrayList<ArrayList<Layer>> childs = new ArrayList<ArrayList<Layer>>(); //USE IN MyExpandableListAdapter CLASS
+    // TOC 的数据源
     private ArrayList<String> titles = new ArrayList<String>(); //USE IN MyExpandableListAdapter CLASS
 
 
@@ -193,10 +202,7 @@ public class Main extends Activity implements OnMapListener
         setContentView(R.layout.main);
 
         onCreateView();
-        //		openGPSSetting();
         initLocation();
-        //		loadDrawList();
-        //		timer.schedule(task, 10000);
         createDrawer();
         createGPS();
         seeAll();
@@ -260,7 +266,6 @@ public class Main extends Activity implements OnMapListener
         //		mLocalTiledLayer.getExtent().queryEnvelope(extend_el);
 
         // 添加绘画图层
-        map.addLayer(mLocationGraphicsLayer); // 定位图层
         map.addLayer(daoLuLayer);
 
         //map.setallow
@@ -284,6 +289,7 @@ public class Main extends Activity implements OnMapListener
         map.addLayer(newgllayer);
         map.addLayer(newglly);
         map.addLayer(newdlly);
+        map.addLayer(mLocationGraphicsLayer); // 定位图层
 
         for(int i=0;i<map.getLayers().length;i++){
             if(map.getLayer(i).getName().equals("新加管道图层") || map.getLayer(i).getName().equals("新加节点图层")
@@ -426,7 +432,7 @@ public class Main extends Activity implements OnMapListener
         //如果不设置查询要求，getLastKnownLocation方法传人的参数为LocationManager.GPS_PROVIDER
         Location location = lm.getLastKnownLocation(bestProvider);
         if (location != null) {
-            updateView(location);
+            updateLocation(location, true);
             //监听状态
             lm.addGpsStatusListener(mGpsStatusListener);
 
@@ -455,7 +461,7 @@ public class Main extends Activity implements OnMapListener
          */
         public void onLocationChanged(Location location) {
             if (mMapState == MAP_STATE_NAVIGATION) {
-                updateView(location);
+                updateLocation(location, true);
             }
             Log.i(TAG, "时间："+location.getTime());
             Log.i(TAG, "经度："+location.getLongitude());
@@ -489,7 +495,7 @@ public class Main extends Activity implements OnMapListener
         public void onProviderEnabled(String provider) {
             if (mMapState == MAP_STATE_NAVIGATION) {
                 Location location = lm.getLastKnownLocation(provider);
-                updateView(location);
+                updateLocation(location, true);
             }
         }
 
@@ -497,7 +503,7 @@ public class Main extends Activity implements OnMapListener
          * GPS禁用时触发
          */
         public void onProviderDisabled(String provider) {
-            updateView(null);
+            updateLocation(null, true);
         }
 
 
@@ -579,6 +585,10 @@ public class Main extends Activity implements OnMapListener
     protected void onResume()
     {
         super.onResume();
+
+        // 实时更新位置
+        mIsUpdatePositionStarted = true;
+        
         functions = Activity.getFunction();
         featureLayers = new ArrayList<FeatureLayer>();
         // 是否显示管道图层
@@ -691,6 +701,13 @@ public class Main extends Activity implements OnMapListener
         //		btnAuthority.setVisibility(View.VISIBLE);
         showLys();
         loadMyDraw();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+
+        mIsUpdatePositionStarted = false;
     }
 
     /**
@@ -1198,49 +1215,7 @@ public class Main extends Activity implements OnMapListener
         }
     }
 
-    /*********************************** 定位功能 *****************************/
-    /**
-     * 通过获取到的位置更新地图的实时更新
-     */
-    private void updateView(Location location)
-    {
 
-        if (location != null)
-        {
-            Double geoLat = location.getLatitude();
-            Double geoLng = location.getLongitude();
-            mCurrentLocationPoint = new Point(location.getLongitude(), location.getLatitude());
-            mCurrentLocationPoint = Util.checkPoint(mCurrentLocationPoint); // 校正坐标点
-
-            if (isFirst) {// 第一次加
-                map.centerAt(mCurrentLocationPoint, true);
-                map.setScale(1200.0000);
-                image = this.getResources().getDrawable(R.drawable.icon_track_map_bar);
-                pictureMarkerSymbol = new PictureMarkerSymbol(image);
-                Graphic graphic = new Graphic(mCurrentLocationPoint, pictureMarkerSymbol);
-                id = mLocationGraphicsLayer.addGraphic(graphic);
-                isFirst = false;
-
-                /**
-                 * 实例化监听器，当展示页面时开启监听器
-                 */
-            } else {
-                // 移动式改变位
-                map.centerAt(mCurrentLocationPoint, true);
-                map.setScale(1200.0000);
-                image = this.getResources().getDrawable(R.drawable.icon_track_map_bar);
-                pictureMarkerSymbol = new PictureMarkerSymbol(image);
-                Graphic graphic = new Graphic(mCurrentLocationPoint, pictureMarkerSymbol);
-                mLocationGraphicsLayer.updateGraphic(id, graphic);
-            }
-            forceUpdateScale(1200);
-            forceUpdateCoordinate(mCurrentLocationPoint.getX(), mCurrentLocationPoint.getY());
-        }
-        else
-        {
-            Toast.makeText(Main.this, "定位失败", Toast.LENGTH_SHORT).show();
-        }
-    }
 
     /**
      *
@@ -1310,7 +1285,7 @@ public class Main extends Activity implements OnMapListener
         {
             if (mMapState == MAP_STATE_NAVIGATION) {
                 Location location = (Location) msg.obj;
-                updateView(location);
+                updateLocation(location, true);
             }
         }
     }
@@ -1734,7 +1709,6 @@ public class Main extends Activity implements OnMapListener
             mMapState = MAP_STATE_NAVIGATION;
             onMapStateChanged();
             createGPS();
-            //map.centerAt(mCurrentLocationPoint, true);
         } else if (mMapState == MAP_STATE_NAVIGATION) {
             mMapState = MAP_STATE_NORMAL;
             onMapStateChanged();
@@ -1769,7 +1743,8 @@ public class Main extends Activity implements OnMapListener
         }
 
         String bestProvider = locationManager.getBestProvider(getCriteria(), true);
-        return locationManager.getLastKnownLocation(bestProvider);
+        mLastLocationFromGps = locationManager.getLastKnownLocation(bestProvider);
+        return mLastLocationFromGps;
     }
 
     /** 获取LocationManager实例 **/
@@ -1786,6 +1761,53 @@ public class Main extends Activity implements OnMapListener
     private void stopNavigationMode() {
 
     }
+
+    /** 开启实时更新位置模式（只更新位置图标，不会移动屏幕位置） **/
+    private void startUpdatePositionMode() {
+        if (mUpdatePositionThread == null) {
+            mUpdatePositionThread = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    updatePositionHandler.sendEmptyMessage(0);
+                    while (mIsUpdatePositionStarted) {
+                        try {
+                            Thread.sleep(1000);
+                        } catch (InterruptedException e) {
+                            Log.e(TAG, "mUpdatePositionThread sleep exception:" + e.getMessage());
+                        }
+
+                        updatePositionHandler.sendEmptyMessage(1);
+                    }
+                    updatePositionHandler.sendEmptyMessage(-1);
+                }
+            });
+            mUpdatePositionThread.start();
+        }
+    }
+
+    private Handler updatePositionHandler = new Handler() {
+        @Override
+        public void handleMessage(Message msg) {
+            switch (msg.what) {
+                case 0:
+                    break;
+                case 1:
+                    Location currentLocation = getLocationFromGps();
+                    if (currentLocation != null) {
+                        boolean isMapMoved = mMapState == MAP_STATE_NAVIGATION ? true : false;
+                        updateLocation(currentLocation, isMapMoved);
+                    }
+                    break;
+                case -1:
+                    mUpdatePositionThread.interrupt();
+                    mUpdatePositionThread = null;
+                    break;
+                default:
+                    break;
+            }
+            super.handleMessage(msg);
+        }
+    };
 
     /** 更新Activity的UI **/
     private void updateUi() {
@@ -1817,12 +1839,19 @@ public class Main extends Activity implements OnMapListener
 
     /** 更新经度 **/
     private void updateLongitude() {
+        if (mLastLocationFromGps != null) {
+            double longitude = mLastLocationFromGps.getLongitude();
+            mTvLongitude.setText("经度：" + longitude);
+        }
 
     }
 
     /** 更新纬度 **/
     private void updateLatitude() {
-
+        if (mLastLocationFromGps != null) {
+            double latitude = mLastLocationFromGps.getLatitude();
+            mTvLatitude.setText("纬度：" + latitude);
+        }
     }
 
     /** 手动更新坐标 **/
@@ -1836,6 +1865,51 @@ public class Main extends Activity implements OnMapListener
     private void forceUpdateScale(double scale) {
         int scaleInt = (int) scale;
         mTvScale.setText("比例 1:" + scaleInt);
+    }
+
+    /**
+     * 在地图上更新显示当前位置
+     * @param location 当前位置
+     * @param isMapMoved 如果为true，则移动地图，以当前位置为中心；如果为false，则只更新显示当前位置
+     */
+    private void updateLocation(Location location, boolean isMapMoved) {
+
+        if (location != null)
+        {
+            mCurrentLocationPoint = new Point(location.getLongitude(), location.getLatitude());
+            // 校正坐标点
+            mCurrentLocationPoint = Util.checkPoint(mCurrentLocationPoint);
+
+
+            if (isFirst) {
+                // 第一次加
+                if (isMapMoved) {
+                    map.centerAt(mCurrentLocationPoint, true);
+                    map.setScale(1200.0000);
+                }
+                image = this.getResources().getDrawable(R.drawable.icon_track_map_bar);
+                pictureMarkerSymbol = new PictureMarkerSymbol(image);
+                Graphic graphic = new Graphic(mCurrentLocationPoint, pictureMarkerSymbol);
+                id = mLocationGraphicsLayer.addGraphic(graphic);
+                isFirst = false;
+            } else {
+                if (isMapMoved) {
+                    map.centerAt(mCurrentLocationPoint, true);
+                    map.setScale(1200.0000);
+                }
+                image = this.getResources().getDrawable(R.drawable.icon_track_map_bar);
+                pictureMarkerSymbol = new PictureMarkerSymbol(image);
+                Graphic graphic = new Graphic(mCurrentLocationPoint, pictureMarkerSymbol);
+                mLocationGraphicsLayer.updateGraphic(id, graphic);
+            }
+            forceUpdateScale(1200);
+            forceUpdateCoordinate(mCurrentLocationPoint.getX(), mCurrentLocationPoint.getY());
+            updateUi();
+        }
+        else
+        {
+            Toast.makeText(Main.this, "定位失败", Toast.LENGTH_SHORT).show();
+        }
     }
 
 }
