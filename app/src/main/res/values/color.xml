@@ -41,4 +41,6 @@
 
     <color name="app_design_background">#1E88E5</color>
     <color name="app_design_ripple">#006AC7</color>
+    <color name="app_design_shadow_dark">#898989</color>
+    <color name="app_design_shadow">#CECECE</color>
 </resources>

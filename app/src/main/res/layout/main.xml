@@ -91,15 +91,92 @@
                     android:textColor="#ff0000"
                     android:visibility="gone" />
 
+                <!-- 坐标，比例，经纬度容器 -->
+                <RelativeLayout
+                    android:layout_width="180dp"
+                    android:layout_height="147dp"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginLeft="8dp">
 
-                <!-- 坐标 -->
+                    <RelativeLayout
+                        android:id="@+id/main_rl_information"
+                        android:layout_width="176dp"
+                        android:layout_height="144dp"
+                        android:layout_marginLeft="2dp"
+                        android:layout_marginTop="1dp"
+                        android:background="@color/white">
 
-                <TextView
-                    android:id="@+id/coordinate"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_above="@+id/btn_location"
-                    android:layout_alignLeft="@+id/btn_location"/>
+                        <!-- 坐标 -->
+                        <TextView
+                            android:id="@+id/coordinate"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginLeft="16dp"
+                            android:layout_marginTop="16dp"
+                            android:text="123456.8, 123456.8"
+                            android:textSize="16sp"/>
+
+                        <!-- 缩放比例 -->
+                        <TextView
+                            android:id="@+id/scale"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:layout_marginLeft="16dp"
+                            android:layout_below="@+id/coordinate"
+                            android:text="比例1:300000"
+                            android:textSize="16sp"/>
+
+                        <TextView
+                            android:id="@+id/main_tv_longitude"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:layout_marginLeft="16dp"
+                            android:layout_below="@+id/scale"
+                            android:text="经度："
+                            android:textSize="16sp"/>
+
+                        <TextView
+                            android:id="@+id/main_tv_latitude"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:layout_marginLeft="16dp"
+                            android:layout_below="@+id/main_tv_longitude"
+                            android:text="纬度："
+                            android:textSize="16sp"/>
+
+                    </RelativeLayout>
+
+                    <!-- 阴影 -->
+                    <!-- 上 -->
+                    <View
+                        android:layout_width="fill_parent"
+                        android:layout_height="1dp"
+                        android:background="@color/app_design_shadow" />
+                    <!-- 右 -->
+                    <View
+                        android:layout_width="2dp"
+                        android:layout_height="fill_parent"
+                        android:layout_marginLeft="178dp"
+                        android:background="@color/app_design_shadow" />
+                    <!-- 下 -->
+                    <View
+                        android:layout_width="fill_parent"
+                        android:layout_height="2dp"
+                        android:layout_marginTop="144dp"
+                        android:background="@color/app_design_shadow_dark" />
+                    <!-- 左 -->
+                    <View
+                        android:layout_width="2dp"
+                        android:layout_height="fill_parent"
+                        android:background="@color/app_design_shadow" />
+
+                </RelativeLayout>
+
+
+
 
                 <!-- 定位按钮 -->
                 <com.gc.materialdesign.views.ButtonFloat
@@ -112,19 +189,10 @@
                     android:onClick="click"
                     android:background="@color/app_design_background"
                     app:animate="false" />
-                <!-- 缩放比例 -->
 
-                <TextView
-                    android:id="@+id/scale"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_alignTop="@+id/btn_location"
-                    android:layout_marginTop="10dp"
-                    android:layout_toRightOf="@+id/btn_location"
-                    android:text="比例1:300000" />
+
 
                 <!-- 缩放 -->
-
                 <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="80dp"
