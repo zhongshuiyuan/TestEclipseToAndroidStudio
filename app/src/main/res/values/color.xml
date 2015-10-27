@@ -40,4 +40,5 @@
     <color name="datagird_shadow_end">#00000000</color>
 
     <color name="app_design_background">#1E88E5</color>
+    <color name="app_design_ripple">#006AC7</color>
 </resources>

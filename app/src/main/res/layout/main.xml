@@ -55,7 +55,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:onClick="click"
-            android:background="#991E44c5"/>
+            android:background="#006AC7"/>
             <!--app:iconDrawable="@drawable/ic_layers_white_48dp" />-->
 
     </LinearLayout>
