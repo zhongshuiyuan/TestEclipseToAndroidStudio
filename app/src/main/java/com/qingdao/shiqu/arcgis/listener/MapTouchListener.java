@@ -1141,7 +1141,7 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 							if(i != gllist.size()-1)
 								sb.append("/");
 						}
-						DoAction.removeDLLY(context, sb.toString());
+						DoAction.removeGLLY(context, sb.toString());
 						//从图层中移除符号
 						newglly.removeGraphic(temp.getUid());
 					}
