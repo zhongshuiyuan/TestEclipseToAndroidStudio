@@ -1128,9 +1128,14 @@ public class Main extends Activity implements OnMapListener
     @Override
     public void onMoveAndZoom()
     {
+        // 退出实时导航模式
+        mMapState = MAP_STATE_NORMAL;
+        onMapStateChanged();
+
+        updateUi();
+
         try
         {
-            updateUi();
 
             Point centerPoint = Util.getCenterPoint(this);
             Point mapPoint = map.toMapPoint(centerPoint);
@@ -1141,12 +1146,6 @@ public class Main extends Activity implements OnMapListener
             take.setZoom(scale);
             Session.getTakes().add(take);
             index = Session.getTakes().size() - 1;
-
-            // 2015-10-26 add
-            Log.v(TAG, "进行地图移动或者缩放操作");
-            // 退出实时导航模式
-            mMapState = MAP_STATE_NORMAL;
-            onMapStateChanged();
         }
         catch (Exception e)
         {
@@ -1572,8 +1571,10 @@ public class Main extends Activity implements OnMapListener
 
     /** 更新Activity的UI **/
     private void updateUi() {
-        updateCoordinate();
-        updateScale();
+        if (mMapState != MAP_STATE_NAVIGATION) {
+            updateCoordinate();
+            updateScale();
+        }
         updateLongitude();
         updateLatitude();
     }
@@ -1652,29 +1653,27 @@ public class Main extends Activity implements OnMapListener
             // 校正坐标点
             mCurrentLocationPoint = Util.checkPoint(mCurrentLocationPoint);
 
-
             if (isFirst) {
                 // 第一次加
-                if (isMapMoved) {
-                    map.centerAt(mCurrentLocationPoint, true);
-                    map.setScale(1200.0000);
-                }
                 pictureMarkerSymbol = new PictureMarkerSymbol(mLocationDrawable);
                 Graphic graphic = new Graphic(mCurrentLocationPoint, pictureMarkerSymbol);
                 mLocationGraphicId = mLocationGraphicsLayer.addGraphic(graphic);
                 isFirst = false;
             } else {
-                if (isMapMoved) {
-                    map.centerAt(mCurrentLocationPoint, true);
-                    map.setScale(1200.0000);
-                }
                 pictureMarkerSymbol = new PictureMarkerSymbol(mLocationDrawable);
                 Graphic graphic = new Graphic(mCurrentLocationPoint, pictureMarkerSymbol);
                 mLocationGraphicsLayer.updateGraphic(mLocationGraphicId, graphic);
             }
-            forceUpdateScale(1200);
-            forceUpdateCoordinate(mCurrentLocationPoint.getX(), mCurrentLocationPoint.getY());
-            updateUi();
+
+            if (isMapMoved) {
+                map.centerAt(mCurrentLocationPoint, true);
+                map.setScale(1200.0000);
+                forceUpdateScale(1200);
+                forceUpdateCoordinate(mCurrentLocationPoint.getX(), mCurrentLocationPoint.getY());
+            } else {
+                updateUi();
+            }
+
         }
     }
 
@@ -1701,6 +1700,7 @@ public class Main extends Activity implements OnMapListener
         if (location != null) {
             mLastLocationFromGps = location;
             updateLocation(location, true);
+            updateUi();
             //监听状态
             locationManager.addGpsStatusListener(mGpsStatusListener);
 
@@ -1714,8 +1714,6 @@ public class Main extends Activity implements OnMapListener
             // 注意：此处更新准确度非常低，推荐在service里面启动一个Thread，在run中sleep(10000);然后执行handler.sendMessage(),更新位置
             locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 0, mLocationListener);
         } else {
-            mMapState = MAP_STATE_NORMAL;
-            onMapStateChanged();
             Toast.makeText(Main.this, "定位失败", Toast.LENGTH_SHORT).show();
         }
     }

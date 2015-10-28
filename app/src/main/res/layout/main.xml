@@ -190,8 +190,6 @@
                     android:background="@color/app_design_background"
                     app:animate="false" />
 
-
-
                 <!-- 缩放 -->
                 <LinearLayout
                     android:layout_width="wrap_content"
@@ -228,8 +226,8 @@
                         android:padding="10dp"
                         android:src="@drawable/main_icon_zoomout" />
                 </LinearLayout>
-                <!-- 底部菜单 -->
 
+                <!-- 底部菜单 -->
                 <LinearLayout
                     android:id="@+id/LlMenu"
                     android:layout_width="fill_parent"
