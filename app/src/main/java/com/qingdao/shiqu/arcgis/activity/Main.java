@@ -48,7 +48,6 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
-import android.support.annotation.Nullable;
 import android.support.v4.widget.DrawerLayout;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -66,6 +65,7 @@ import com.esri.android.map.GraphicsLayer;
 import com.esri.android.map.Layer;
 import com.esri.android.map.MapView;
 import com.esri.android.map.ags.ArcGISLocalTiledLayer;
+import com.esri.android.map.event.OnStatusChangedListener;
 import com.esri.core.geodatabase.Geodatabase;
 import com.esri.core.geodatabase.GeodatabaseFeatureTable;
 import com.esri.core.geometry.Envelope;
@@ -90,6 +90,7 @@ import com.qingdao.shiqu.arcgis.mode.ContentModel;
 import com.qingdao.shiqu.arcgis.mode.Take;
 import com.qingdao.shiqu.arcgis.sqlite.DoAction;
 import com.qingdao.shiqu.arcgis.utils.DBOpterate;
+import com.qingdao.shiqu.arcgis.utils.FileUtil;
 import com.qingdao.shiqu.arcgis.utils.LocalDataModify;
 import com.qingdao.shiqu.arcgis.utils.NSXAsyncTask;
 import com.qingdao.shiqu.arcgis.utils.Session;
@@ -112,7 +113,11 @@ public class Main extends Activity implements OnMapListener
     /** 地图控件 **/
     MapView map = null;
     /** 本地离线切片图层 **/
-    ArcGISLocalTiledLayer mLocalTiledLayer;
+    ArcGISLocalTiledLayer mLocalTiledLayerMap;
+    /** 标注 **/
+    ArcGISLocalTiledLayer mLocalTiledLayerLabel;
+    /** 光机 **/
+    ArcGISLocalTiledLayer mLocalTiledLayerGuangJi;
 
     /** 第一次加载地图时需要全图显示 **/
     private boolean mIsFullExtentNeeded = true;
@@ -159,9 +164,10 @@ public class Main extends Activity implements OnMapListener
     private DrawerLayout drawerLayout;
     private RelativeLayout leftLayout;
     private RelativeLayout rightLayout;
-    private List<ContentModel> listLeftDrawer;
     private ContentAdapter adapter;
     private String GL_TYPE = "";
+    // TOC
+    ExpandableListView mElvTov;
     // TOC 的子数据源
     private ArrayList<ArrayList<Layer>> childs = new ArrayList<ArrayList<Layer>>(); //USE IN MyExpandableListAdapter CLASS
     // TOC 的数据源
@@ -223,6 +229,15 @@ public class Main extends Activity implements OnMapListener
         mBtnToc.setDrawableIcon(getResources().getDrawable(R.drawable.ic_layers_white_48dp));
 
         map = (MapView) findViewById(R.id.map);
+        map.setOnStatusChangedListener(new OnStatusChangedListener() {
+            @Override
+            public void onStatusChanged(Object o, STATUS status) {
+                if (STATUS.LAYER_LOADED == status) {
+                    seeAll();
+                    map.setEsriLogoVisible(false);
+                }
+            }
+        });
 
         // 信息显示框
         mTvScale = (TextView) findViewById(R.id.scale);
@@ -240,9 +255,11 @@ public class Main extends Activity implements OnMapListener
         locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
         // 讲解密后的文件写入sd卡
         // writeFiles();
-        mLocalTiledLayer = new ArcGISLocalTiledLayer("file:///" + "sdcard/layers");
-        //mLocalTiledLayer = new ArcGISLocalTiledLayer("file:///mnt/sdcard/Layers");
-        //mLocalTiledLayer = new ArcGISLocalTiledLayer(Environment.getExternalStorageDirectory().getAbsolutePath()+"/layers");
+        mLocalTiledLayerMap = new ArcGISLocalTiledLayer("file:///" + "sdcard/PDAlayers/layers");
+        //mLocalTiledLayerMap = new ArcGISLocalTiledLayer("file:///mnt/sdcard/Layers");
+        //mLocalTiledLayerMap = new ArcGISLocalTiledLayer(Environment.getExternalStorageDirectory().getAbsolutePath()+"/layers");
+        mLocalTiledLayerLabel = new ArcGISLocalTiledLayer("file:///" + "sdcard/PDAlayers/annlayers");
+        mLocalTiledLayerGuangJi = new ArcGISLocalTiledLayer("file:///" + "sdcard/PDAlayers/gjlay");
         mLocationGraphicsLayer = new GraphicsLayer();
         mLocationGraphicsLayer.setName("定位图层");
         newGraphicLayer = new GraphicsLayer();
@@ -259,13 +276,22 @@ public class Main extends Activity implements OnMapListener
         drawLayer.setName("绘制图层");
         daoLuLayer = new GraphicsLayer();
         daoLuLayer.setName("道路图层");
-        mLocalTiledLayer.setName("青岛底图");
+        mLocalTiledLayerMap.setName("青岛底图");
+
         // 添加底图
         map.setMapBackground(0xffffff, 0xffffff, 0, 0);
-        double lms = mLocalTiledLayer.getMinScale();
-        //mLocalTiledLayer.setMinScale(0);
-        map.addLayer(mLocalTiledLayer);
-        //mLocalTiledLayer.getExtent().queryEnvelope(extend_el);
+        double lms = mLocalTiledLayerMap.getMinScale();
+        //mLocalTiledLayerMap.setMinScale(0);
+        map.addLayer(mLocalTiledLayerMap);
+        //mLocalTiledLayerMap.getExtent().queryEnvelope(extend_el);
+        if (mLocalTiledLayerLabel != null) {
+            mLocalTiledLayerLabel.setName("标注图层");
+            map.addLayer(mLocalTiledLayerLabel);
+        }
+        if (mLocalTiledLayerGuangJi != null) {
+            mLocalTiledLayerGuangJi.setName("光机图层");
+            map.addLayer(mLocalTiledLayerGuangJi);
+        }
 
         // 添加绘画图层
         map.addLayer(daoLuLayer);
@@ -280,8 +306,12 @@ public class Main extends Activity implements OnMapListener
         map.setOnTouchListener(touchListener); // 地图手势操作监听事件
         map.setOnZoomListener(touchListener); // 地图缩放监听事件
         //		btnAuthority = (LinearLayout) this.findViewById(R.id.btnAuthority);
+
+        // 下面这两个方法包含了给 TOC 数据源赋值的过程 by QYY
         initGeodatabase();
         loadExtraLayers();
+
+
         map.addLayer(drawLayer);
         map.addLayer(newGraphicLayer);
         map.addLayer(newgdlayer);
@@ -337,11 +367,11 @@ public class Main extends Activity implements OnMapListener
 
 
         leftLayout = (RelativeLayout) findViewById(R.id.left);
-        final ListView listView_left = (ListView) leftLayout.findViewById(R.id.left_listview);
-        initData();
-        adapter = new ContentAdapter(this, listLeftDrawer);
-        listView_left.setAdapter(adapter);
-        listView_left.setOnItemClickListener(new OnItemClickListener() {
+        final ListView lvLeftDrawer = (ListView) leftLayout.findViewById(R.id.left_listview);
+        ArrayList<ContentModel> leftDrawerData = initLeftDrawerData();
+        adapter = new ContentAdapter(this, leftDrawerData);
+        lvLeftDrawer.setAdapter(adapter);
+        lvLeftDrawer.setOnItemClickListener(new OnItemClickListener() {
 
             @Override
             public void onItemClick(AdapterView<?> arg0, View arg1, int index,
@@ -391,26 +421,31 @@ public class Main extends Activity implements OnMapListener
         });
 
         rightLayout=(RelativeLayout) findViewById(R.id.right);
+
         showLys();
     }
-    private void initData() {
-        listLeftDrawer =new ArrayList<ContentModel>();
 
-		/*listLeftDrawer.add(new ContentModel(R.drawable.doctoradvice2, "新闻"));
-		listLeftDrawer.add(new ContentModel(R.drawable.infusion_selected, "查阅"));*/
-        listLeftDrawer.add(new ContentModel(R.drawable.mypatient_selected, "权限控制"));
-        listLeftDrawer.add(new ContentModel(R.drawable.personal_selected, "编辑管井"));
-        listLeftDrawer.add(new ContentModel(R.drawable.nursingcareplan2, "编辑光缆"));
-        listLeftDrawer.add(new ContentModel(R.drawable.infusion_selected, "编辑光缆路由图"));
-        listLeftDrawer.add(new ContentModel(R.drawable.infusion_selected, "编辑电缆路由图"));
-        listLeftDrawer.add(new ContentModel(R.drawable.infusion_selected, "查看管道光缆走向"));
-        //		listLeftDrawer.add(new ContentModel(R.drawable.infusion_selected, "井/管道类型"));
-
+    private void showLys() {
+        mElvTov = (ExpandableListView)findViewById(R.id.right_listview);
+        MyExpandableListAdapter adapter = new MyExpandableListAdapter(Main.this, titles, childs);
+        mElvTov.setAdapter(adapter);
     }
-    private void showLys(){
-        ExpandableListView elv = (ExpandableListView)findViewById(R.id.right_listview);
-        MyExpandableListAdapter mela = new MyExpandableListAdapter(Main.this, titles, childs);
-        elv.setAdapter(mela);
+
+    /** 创建左抽屉数据 **/
+    private ArrayList<ContentModel> initLeftDrawerData() {
+        ArrayList<ContentModel> leftDrawerDatas = new ArrayList<>();
+
+		/*leftDrawerDatas.add(new ContentModel(R.drawable.doctoradvice2, "新闻"));
+		leftDrawerDatas.add(new ContentModel(R.drawable.infusion_selected, "查阅"));*/
+        leftDrawerDatas.add(new ContentModel(R.drawable.mypatient_selected, "权限控制"));
+        leftDrawerDatas.add(new ContentModel(R.drawable.personal_selected, "编辑管井"));
+        leftDrawerDatas.add(new ContentModel(R.drawable.nursingcareplan2, "编辑光缆"));
+        leftDrawerDatas.add(new ContentModel(R.drawable.infusion_selected, "编辑光缆路由图"));
+        leftDrawerDatas.add(new ContentModel(R.drawable.infusion_selected, "编辑电缆路由图"));
+        leftDrawerDatas.add(new ContentModel(R.drawable.infusion_selected, "查看管道光缆走向"));
+        //		leftDrawerDatas.add(new ContentModel(R.drawable.infusion_selected, "井/管道类型"));
+
+        return leftDrawerDatas;
     }
 
     @Override
@@ -420,8 +455,8 @@ public class Main extends Activity implements OnMapListener
         if (hasFocus) {
             // 第一次加载地图时全图显示
             if (mIsFullExtentNeeded) {
-                seeAll();
-                map.setEsriLogoVisible(false);
+                //seeAll();
+                //map.setEsriLogoVisible(false);
                 mIsFullExtentNeeded = false;
             }
         }
@@ -432,6 +467,8 @@ public class Main extends Activity implements OnMapListener
     protected void onResume()
     {
         super.onResume();
+
+        map.unpause();
 
         // 实时更新位置
         startUpdatePositionMode();
@@ -548,13 +585,60 @@ public class Main extends Activity implements OnMapListener
         //		btnAuthority.setVisibility(View.VISIBLE);
         showLys();
         loadMyDraw();
+
+        loadTocSetting();
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-
+        map.pause();
         stopUpdatePositionMode();
+    }
+
+    private void saveTocSetting() {
+        SharedPreferences sharedPreferences = getPreferences(Context.MODE_PRIVATE);
+        String tocSetting = "";
+
+        int titleCount = childs.size();
+        for (int i = 0; i < titleCount; ++i) {
+            ArrayList<Layer> layers = childs.get(i);
+            int layerCount = layers.size();
+            for (int j = 0; j < layerCount; ++j) {
+                Layer layer = layers.get(j);
+                if (layer.isVisible()) {
+                    tocSetting += "1";
+                } else {
+                    tocSetting += "0";
+                }
+            }
+        }
+
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putString(getString(R.string.preference_file_key_main_toc), tocSetting);
+        editor.commit();
+    }
+
+    private void loadTocSetting() {
+        SharedPreferences sharedPreferences = getPreferences(Context.MODE_PRIVATE);
+        String tocSetting = sharedPreferences.getString(getString(R.string.preference_file_key_main_toc), null);
+        if (tocSetting != null) {
+            int stringIndex = 0;
+            int titleCount = childs.size();
+            for (int i = 0; i < titleCount; ++i) {
+                ArrayList<Layer> layers = childs.get(i);
+                int layerCount = layers.size();
+                for (int j = 0; j < layerCount; ++j) {
+                    Layer layer = layers.get(j);
+                    if (String.valueOf(tocSetting.charAt(stringIndex)).equals("0")) {
+                        layer.setVisible(false);
+                    } else if (String.valueOf(tocSetting.charAt(stringIndex)).equals("1")) {
+                        layer.setVisible(true);
+                    }
+                    stringIndex++;
+                }
+            }
+        }
     }
 
     /**
@@ -563,30 +647,13 @@ public class Main extends Activity implements OnMapListener
      */
     private void initGeodatabase()
     {
-        try
-        {
+        try {
             // UsernamePasswordCredentials userCredentials = new
             // UsernamePasswordCredentials("", "");
             //			 UserCredentials a = new UserCredentials();
             //			 a.setUserAccount(userName, password);
-            String map10 = "";
-
-            String a = Environment.getExternalStorageDirectory().getAbsolutePath()
-                    + "/map/map10.geodatabase";
-            Boolean exists = File.exists(Environment.getExternalStorageDirectory().getAbsolutePath()
-                    + "/map/map10.geodatabase");
-            Boolean exists2 = File.exists( Environment.getRootDirectory().getAbsolutePath()
-                    + "/map/map10.geodatabase");
-            if(exists)
-            {
-                map10 = Environment.getExternalStorageDirectory().getAbsolutePath()
-                        + "/map/map10.geodatabase";
-            }else if(exists2){
-                map10 = Environment.getRootDirectory().getAbsolutePath()
-                        + "/map/map10.geodatabase";
-            }
-            if(!"".equals(map10))
-            {
+            String map10 = FileUtil.getFileAbsolutePath("/map/map10.geodatabase");
+            if(map10 != null) {
                 Geodatabase geodatabase = new Geodatabase(map10);
                 List<GeodatabaseFeatureTable> tables = geodatabase.getGeodatabaseTables();
                 danyuan = new FeatureLayer(tables.get(0));
@@ -598,206 +665,97 @@ public class Main extends Activity implements OnMapListener
                 map.addLayer(guangjigui);
                 map.addLayer(guanjing);
                 map.addLayer(guangji);
-//				map.addLayer(guanli);
+                // map.addLayer(guanli);
             }
-            String guandao = "";
-            if(File.exists(Environment.getExternalStorageDirectory().getAbsolutePath()
-                    + "/map/guandao.geodatabase"))
-            {
-                guandao = Environment.getExternalStorageDirectory().getAbsolutePath()
-                        + "/map/guandao.geodatabase";
-            }else if(File.exists(Environment.getRootDirectory().getAbsolutePath()
-                    + "/map/guandao.geodatabase")){
-                guandao = Environment.getRootDirectory().getAbsolutePath()
-                        + "/map/guandao.geodatabase";
-            }
-            if(!"".equals(guandao))
-            {
-                Geodatabase guandaogeodatabase = new Geodatabase(guandao);
+
+            String guandaoPath = FileUtil.getFileAbsolutePath("/map/guandao.geodatabase");
+            if(guandaoPath != null) {
+                Geodatabase guandaogeodatabase = new Geodatabase(guandaoPath);
                 List<GeodatabaseFeatureTable> guandaotables = guandaogeodatabase.getGeodatabaseTables();
                 Segment = new FeatureLayer(guandaotables.get(0));
                 Segment.setName("管道");
                 map.addLayer(Segment);
             }
-            String guanglanPath = "";
-            if(File.exists(Environment.getExternalStorageDirectory().getAbsolutePath()
-                    + "/map/guanglan.geodatabase"))
-            {
-                guanglanPath = Environment.getExternalStorageDirectory().getAbsolutePath()
-                        + "/map/guanglan.geodatabase";
-            }else if(File.exists(Environment.getRootDirectory().getAbsolutePath()
-                    + "/map/guanglan.geodatabase")){
-                guanglanPath = Environment.getRootDirectory().getAbsolutePath()
-                        + "/map/guanglan.geodatabase";
-            }
-            if(!"".equals(guanglanPath))
-            {
+
+            String guanglanPath = FileUtil.getFileAbsolutePath("/map/guanglan.geodatabase");
+            if(guanglanPath != null) {
                 Geodatabase guanlangeodatabase = new Geodatabase(guanglanPath);
                 List<GeodatabaseFeatureTable> guanlantables = guanlangeodatabase.getGeodatabaseTables();
                 guanglan = new FeatureLayer(guanlantables.get(0));
-                //				map.addLayer(guanglan);
+                //map.addLayer(guanglan);
             }
+
             //加载道路
-            String daoluPath = "";
-            if(File.exists(Environment.getExternalStorageDirectory().getAbsolutePath()
-                    + "/map/daolu.geodatabase"))
-            {
-                daoluPath = Environment.getExternalStorageDirectory().getAbsolutePath()
-                        + "/map/daolu.geodatabase";
-            }else if(File.exists(Environment.getRootDirectory().getAbsolutePath()
-                    + "/map/daolu.geodatabase")){
-                daoluPath = Environment.getRootDirectory().getAbsolutePath()
-                        + "/map/daolu.geodatabase";
-            }
-            if(!"".equals(daoluPath))
-            {
+            String daoluPath = FileUtil.getFileAbsolutePath("/map/daolu.geodatabase");
+            if(daoluPath != null) {
                 Geodatabase daolugeodatabase = new Geodatabase(daoluPath);
                 List<GeodatabaseFeatureTable> daolutables = daolugeodatabase.getGeodatabaseTables();
                 daolu = new FeatureLayer(daolutables.get(0));
                 map.addLayer(daolu);
             }
-            String pad="";
-            if(File.exists(Environment.getExternalStorageDirectory().getAbsolutePath()
-                    + "/map/pdageodatabase.geodatabase"))
-            {
-                pad = Environment.getExternalStorageDirectory().getAbsolutePath()
-                        + "/map/pdageodatabase.geodatabase";
-            }else if(File.exists(Environment.getRootDirectory().getAbsolutePath()
-                    + "/map/daolu.geodatabase")){
-                pad = Environment.getRootDirectory().getAbsolutePath()
-                        + "/map/pdageodatabase.geodatabase";
-            }
-            if(!"".equals(pad)){
+
+
+            String pad = FileUtil.getFileAbsolutePath("/map/pdageodatabase.geodatabase");
+            if(pad != null) {
                 Geodatabase daolugeodatabase = new Geodatabase(pad);
                 List<GeodatabaseFeatureTable> daolutables = daolugeodatabase.getGeodatabaseTables();
                 pda = new FeatureLayer(daolutables.get(0));
                 pda1 = new FeatureLayer(daolutables.get(1));
-				/*map.addLayer(pda);
-				map.addLayer(pda1);*/
+				//map.addLayer(pda);
+				//map.addLayer(pda1);
             }
-            ArrayList<Layer> old = new ArrayList<Layer>();
+
+            ArrayList<Layer> old = new ArrayList<>();
             for(int i=0;i<map.getLayers().length;i++){
                 old.add(map.getLayer(i));
             }
             childs.add(old);
-        }
-        catch (Exception e)
-        {
-            e.printStackTrace();
+
+        } catch (Exception e) {
+            Log.e(TAG, "初始化Geodatabase错误：" + e.getMessage());
         }
     }
     private void loadExtraLayers(){
         //加载道路
-        String htfPath = "";
-        ArrayList<Layer> hfc_lay = new ArrayList<Layer>();
-        if(File.exists(Environment.getExternalStorageDirectory().getAbsolutePath()
-                + "/map/hfc.geodatabase"))
-        {
-            htfPath = Environment.getExternalStorageDirectory().getAbsolutePath()
-                    + "/map/hfc.geodatabase";
-        }else if(File.exists(Environment.getRootDirectory().getAbsolutePath()
-                + "/map/hfc.geodatabase")){
-            htfPath = Environment.getRootDirectory().getAbsolutePath()
-                    + "/map/hfc.geodatabase";
-        }
-        if(!"".equals(htfPath))
-        {
+        ArrayList<Layer> hfc_lay = new ArrayList<>();
+        String htfPath = FileUtil.getFileAbsolutePath("/map/hfc.geodatabase");
+        if(htfPath != null) {
             loadLayerByGeoPath("HFC", htfPath);
         }
-        ////
-        String eponPath = "";
-        if(File.exists(Environment.getExternalStorageDirectory().getAbsolutePath()
-                + "/map/epon.geodatabase"))
-        {
-            eponPath = Environment.getExternalStorageDirectory().getAbsolutePath()
-                    + "/map/epon.geodatabase";
-        }else if(File.exists(Environment.getRootDirectory().getAbsolutePath()
-                + "/map/GISGL.geodatabase")){
-            eponPath = Environment.getRootDirectory().getAbsolutePath()
-                    + "/map/epon.geodatabase";
-        }
-        if(!"".equals(eponPath))
-        {
+
+
+        String eponPath = FileUtil.getFileAbsolutePath("/map/epon.geodatabase");
+        if(eponPath != null) {
             loadLayerByGeoPath("EPON网", eponPath);
         }
+
         ///
-        String gj2Path = "";
-        if(File.exists(Environment.getExternalStorageDirectory().getAbsolutePath()
-                + "/map/GISGJ.geodatabase"))
-        {
-            gj2Path = Environment.getExternalStorageDirectory().getAbsolutePath()
-                    + "/map/GISGJ.geodatabase";
-        }else if(File.exists(Environment.getRootDirectory().getAbsolutePath()
-                + "/map/GISGJ.geodatabase")){
-            gj2Path = Environment.getRootDirectory().getAbsolutePath()
-                    + "/map/GISGJ.geodatabase";
-        }
-        if(!"".equals(gj2Path))
-        {
+        String gj2Path = FileUtil.getFileAbsolutePath("/map/GISGJ.geodatabase");
+        if(gj2Path != null) {
             loadLayerByGeoPath("GIS新增数据", gj2Path);
         }
+
         //
-        String glpath = "";
-        if(File.exists(Environment.getExternalStorageDirectory().getAbsolutePath()
-                + "/map/glw.geodatabase"))
-        {
-            glpath = Environment.getExternalStorageDirectory().getAbsolutePath()
-                    + "/map/glw.geodatabase";
-        }else if(File.exists(Environment.getRootDirectory().getAbsolutePath()
-                + "/map/glw.geodatabase")){
-            glpath = Environment.getRootDirectory().getAbsolutePath()
-                    + "/map/glw.geodatabase";
-        }
-        if(!"".equals(glpath))
-        {
+        String glpath = FileUtil.getFileAbsolutePath("/map/glw.geodatabase");
+        if(glpath != null) {
             loadLayerByGeoPath("光缆网", glpath);
         }
+
         //
-        String fenpeipath = "";
-        if(File.exists(Environment.getExternalStorageDirectory().getAbsolutePath()
-                + "/map/fenpeiwang.geodatabase"))
-        {
-            fenpeipath = Environment.getExternalStorageDirectory().getAbsolutePath()
-                    + "/map/fenpeiwang.geodatabase";
-        }else if(File.exists(Environment.getRootDirectory().getAbsolutePath()
-                + "/map/fenpeiwang.geodatabase")){
-            fenpeipath = Environment.getRootDirectory().getAbsolutePath()
-                    + "/map/fenpeiwang.geodatabase";
-        }
-        if(!"".equals(fenpeipath))
-        {
+        String fenpeipath = FileUtil.getFileAbsolutePath("/map/fenpeiwang.geodatabase");
+        if(fenpeipath != null) {
             loadLayerByGeoPath("分配网", fenpeipath);
         }
+
         //
-        String PDAguanglan = "";
-        if(File.exists(Environment.getExternalStorageDirectory().getAbsolutePath()
-                + "/map/pdagl.geodatabase"))
-        {
-            PDAguanglan = Environment.getExternalStorageDirectory().getAbsolutePath()
-                    + "/map/pdagl.geodatabase";
-        }else if(File.exists(Environment.getRootDirectory().getAbsolutePath()
-                + "/map/pdagl.geodatabase")){
-            PDAguanglan = Environment.getRootDirectory().getAbsolutePath()
-                    + "/map/pdagl.geodatabase";
-        }
-        if(!"".equals(PDAguanglan))
-        {
+        String PDAguanglan = FileUtil.getFileAbsolutePath("/map/pdagl.geodatabase");
+        if(PDAguanglan != null) {
             loadLayerByGeoPath("PDA光缆网", PDAguanglan);
         }
+
         //
-        String daolupath = "";
-        if(File.exists(Environment.getExternalStorageDirectory().getAbsolutePath()
-                + "/map/hfcdaolu.geodatabase"))
-        {
-            daolupath = Environment.getExternalStorageDirectory().getAbsolutePath()
-                    + "/map/hfcdaolu.geodatabase";
-        }else if(File.exists(Environment.getRootDirectory().getAbsolutePath()
-                + "/map/hfcdaolu.geodatabase")){
-            daolupath = Environment.getRootDirectory().getAbsolutePath()
-                    + "/map/hfcdaolu.geodatabase";
-        }
-        if(!"".equals(daolupath))
-        {
+        String daolupath = FileUtil.getFileAbsolutePath("/map/hfcdaolu.geodatabase");
+        if(daolupath != null) {
             loadLayerByGeoPath("道路网", daolupath);
         }
     }
@@ -881,6 +839,7 @@ public class Main extends Activity implements OnMapListener
             }
         }
     }
+
 
     /**
      *
@@ -1248,6 +1207,7 @@ public class Main extends Activity implements OnMapListener
             db.execute("aqBS_InsExtent", params);
 
 
+        saveTocSetting();
     }
     /**
      * 复制单个文件
@@ -1699,7 +1659,7 @@ public class Main extends Activity implements OnMapListener
         Location location = locationManager.getLastKnownLocation(bestProvider);
         if (location != null) {
             mLastLocationFromGps = location;
-            updateLocation(location, true);
+            updateLocation(location, false);
             updateUi();
             //监听状态
             locationManager.addGpsStatusListener(mGpsStatusListener);

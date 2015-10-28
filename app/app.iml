@@ -104,5 +104,6 @@
     <orderEntry type="library" exported="" name="android-ui-1.2" level="project" />
     <orderEntry type="library" exported="" name="ksoap2-android-assembly-2.4-jar-with-dependencies" level="project" />
     <orderEntry type="library" exported="" name="jackson-mapper-lgpl-1.9.5" level="project" />
+    <orderEntry type="library" exported="" name="android-android-22" level="project" />
   </component>
 </module>
