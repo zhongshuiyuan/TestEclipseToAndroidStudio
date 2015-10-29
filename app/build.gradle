@@ -38,6 +38,7 @@ dependencies {
     compile files('libs/spatialite-android-library.jar')
     //compile(name: 'MaterialDesign', ext: 'aar')
     compile(name: 'MaterialDesignDialog', ext: 'aar')
+    compile(name: 'FloatingActionButton', ext: 'aar')
     compile 'com.github.markushi:android-ui:1.2'
     compile 'com.github.navasmdc:MaterialDesign:1.5@aar'
     compile 'com.nineoldandroids:library:2.4.0'

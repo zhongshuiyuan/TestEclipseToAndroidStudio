@@ -58,10 +58,17 @@
             <!--app:iconDrawable="@drawable/ic_layers_white_48dp" />-->
 
     </LinearLayout>
+    <!-- 动作条阴影 -->
+    <View
+        android:id="@+id/main_actionbar_shadow"
+        android:layout_width="fill_parent"
+        android:layout_height="2dp"
+        android:layout_below="@id/main_actionbar"
+        android:background="@color/app_design_shadow" />
 
     <android.support.v4.widget.DrawerLayout
         android:id="@+id/drawerlayout"
-        android:layout_below="@id/main_actionbar"
+        android:layout_below="@id/main_actionbar_shadow"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
@@ -195,10 +202,10 @@
                     android:id="@+id/main_btn_zoomin"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_alignParentRight="true"
-                    android:layout_alignParentEnd="true"
-                    android:layout_marginRight="16dp"
-                    android:layout_marginEnd="16dp"
+                    android:layout_alignParentLeft="true"
+                    android:layout_alignParentStart="true"
+                    android:layout_marginLeft="24dp"
+                    android:layout_marginStart="24dp"
                     android:layout_above="@+id/main_btn_zoomout"
                     android:layout_marginBottom="8dp"
                     android:onClick="click"
@@ -209,11 +216,11 @@
                     android:id="@+id/main_btn_zoomout"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_alignParentRight="true"
-                    android:layout_alignParentEnd="true"
-                    android:layout_marginRight="16dp"
-                    android:layout_marginEnd="16dp"
-                    android:layout_above="@+id/LlMenu"
+                    android:layout_alignParentLeft="true"
+                    android:layout_alignParentStart="true"
+                    android:layout_marginLeft="24dp"
+                    android:layout_marginStart="24dp"
+                    android:layout_above="@+id/btn_location"
                     android:layout_marginBottom="16dp"
                     android:onClick="click"
                     app:iconDrawable="@drawable/ic_minus_white"
