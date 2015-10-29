@@ -36,13 +36,16 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="8dp"
+                android:layout_marginStart="8dp"
                 android:layout_gravity="center_vertical"
-                android:src="@drawable/common_icon_searchbox_magnifier" />
+                android:src="@drawable/common_icon_searchbox_magnifier"
+                android:contentDescription="搜索图标"/>
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="8dp"
+                android:layout_marginStart="8dp"
                 android:layout_gravity="center_vertical"
                 android:text="搜单位、道路，光机、井"
                 android:textColor="#666"
@@ -100,13 +103,15 @@
                     android:layout_width="180dp"
                     android:layout_height="147dp"
                     android:layout_marginTop="8dp"
-                    android:layout_marginLeft="8dp">
+                    android:layout_marginLeft="8dp"
+                    android:layout_marginStart="8dp">
 
                     <RelativeLayout
                         android:id="@+id/main_rl_information"
                         android:layout_width="176dp"
                         android:layout_height="144dp"
                         android:layout_marginLeft="2dp"
+                        android:layout_marginStart="2dp"
                         android:layout_marginTop="1dp"
                         android:background="@color/white">
 
@@ -116,6 +121,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginLeft="16dp"
+                            android:layout_marginStart="16dp"
                             android:layout_marginTop="16dp"
                             android:text="123456.8, 123456.8"
                             android:textSize="16sp"/>
@@ -127,6 +133,7 @@
                             android:layout_height="wrap_content"
                             android:layout_marginTop="8dp"
                             android:layout_marginLeft="16dp"
+                            android:layout_marginStart="16dp"
                             android:layout_below="@+id/coordinate"
                             android:text="比例1:300000"
                             android:textSize="16sp"/>
@@ -137,6 +144,7 @@
                             android:layout_height="wrap_content"
                             android:layout_marginTop="8dp"
                             android:layout_marginLeft="16dp"
+                            android:layout_marginStart="16dp"
                             android:layout_below="@+id/scale"
                             android:text="经度："
                             android:textSize="16sp"/>
@@ -147,6 +155,7 @@
                             android:layout_height="wrap_content"
                             android:layout_marginTop="8dp"
                             android:layout_marginLeft="16dp"
+                            android:layout_marginStart="16dp"
                             android:layout_below="@+id/main_tv_longitude"
                             android:text="纬度："
                             android:textSize="16sp"/>
@@ -164,6 +173,7 @@
                         android:layout_width="2dp"
                         android:layout_height="fill_parent"
                         android:layout_marginLeft="178dp"
+                        android:layout_marginStart="178dp"
                         android:background="@color/app_design_shadow" />
                     <!-- 下 -->
                     <View
@@ -179,9 +189,6 @@
 
                 </RelativeLayout>
 
-
-
-
                 <!-- 定位按钮 -->
                 <com.gc.materialdesign.views.ButtonFloat
                     android:id="@+id/btn_location"
@@ -189,9 +196,9 @@
                     android:layout_height="wrap_content"
                     android:layout_alignParentLeft="true"
                     android:layout_alignParentStart="true"
+                    android:layout_alignParentBottom="true"
                     android:layout_marginLeft="16dp"
                     android:layout_marginStart="16dp"
-                    android:layout_above="@+id/LlMenu"
                     android:layout_marginBottom="16dp"
                     android:onClick="click"
                     android:background="@color/app_design_background"
@@ -226,248 +233,81 @@
                     app:iconDrawable="@drawable/ic_minus_white"
                     app:animate="false"/>
 
-                <!-- 缩放地图按钮（旧） -->
-                <!--
-                <LinearLayout
+                <!-- 按钮菜单 -->
+                <com.getbase.floatingactionbutton.FloatingActionsMenu
+                    android:id="@+id/main_multiple_actions"
                     android:layout_width="wrap_content"
-                    android:layout_height="80dp"
-                    android:layout_above="@+id/LlMenu"
-                    android:layout_alignParentRight="true"
-                    android:layout_marginBottom="10dp"
-                    android:layout_marginRight="10dp"
-                    android:background="@drawable/ww"
-                    android:orientation="vertical" >
-
-                    <ImageButton
-                        android:id="@+id/Zoomin"
-                        android:layout_width="wrap_content"
-                        android:layout_height="0dp"
-                        android:layout_weight="1"
-                        android:background="@drawable/linear_menu_selector"
-                        android:onClick="click"
-                        android:padding="10dp"
-                        android:src="@drawable/main_icon_zoomin" />
-
-                    <View
-                        android:layout_width="fill_parent"
-                        android:layout_height="1dp"
-                        android:background="#d1d0d0" />
-
-                    <ImageButton
-                        android:id="@+id/Zoomout"
-                        android:layout_width="wrap_content"
-                        android:layout_height="0dp"
-                        android:layout_weight="1"
-                        android:background="@drawable/linear_menu_selector"
-                        android:onClick="click"
-                        android:padding="10dp"
-                        android:src="@drawable/main_icon_zoomout" />
-                </LinearLayout>
-                -->
-
-                <!-- 底部菜单 -->
-                <LinearLayout
-                    android:id="@+id/LlMenu"
-                    android:layout_width="fill_parent"
-                    android:layout_height="50dp"
+                    android:layout_height="wrap_content"
                     android:layout_alignParentBottom="true"
-                    android:layout_marginBottom="10dp"
-                    android:layout_marginLeft="10dp"
-                    android:layout_marginRight="10dp"
-                    android:background="@drawable/ll"
-                    android:orientation="horizontal" >
+                    android:layout_alignParentRight="true"
+                    android:layout_alignParentEnd="true"
+                    android:layout_marginBottom="16dp"
+                    android:layout_marginRight="16dp"
+                    android:layout_marginEnd="16dp"
+                    app:fab_addButtonColorNormal="@color/app_design_background"
+                    app:fab_addButtonColorPressed="@color/app_design_background"
+                    app:fab_addButtonPlusIconColor="@color/white"
+                    app:fab_labelStyle="@style/menu_labels_style">
+                    <!--app:fab_addButtonSize="mini"-->
+                    <!--app:fab_expandDirection="up"-->
 
-                    <LinearLayout
-                        android:id="@+id/LinearLength"
-                        android:layout_width="0dp"
-                        android:layout_height="fill_parent"
-                        android:layout_weight="1"
-                        android:background="@drawable/linear_menu_selector"
-                        android:gravity="center"
+                    <com.getbase.floatingactionbutton.FloatingActionButton
+                        android:id="@+id/main_btn_distance_measurement"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
                         android:onClick="click"
-                        android:orientation="horizontal" >
+                        app:fab_icon="@drawable/ic_ruler_white"
+                        app:fab_title="测距"
+                        app:fab_colorNormal="@color/app_design_background"
+                        app:fab_colorPressed="@color/app_design_ripple"/>
 
-                        <ImageView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:src="@drawable/ceju" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="测距" />
-                    </LinearLayout>
-
-                    <View
-                        android:layout_width="1px"
-                        android:layout_height="fill_parent"
-                        android:layout_marginBottom="10dp"
-                        android:layout_marginTop="10dp"
-                        android:background="#777676" />
-
-                    <LinearLayout
-                        android:id="@+id/LinearClear"
-                        android:layout_width="0dp"
-                        android:layout_height="fill_parent"
-                        android:layout_weight="1"
-                        android:background="@drawable/linear_menu_selector"
-                        android:gravity="center"
+                    <com.getbase.floatingactionbutton.FloatingActionButton
+                        android:id="@+id/main_btn_clear"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
                         android:onClick="click"
-                        android:orientation="horizontal" >
+                        app:fab_icon="@drawable/ic_delete_white_48dp"
+                        app:fab_title="清空"
+                        app:fab_colorNormal="@color/app_design_background"
+                        app:fab_colorPressed="@color/app_design_ripple"/>
 
-                        <ImageView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:src="@drawable/qingkong" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="清空" />
-                    </LinearLayout>
-
-                    <View
-                        android:layout_width="1px"
-                        android:layout_height="fill_parent"
-                        android:layout_marginBottom="10dp"
-                        android:layout_marginTop="10dp"
-                        android:background="#777676" />
-
-                    <LinearLayout
-                        android:id="@+id/back"
-                        android:layout_width="0dp"
-                        android:layout_height="fill_parent"
-                        android:layout_weight="1"
-                        android:background="@drawable/linear_menu_selector"
-                        android:gravity="center"
+                    <com.getbase.floatingactionbutton.FloatingActionButton
+                        android:id="@+id/mian_btn_previous"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
                         android:onClick="click"
-                        android:orientation="horizontal" >
+                        app:fab_icon="@drawable/ic_undo_white"
+                        app:fab_title="后退"
+                        app:fab_colorNormal="@color/app_design_background"
+                        app:fab_colorPressed="@color/app_design_ripple"/>
 
-                        <ImageView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:src="@drawable/houtui" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="后退" />
-                    </LinearLayout>
-
-                    <View
-                        android:layout_width="1px"
-                        android:layout_height="fill_parent"
-                        android:layout_marginBottom="10dp"
-                        android:layout_marginTop="10dp"
-                        android:background="#777676" />
-
-                    <LinearLayout
-                        android:id="@+id/advance"
-                        android:layout_width="0dp"
-                        android:layout_height="fill_parent"
-                        android:layout_weight="1"
-                        android:background="@drawable/linear_menu_selector"
-                        android:gravity="center"
+                    <com.getbase.floatingactionbutton.FloatingActionButton
+                        android:id="@+id/mian_btn_next"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
                         android:onClick="click"
-                        android:orientation="horizontal" >
+                        app:fab_icon="@drawable/ic_redo_white"
+                        app:fab_title="前进"
+                        app:fab_colorNormal="@color/app_design_background"
+                        app:fab_colorPressed="@color/app_design_ripple"/>
 
-                        <ImageView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:src="@drawable/qianjin" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="前进" />
-                    </LinearLayout>
-
-                    <View
-                        android:layout_width="1px"
-                        android:layout_height="fill_parent"
-                        android:layout_marginBottom="10dp"
-                        android:layout_marginTop="10dp"
-                        android:background="#777676" />
-
-                    <LinearLayout
-                        android:id="@+id/btnAll"
-                        android:layout_width="0dp"
-                        android:layout_height="fill_parent"
-                        android:layout_weight="1"
-                        android:background="@drawable/linear_menu_selector"
-                        android:gravity="center"
+                    <com.getbase.floatingactionbutton.FloatingActionButton
+                        android:id="@+id/mian_btn_fullextent"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
                         android:onClick="click"
-                        android:orientation="horizontal" >
+                        app:fab_icon="@drawable/ic_earth_white"
+                        app:fab_title="全图"
+                        app:fab_colorNormal="@color/app_design_background"
+                        app:fab_colorPressed="@color/app_design_ripple"/>
 
-                        <ImageView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:src="@drawable/globe2" />
+                </com.getbase.floatingactionbutton.FloatingActionsMenu>
 
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="全图" />
-                    </LinearLayout>
 
-                    <View
-                        android:layout_width="1px"
-                        android:layout_height="fill_parent"
-                        android:layout_marginBottom="10dp"
-                        android:layout_marginTop="10dp"
-                        android:background="#777676" />
-
-                    <!-- <LinearLayout
-                        android:id="@+id/btnAuthority"
-                        android:layout_width="0dp"
-                        android:layout_height="fill_parent"
-                        android:layout_weight="1"
-                        android:background="@drawable/linear_menu_selector"
-                        android:gravity="center"
-                        android:onClick="click"
-                        android:orientation="horizontal" >
-
-                        <ImageView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:src="@drawable/quanxian" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="权限" />
-                    </LinearLayout> -->
-                    <View
-                        android:layout_width="1px"
-                        android:layout_height="fill_parent"
-                        android:layout_marginBottom="10dp"
-                        android:layout_marginTop="10dp"
-                        android:background="#777676" />
-                    <LinearLayout
-                        android:id="@+id/rj"
-                        android:layout_width="0dp"
-                        android:layout_height="fill_parent"
-                        android:layout_weight="1"
-                        android:background="@drawable/linear_menu_selector"
-                        android:gravity="center"
-                        android:onClick="click"
-                        android:orientation="horizontal" >
-
-                        <ImageView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:src="@drawable/rj"/>
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="熔接" />
-                    </LinearLayout>
-
-                </LinearLayout>
             </RelativeLayout>
         </FrameLayout>
 
+        <!-- 左抽屉 -->
         <RelativeLayout
             android:id="@+id/left"
             android:layout_width="200dp"
@@ -483,6 +323,7 @@
             </ListView>
         </RelativeLayout>
 
+        <!-- 右抽屉 -->
         <RelativeLayout
             android:id="@+id/right"
             android:layout_width="260dp"
@@ -501,7 +342,6 @@
             </ExpandableListView>
         </RelativeLayout>
 
-    </android.support.v4.widget.DrawerLayout>t.v4.widget.DrawerLayout>
-
+    </android.support.v4.widget.DrawerLayout>
 
 </RelativeLayout>

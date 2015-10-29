@@ -426,7 +426,7 @@ public class Main extends Activity implements OnMapListener
             public void onItemClick(AdapterView<?> arg0, View arg1, int index,
                                     long arg3) {
                 switch (index) {
-                    case 0:
+                    case 0: //权限控制
                         if (functions.contains("001001")) {
                             Intent intentAuthority = new Intent(Main.this, Dialog_Authority.class);
                             startActivityForResult(intentAuthority, 1);
@@ -437,12 +437,16 @@ public class Main extends Activity implements OnMapListener
                         }
 
                         break;
-                    case 1:
+                    case 1: //查看熔接
+                        touchListener.setGeoType(Geometry.Type.POLYGON);
+                        touchListener.setFeatureLayers(null);
+                        break;
+                    case 2: // 编辑管井
                         Intent iii = new Intent(Main.this, PopWindowSpinnerActivity.class/*GuanjingActivity.class*/);
                         startActivityForResult(iii, requestCode);
                         drawerLayout.closeDrawers();
                         break;
-                    case 2:
+                    case 3: // 编辑光缆
                         drawerLayout.closeDrawers();
 					/*Intent iii2 = new Intent(Main.this,GuanglanActivity.class);
 					startActivityForResult(iii2,requestCode);*/
@@ -451,15 +455,15 @@ public class Main extends Activity implements OnMapListener
                         touchListener.setGltype(GL_TYPE);
                         GL_TYPE = "";
                         break;
-                    case 3:
+                    case 4: // 编辑光缆路由
                         touchListener.setDrawglly(true);
                         drawerLayout.closeDrawers();
                         break;
-                    case 4:
+                    case 5: // 编辑电缆路由
                         touchListener.setDrawdlly(true);
                         drawerLayout.closeDrawers();
                         break;
-                    case 5:
+                    case 6: // 查看管道光缆走向
                         touchListener.setShowglly(true);
                         drawerLayout.closeDrawers();
                         break;
@@ -487,6 +491,7 @@ public class Main extends Activity implements OnMapListener
 		/*leftDrawerDatas.add(new ContentModel(R.drawable.doctoradvice2, "新闻"));
 		leftDrawerDatas.add(new ContentModel(R.drawable.infusion_selected, "查阅"));*/
         leftDrawerDatas.add(new ContentModel(R.drawable.mypatient_selected, "权限控制"));
+        leftDrawerDatas.add(new ContentModel(R.drawable.rj, "查看熔接信息"));
         leftDrawerDatas.add(new ContentModel(R.drawable.personal_selected, "编辑管井"));
         leftDrawerDatas.add(new ContentModel(R.drawable.nursingcareplan2, "编辑光缆"));
         leftDrawerDatas.add(new ContentModel(R.drawable.infusion_selected, "编辑光缆路由图"));
@@ -941,23 +946,19 @@ public class Main extends Activity implements OnMapListener
             case R.id.main_btn_zoomout: // 缩小地图
                 map.zoomout();
                 break;
-            case R.id.LinearLength: // 计算长度
+            case R.id.main_btn_distance_measurement: // 计算长度
                 touchListener.setGeoType(Geometry.Type.POLYLINE);
                 break;
-            case R.id.LinearClear: // 清空计算长度画的线和点
+            case R.id.main_btn_clear: // 清空计算长度画的线和点
                 drawLayer.removeAll();
                 touchListener.setGeoType(null);
                 daoLuLayer.removeAll();
                 map.postInvalidate();
                 break;
-            case R.id.rj:
-                touchListener.setGeoType(Geometry.Type.POLYGON);
-                touchListener.setFeatureLayers(null);
-                break;
             case R.id.main_ll_search:// 搜索功能
                 onSearchClick();
                 break;
-            case R.id.back: // 后退操作
+            case R.id.mian_btn_previous: // 后退操作
                 List<Take> takes = Session.getTakes();
                 int size = takes.size();
                 if (index > 0 && size > 0)
@@ -969,7 +970,7 @@ public class Main extends Activity implements OnMapListener
                     map.centerAt(take.getPoint(), true);
                 }
                 break;
-            case R.id.advance: // 前进操作
+            case R.id.mian_btn_next: // 前进操作
                 List<Take> t = Session.getTakes();
                 int s = t.size();
                 if (index < s - 1)
@@ -984,11 +985,7 @@ public class Main extends Activity implements OnMapListener
             case R.id.btn_location: // 切换导航模式和普通模式
                 onBtnNavigationClick();
                 break;
-			/*case R.id.btnAuthority:
-			Intent intentAuthority = new Intent(Main.this, Dialog_Authority.class);
-			startActivityForResult(intentAuthority, 1);
-			break;*/
-            case R.id.btnAll:
+            case R.id.mian_btn_fullextent:
                 seeAll();
                 break;
             case R.id.main_btn_toc:
@@ -1331,6 +1328,9 @@ public class Main extends Activity implements OnMapListener
 
         forceUpdateCoordinate(236038.1424072377, 109233.05352031846);
         forceUpdateScale(175590);
+
+        mMapState = MAP_STATE_NORMAL;
+        onMapStateChanged();
     }
 
     /**
