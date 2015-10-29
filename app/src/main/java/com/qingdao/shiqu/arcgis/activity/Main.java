@@ -20,6 +20,7 @@ import Eruntech.BirthStone.Core.Sqlite.SQLiteDatabase;
 import at.markushi.ui.ActionView;
 import at.markushi.ui.action.BackAction;
 import at.markushi.ui.action.DrawerAction;
+import me.drakeet.materialdialog.MaterialDialog;
 
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
@@ -45,13 +46,13 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.location.LocationProvider;
 import android.os.Bundle;
-import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
 import android.support.v4.widget.DrawerLayout;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ExpandableListView;
@@ -76,6 +77,7 @@ import com.esri.core.map.Graphic;
 import com.esri.core.symbol.MarkerSymbol;
 import com.esri.core.symbol.PictureMarkerSymbol;
 import com.esri.core.symbol.SimpleLineSymbol;
+import com.gc.materialdesign.views.ButtonFlat;
 import com.gc.materialdesign.views.ButtonFloat;
 import com.gc.materialdesign.views.ButtonIcon;
 import com.qingdao.shiqu.arcgis.R;
@@ -213,7 +215,52 @@ public class Main extends Activity implements OnMapListener
 
         startUpdatePositionMode();
 
+        showNewVersionChanglog();
+
         super.onCreate(savedInstanceState);
+    }
+
+    /** 显示新版本特性 **/
+    private void showNewVersionChanglog() {
+        boolean show = sharedPreferences.getBoolean(getString(R.string.preference_file_key_main_boolean_show_changelog), true);
+        if (show) {
+            final MaterialDialog materialDialog = new MaterialDialog(this);
+            String title = getString(R.string.app_version) + "版本变化";
+            String message = "1、使用谷歌的Material Design重新设计整个app，虽然暂未完成，但是希望你会喜欢\n"
+                    + "2、重新设计定位的显示，实时更新所在位置\n"
+                    + "3、显示当前通过GPS定位位置的经纬度\n"
+                    + "4、保存图层控制的设置，下次登录时能读取之前的设置\n"
+                    + "5、修复登录成功后地图显示空白的bug\n"
+                    + "6、修复导航模式无法取消的bug\n"
+                    + "7、修复了很多处细微的bug，只为使用起来更舒适\n";
+            materialDialog.setTitle(title)
+                    .setMessage(message)
+                    .setPositiveButton("确定", new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            materialDialog.dismiss();
+                        }
+                    })
+                    .setNegativeButton("不再显示", new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            SharedPreferences sharedPreferences = getPreferences(Context.MODE_PRIVATE);
+                            SharedPreferences.Editor editor = sharedPreferences.edit();
+                            editor.putBoolean(getString(R.string.preference_file_key_main_boolean_show_changelog), false);
+                            editor.commit();
+                            materialDialog.dismiss();
+                        }
+                    });
+
+            materialDialog.show();
+
+            // 隐藏软键盘
+            InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
+            if (imm.isActive()) {
+                imm.toggleSoftInput(InputMethodManager.SHOW_IMPLICIT, InputMethodManager.HIDE_NOT_ALWAYS);
+            }
+
+        }
     }
 
     /**
@@ -221,6 +268,8 @@ public class Main extends Activity implements OnMapListener
      */
     public void onCreateView()
     {
+        sharedPreferences = this.getPreferences(Context.MODE_PRIVATE);
+
         mMapState = MAP_STATE_NORMAL;
 
         //顶部动作条
@@ -597,7 +646,10 @@ public class Main extends Activity implements OnMapListener
     }
 
     private void saveTocSetting() {
-        SharedPreferences sharedPreferences = getPreferences(Context.MODE_PRIVATE);
+        if (sharedPreferences == null) {
+            sharedPreferences = getPreferences(Context.MODE_PRIVATE);
+        }
+
         String tocSetting = "";
 
         int titleCount = childs.size();
@@ -615,13 +667,15 @@ public class Main extends Activity implements OnMapListener
         }
 
         SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.putString(getString(R.string.preference_file_key_main_toc), tocSetting);
+        editor.putString(getString(R.string.preference_file_key_string_main_toc), tocSetting);
         editor.commit();
     }
 
     private void loadTocSetting() {
-        SharedPreferences sharedPreferences = getPreferences(Context.MODE_PRIVATE);
-        String tocSetting = sharedPreferences.getString(getString(R.string.preference_file_key_main_toc), null);
+        if (sharedPreferences == null) {
+            sharedPreferences = getPreferences(Context.MODE_PRIVATE);
+        }
+        String tocSetting = sharedPreferences.getString(getString(R.string.preference_file_key_string_main_toc), null);
         if (tocSetting != null) {
             int stringIndex = 0;
             int titleCount = childs.size();

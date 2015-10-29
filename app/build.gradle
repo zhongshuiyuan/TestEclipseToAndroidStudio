@@ -37,7 +37,7 @@ dependencies {
     compile files('libs/ksoap2-android-assembly-2.4-jar-with-dependencies.jar')
     compile files('libs/spatialite-android-library.jar')
     //compile(name: 'MaterialDesign', ext: 'aar')
-    //compile 'com.ikimuhendis:ldrawer:0.1'
+    compile(name: 'MaterialDesignDialog', ext: 'aar')
     compile 'com.github.markushi:android-ui:1.2'
     compile 'com.github.navasmdc:MaterialDesign:1.5@aar'
     compile 'com.nineoldandroids:library:2.4.0'

@@ -67,8 +67,6 @@
         android:layout_height="match_parent">
 
         <FrameLayout
-            xmlns:android="http://schemas.android.com/apk/res/android"
-            xmlns:custom="http://schemas.android.com/apk/res/com.qingdao.shiqu.arcgis"
             android:id="@+id/lin"
             android:layout_width="fill_parent"
             android:layout_height="fill_parent"

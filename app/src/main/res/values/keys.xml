@@ -3,5 +3,6 @@
     <string name="intent_extra_key_tube_id">intent_extra_key_tube_id</string>
     <string name="preference_file_key_show_animation">preference_file_key_show_animation</string>
     
-    <string name="preference_file_key_main_toc">preference_file_key_main_toc</string>
+    <string name="preference_file_key_string_main_toc">preference_file_key_main_toc</string>
+    <string name="preference_file_key_main_boolean_show_changelog">preference_file_key_main_show_changelog</string>
 </resources>

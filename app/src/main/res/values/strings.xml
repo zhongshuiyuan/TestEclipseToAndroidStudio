@@ -6,6 +6,7 @@
     <string name="drawer_close">close</string>
     <string name="title_activity_add">add</string>
     <string name="drawer_title">titel</string>
+    <string name="app_version">1.0.3</string>
 	
 	 <!-- Common Actions -->
     <string name="on">打开</string>
