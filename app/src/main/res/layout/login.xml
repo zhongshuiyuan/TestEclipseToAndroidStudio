@@ -59,7 +59,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="48dp"
                 android:background="@color/white"
-                android:text="登录" />
+                android:text="登录"
+                app:animate="true"/>
         </RelativeLayout>
 
     </LinearLayout>

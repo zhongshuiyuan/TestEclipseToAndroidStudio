@@ -935,10 +935,10 @@ public class Main extends Activity implements OnMapListener
     {
         switch (view.getId())
         {
-            case R.id.Zoomin: // 缩小地图
+            case R.id.main_btn_zoomin: // 放大地图
                 map.zoomin();
                 break;
-            case R.id.Zoomout: // 放大地图
+            case R.id.main_btn_zoomout: // 缩小地图
                 map.zoomout();
                 break;
             case R.id.LinearLength: // 计算长度
@@ -981,7 +981,7 @@ public class Main extends Activity implements OnMapListener
                     map.centerAt(take.getPoint(), true);
                 }
                 break;
-            case R.id.btn_location: // 将地图中心移动到定位坐标点
+            case R.id.btn_location: // 切换导航模式和普通模式
                 onBtnNavigationClick();
                 break;
 			/*case R.id.btnAuthority:
