@@ -12,6 +12,7 @@ import Eruntech.BirthStone.Core.Parse.DataCollection;
 import Eruntech.BirthStone.Core.Parse.DataTable;
 import Eruntech.BirthStone.Core.Sqlite.SQLiteDatabase;
 import android.app.AlertDialog;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -57,6 +58,7 @@ import com.qingdao.shiqu.arcgis.R;
 import com.qingdao.shiqu.arcgis.activity.Dialog_Range;
 import com.qingdao.shiqu.arcgis.dialog.DataShowDialog;
 import com.qingdao.shiqu.arcgis.helper.FunctionHelper;
+import com.qingdao.shiqu.arcgis.sqlite.DatabaseOpenHelper;
 import com.qingdao.shiqu.arcgis.sqlite.DoAction;
 import com.qingdao.shiqu.arcgis.utils.DBOpterate;
 import com.qingdao.shiqu.arcgis.utils.LocalDataModify;
@@ -80,7 +82,7 @@ import com.qingdao.shiqu.arcgis.utils.XMLToServer;
 public class MapTouchListener extends MapOnTouchListener implements OnZoomListener
 {
 	List<Point> points;
-	Context context;
+	Context mContext;
 	MapView mapView;
 	SimpleLineSymbol lineSymbol,lineSysb;
 	SimpleMarkerSymbol markerSymbol;
@@ -255,7 +257,7 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 	public MapTouchListener(Context context, MapView mapView)
 	{
 		super(context, mapView);
-		this.context = context;
+		this.mContext = context;
 		db = new SQLiteDatabase(context);
 		this.mapView = mapView;
 		points = new ArrayList<Point>();
@@ -451,7 +453,7 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 				currentPoint = mapView.toMapPoint(new Point(point.getX(), point.getY()));
 				points.add(currentPoint);
 				//Get jing pictrue path
-				String path = DoAction.getGJPathByName(context,jtype);
+				String path = DoAction.getGJPathByName(mContext,jtype);
 				//transition path to drawable 
 				Bitmap bm = DoAction.TransPath2Bmp(path);
 				BitmapDrawable bd = new BitmapDrawable(bm);
@@ -475,7 +477,7 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 
 					Polyline polyline = new Polyline();
 					polyline.addSegment(l, false);
-					lineSysb = new SimpleLineSymbol(/*Color.RED*/DoAction.getGDColorByCQ(context,gdcq), DoAction.getGDWidthByCQ(context, gdcq), SimpleLineSymbol.STYLE.SOLID);
+					lineSysb = new SimpleLineSymbol(/*Color.RED*/DoAction.getGDColorByCQ(mContext,gdcq), DoAction.getGDWidthByCQ(mContext, gdcq), SimpleLineSymbol.STYLE.SOLID);
 					Graphic tempGraphic = new Graphic(polyline, lineSysb);
 					uid_segment = newgdlayer.addGraphic(tempGraphic);
 					uid_seg_list.add(uid_segment);
@@ -526,20 +528,31 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 					layer.addGraphic(tempGraphic);
 
 					String lenth = Double.toString(Math.round(l.calculateLength2D())) + "米";
-					Toast.makeText(context, lenth, Toast.LENGTH_SHORT).show();
+					Toast.makeText(mContext, lenth, Toast.LENGTH_SHORT).show();
 					fristPoint = currentPoint;
+
+					// TODO 测试保存Graphic到数据库
+					DatabaseOpenHelper mDbHelper = new DatabaseOpenHelper(mContext);
+					android.database.sqlite.SQLiteDatabase db = mDbHelper.getWritableDatabase();
+					ContentValues cv = new ContentValues();//实例化一个ContentValues用来装载待插入的数据
+					//cv.put("username","Jack Johnson");//添加用户名
+					//cv.put("password","iLovePopMusic"); //添加密码
+					tempGraphic.getGeometry().
+					cv.put
+					db.insert("user", null, cv);//执行插入操作
+					// TODO 测试结束，重构时删除以上测试代码
 				}
 			}/*else*/ if (guangji != null) 
 			{
 				long[] featureIDs = guangji.getFeatureIDs(point.getX(), point.getY(), 30);
 				if (featureIDs.length > 0)
 				{
-					// Toast.makeText(context, "查出光机信息"+featureIDs[0],
+					// Toast.makeText(mContext, "查出光机信息"+featureIDs[0],
 					// Toast.LENGTH_SHORT).show();
 					// 获取工程附图路径
-					Intent intentAuthority = new Intent(context, Dialog_Range.class);
+					Intent intentAuthority = new Intent(mContext, Dialog_Range.class);
 					intentAuthority.putExtra("tt_id", featureIDs[0] + "");
-					context.startActivity(intentAuthority);
+					mContext.startActivity(intentAuthority);
 				}
 
 			}
@@ -575,10 +588,10 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 							{
 								String nodeid = attributes.get("OBJECT_USE").toString();
 
-								DBOpterate dbo = DBOpterate.getDbOpterate(context);
+								DBOpterate dbo = DBOpterate.getDbOpterate(mContext);
 								String[] selectionArgs = {"tt_id","tt_name","refname","astext(Geometry)","cadtype","nodename","funtype","state","areaid","userlocati"};
 								List<Data> list = dbo.searchPointByID(nodeid, selectionArgs);
-								DataShowDialog.showDialog_List(list, "节点属性信息", context);
+								DataShowDialog.showDialog_List(list, "节点属性信息", mContext);
 								is = false;
 
 							}
@@ -609,9 +622,8 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 						}
 						Writer writer = new StringWriter();
 						try {
-							XMLToServer.SendToServer(gdIDS, writer, context);
+							XMLToServer.SendToServer(gdIDS, writer, mContext);
 						} catch (Throwable e) {
-							// TODO 自动生成的 catch 块
 							e.printStackTrace();
 						}
 					}else if(geoType == Geometry.Type.POLYGON && featureIDs.length > 2){
@@ -638,7 +650,7 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 
 						}
 						DataShowDialog.gdIDs = gdIDs;
-						DataShowDialog.showDialog_StringArray(gdNames, "光纤熔接选择", context);
+						DataShowDialog.showDialog_StringArray(gdNames, "光纤熔接选择", mContext);
 					}else{
 						List<Feature> selectedFeatures = guandao.getSelectedFeatures();
 						for (int j = 0; j < selectedFeatures.size(); j++)
@@ -659,7 +671,7 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 									startingPointName = first.get("StartingPointName").getValue().toString();
 									endPointName = first.get("EndPointName").getValue().toString();
 									final String[] itemList = {"起点:" + startingPointName,"终点:" + endPointName};
-									final Button openTubeViewBtn = new Button(context);
+									final Button openTubeViewBtn = new Button(mContext);
 
 									openTubeViewBtn.setText("打开管道截面展开图");
 									openTubeViewBtn.setOnClickListener(new OnClickListener()
@@ -676,13 +688,13 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 											Log.d("debug", tubeId.toString());
 
 
-											Intent tubeViewIntent = new Intent(context, TubeViewActivity.class);
-											tubeViewIntent.putExtra(context.getString(R.string.intent_extra_key_tube_id), tubeId);
-											context.startActivity(tubeViewIntent);
+											Intent tubeViewIntent = new Intent(mContext, TubeViewActivity.class);
+											tubeViewIntent.putExtra(mContext.getString(R.string.intent_extra_key_tube_id), tubeId);
+											mContext.startActivity(tubeViewIntent);
 										}
 									});
 									//							showAlertDialog(itemList);
-									new AlertDialog.Builder(context)
+									new AlertDialog.Builder(mContext)
 									.setIcon(R.drawable.logo)
 									.setTitle("管道属性信息")
 									.setItems(itemList,null)
@@ -692,7 +704,6 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 
 										@Override
 										public void onClick(DialogInterface arg0, int arg1) {
-											// TODO 自动生成的方法存根
 											String tubePadId = nodeid;
 											Float id = Float.parseFloat(tubePadId);
 											Log.d("debug", id.toString());
@@ -701,12 +712,12 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 											Log.d("debug", tubeId.toString());
 
 
-											Intent tubeViewIntent = new Intent(context, TubeViewActivity.class);
-											tubeViewIntent.putExtra(context.getString(R.string.intent_extra_key_tube_id), tubeId);
-											context.startActivity(tubeViewIntent);
+											Intent tubeViewIntent = new Intent(mContext, TubeViewActivity.class);
+											tubeViewIntent.putExtra(mContext.getString(R.string.intent_extra_key_tube_id), tubeId);
+											mContext.startActivity(tubeViewIntent);
 										}
 									})*/
-									.show();
+											.show();
 
 								}
 							}
@@ -751,7 +762,7 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 							gisinfo.add(new Data("X", String.valueOf(tempp.getX())));
 							gisinfo.add(new Data("Y", String.valueOf(tempp.getY())));
 							//信息显示
-							DataShowDialog.showDialog_List(gisinfo, "光机属性信息", context);
+							DataShowDialog.showDialog_List(gisinfo, "光机属性信息", mContext);
 						}
 					}
 					is = false;
@@ -779,7 +790,7 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 								tempp = (Point)tempFea.getGeometry();
 							gisinfo.add(new Data("X", String.valueOf(tempp.getX())));
 							gisinfo.add(new Data("Y", String.valueOf(tempp.getY())));
-							DataShowDialog.showDialog_List(gisinfo, "楼放属性信息", context);
+							DataShowDialog.showDialog_List(gisinfo, "楼放属性信息", mContext);
 						}
 					}
 					is = false;
@@ -804,7 +815,7 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 							}
 							/*gisinfo.add(new Data("X", String.valueOf(tempp.getX())));
 							gisinfo.add(new Data("Y", String.valueOf(tempp.getY())));*/
-							DataShowDialog.showDialog_List(gisinfo, "道路属性信息", context);
+							DataShowDialog.showDialog_List(gisinfo, "道路属性信息", mContext);
 						}
 					}
 					is = false;
@@ -831,7 +842,7 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 							}
 							/*gisinfo.add(new Data("X", String.valueOf(tempp.getX())));
 							gisinfo.add(new Data("Y", String.valueOf(tempp.getY())));*/
-							DataShowDialog.showDialog_List(gisinfo, "路牌号属性信息", context);
+							DataShowDialog.showDialog_List(gisinfo, "路牌号属性信息", mContext);
 						}
 					}
 					is = false;
@@ -862,7 +873,7 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 							}
 							/*gisinfo.add(new Data("X", String.valueOf(tempp.getX())));
 							gisinfo.add(new Data("Y", String.valueOf(tempp.getY())));*/
-							DataShowDialog.showDialog_List(gisinfo, "分支器属性信息", context);
+							DataShowDialog.showDialog_List(gisinfo, "分支器属性信息", mContext);
 						}
 					}
 					is = false;
@@ -893,7 +904,7 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 							}
 							/*gisinfo.add(new Data("X", String.valueOf(tempp.getX())));
 							gisinfo.add(new Data("Y", String.valueOf(tempp.getY())));*/
-							DataShowDialog.showDialog_List(gisinfo, "专网光缆属性信息", context);
+							DataShowDialog.showDialog_List(gisinfo, "专网光缆属性信息", mContext);
 						}
 					}
 					is = false;
@@ -928,7 +939,7 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 							}
 							/*gisinfo.add(new Data("X", String.valueOf(tempp.getX())));
 							gisinfo.add(new Data("Y", String.valueOf(tempp.getY())));*/
-							DataShowDialog.showDialog_List(gisinfo, "支线光缆属性信息", context);
+							DataShowDialog.showDialog_List(gisinfo, "支线光缆属性信息", mContext);
 						}
 					}
 					is = false;
@@ -959,7 +970,7 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 							}
 							/*gisinfo.add(new Data("X", String.valueOf(tempp.getX())));
 							gisinfo.add(new Data("Y", String.valueOf(tempp.getY())));*/
-							DataShowDialog.showDialog_List(gisinfo, "骨干光缆属性信息", context);
+							DataShowDialog.showDialog_List(gisinfo, "骨干光缆属性信息", mContext);
 						}
 					}
 					is = false;
@@ -976,7 +987,7 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 		if(drawglly){
 			//保存光缆路由数据
 			drawglly = false;
-			DoAction.saveGLLY(context, points);
+			DoAction.saveGLLY(mContext, points);
 			fristPoint = null;
 			points.clear();
 			newglly.removeAll();
@@ -986,7 +997,7 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 		if(drawdlly){
 			//保存电缆路由数据
 			drawdlly = false;
-			DoAction.saveDLLY(context, points);
+			DoAction.saveDLLY(mContext, points);
 			fristPoint = null;
 			points.clear();
 			newdlly.removeAll();
@@ -1006,7 +1017,7 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 			sld.savaGL(points,gltype);
 			fristPoint = null;
 			points.clear();
-			Toast.makeText(context, "光缆添加成功！", Toast.LENGTH_SHORT).show();
+			Toast.makeText(mContext, "光缆添加成功！", Toast.LENGTH_SHORT).show();
 			return false;
 		}
 		if(addEle){
@@ -1089,12 +1100,12 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 			del.getSymbol();
 			if(ty == Type.POINT){
 				Point pt = (Point)gy;
-				result = DoAction.getPointInfoByXY(context,pt);
-				//				result = DoAction.getPointInfoByUID(context, String.valueOf(del.getId()));
+				result = DoAction.getPointInfoByXY(mContext,pt);
+				//				result = DoAction.getPointInfoByUID(mContext, String.valueOf(del.getId()));
 				for(int i=0;i<result.size();i++){
 					DataCollection dc = result.next();
 					//search the gjid in gdtable , if find the gj is not to be delete,should delete the linked gd first!
-					DataTable rst = DoAction.getSegmentInfoByPID(context, dc.get("gjid").Value.toString());
+					DataTable rst = DoAction.getSegmentInfoByPID(mContext, dc.get("gjid").Value.toString());
 					// show dialog 
 					showDelDialog(newEleLayer,del.getId(),Integer.valueOf(dc.get("gjid").Value.toString()),rst,ty);
 				}
@@ -1104,11 +1115,11 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 				for(int i=0;i<pl.getPointCount();i++){
 					alpl.add(pl.getPoint(i));
 				}
-				result = DoAction.getSegmentInfoByPts(context,alpl);
-				//				result = DoAction.getSegmentInfoByUID(context, String.valueOf(del.getId()));
+				result = DoAction.getSegmentInfoByPts(mContext,alpl);
+				//				result = DoAction.getSegmentInfoByUID(mContext, String.valueOf(del.getId()));
 				for(int i=0;i<result.size();i++){
 					DataCollection dc = result.next();
-					DataTable rst = DoAction.ChargeSegIsinGD2GL(context,dc.get("gdid").Value.toString());
+					DataTable rst = DoAction.ChargeSegIsinGD2GL(mContext,dc.get("gdid").Value.toString());
 					// show dialog 
 					showDelDialog(newgdlayer,del.getId(),Integer.valueOf(dc.get("gdid").Value.toString()),rst,ty);
 				}
@@ -1119,7 +1130,7 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 		if(del != null && next){
 			next = false;
 			final Graphic temp = del;
-			AlertDialog alertDialog = new AlertDialog.Builder(context)
+			AlertDialog alertDialog = new AlertDialog.Builder(mContext)
 			.setIcon(R.drawable.logo)
 			.setTitle("删除光缆路由")
 			.setMessage("你确定要删除该条光缆路由吗？")
@@ -1141,7 +1152,7 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 							if(i != gllist.size()-1)
 								sb.append("/");
 						}
-						DoAction.removeGLLY(context, sb.toString());
+						DoAction.removeGLLY(mContext, sb.toString());
 						//从图层中移除符号
 						newglly.removeGraphic(temp.getUid());
 					}
@@ -1151,7 +1162,6 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 
 				@Override 
 				public void onClick(DialogInterface dialog, int which) { 
-					// TODO Auto-generated method stub  
 					return;
 				} 
 			})
@@ -1168,7 +1178,7 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 			del = GetOneGraphicFromLayer(event.getX(),event.getY(),newdlly);
 		if(del != null && next){
 			final Graphic temp = del;
-			AlertDialog alertDialog = new AlertDialog.Builder(context)
+			AlertDialog alertDialog = new AlertDialog.Builder(mContext)
 			.setIcon(R.drawable.logo)
 			.setTitle("删除电缆路由")
 			.setMessage("你确定要删除该条电缆路由吗？")
@@ -1190,7 +1200,7 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 							if(i != gllist.size()-1)
 								sb.append("/");
 						}
-						DoAction.removeDLLY(context, sb.toString());
+						DoAction.removeDLLY(mContext, sb.toString());
 						//从图层中移除符号
 						newdlly.removeGraphic(temp.getUid());
 					}
@@ -1200,7 +1210,6 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 
 				@Override 
 				public void onClick(DialogInterface dialog, int which) { 
-					// TODO Auto-generated method stub  
 					return;
 				} 
 			})
@@ -1232,8 +1241,8 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 	}
 
 	private void showAlertDialog( final String[] nList,String title) {
-		ListAdapter mAdapter = new ArrayAdapter(context, R.layout.item, nList);
-		LayoutInflater inflater = LayoutInflater.from(context);  
+		ListAdapter mAdapter = new ArrayAdapter(mContext, R.layout.item, nList);
+		LayoutInflater inflater = LayoutInflater.from(mContext);
 		View view = inflater.inflate(R.layout.alertdialog, null);  
 
 		TextView titleView = (TextView)view.findViewById(R.id.titleView);
@@ -1248,13 +1257,12 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 
 			@Override
 			public void onClick(View arg0) {
-				// TODO 自动生成的方法存根
 
 			}
 		});
 		listview.setOnItemClickListener( null );
 
-		AlertDialog.Builder builder = new AlertDialog.Builder(context); 
+		AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
 		AlertDialog mAlertDialog = builder.create();
 		mAlertDialog.show();
 		mAlertDialog.getWindow().setContentView(view);
@@ -1315,7 +1323,7 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 				if (gpVar != null) {
 					Geometry gy = gpVar.getGeometry();
 					Type ty = gy.getType();
-					LocalDataModify ldm = new LocalDataModify(context);
+					LocalDataModify ldm = new LocalDataModify(mContext);
 					if(0 == ty.compareTo(Type.POINT)){
 						Point pt = (Point)gpVar.getGeometry();
 						oldPoint = pt;
@@ -1363,7 +1371,7 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 		return result;
 	}
 	private void showDelDialog(final GraphicsLayer layer,final long graphicid,final int pkid,final DataTable rst,final Type t){
-		AlertDialog alertDialog = new AlertDialog.Builder(context)
+		AlertDialog alertDialog = new AlertDialog.Builder(mContext)
 		.setIcon(R.drawable.logo)
 		.setTitle("删除元素")
 		.setMessage("你确定要删除该元素吗？")
@@ -1371,28 +1379,26 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 
 			@Override 
 			public void onClick(DialogInterface dialog, int which) { 
-				// TODO Auto-generated method stub  
 				if(rst != null && rst.size() > 0){
 					if(t == Type.POINT)
-						Toast.makeText(context, "请先删除关联管道！", Toast.LENGTH_SHORT).show();
+						Toast.makeText(mContext, "请先删除关联管道！", Toast.LENGTH_SHORT).show();
 					else if(t == Type.POLYLINE)
-						Toast.makeText(context, "请先移除管道内的光缆！", Toast.LENGTH_SHORT).show();
+						Toast.makeText(mContext, "请先移除管道内的光缆！", Toast.LENGTH_SHORT).show();
 					return;
 				}
 				//delete the graphic on the layer
 				layer.removeGraphic((int) graphicid);
 				//delete the data in the SQL table
 				if(t == Type.POINT)
-					DoAction.DeletePointByID(context, String.valueOf(pkid));
+					DoAction.DeletePointByID(mContext, String.valueOf(pkid));
 				else if(t == Type.POLYLINE)
-					DoAction.DeleteSegmentByID(context, String.valueOf(pkid));
+					DoAction.DeleteSegmentByID(mContext, String.valueOf(pkid));
 			} 
 		})
 		.setNegativeButton("取消", new DialogInterface.OnClickListener() { 
 
 			@Override 
 			public void onClick(DialogInterface dialog, int which) { 
-				// TODO Auto-generated method stub  
 				return;
 			} 
 		})
@@ -1406,12 +1412,12 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 	}
 	void AlertMsg(String str, Object... arg) {
 		String msg = String.format(str, arg);
-		Toast.makeText(context, msg, Toast.LENGTH_LONG).show();
+		Toast.makeText(mContext, msg, Toast.LENGTH_LONG).show();
 		Log.i("AlertMsg", msg);
 	}
 	public void loadGLLY(){
 		Graphic tempGraphic ;
-		db = new SQLiteDatabase(context);
+		db = new SQLiteDatabase(mContext);
 		DataCollection params = new DataCollection();
 		params.add(new Data("uname",FunctionHelper.userName));
 		DataTable rst = db.executeTable("spBS_LocalGLLYQueryByUName", params);
@@ -1439,7 +1445,7 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 	}
 	public void loadDLLY(){
 		Graphic tempGraphic ;
-		db = new SQLiteDatabase(context);
+		db = new SQLiteDatabase(mContext);
 		DataCollection params = new DataCollection();
 		params.add(new Data("uname",FunctionHelper.userName));
 		DataTable rst = db.executeTable("spBS_LocalDLLYQueryByUName", params);

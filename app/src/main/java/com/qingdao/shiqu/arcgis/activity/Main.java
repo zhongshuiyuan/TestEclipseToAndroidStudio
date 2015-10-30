@@ -3,6 +3,7 @@ package com.qingdao.shiqu.arcgis.activity;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -30,6 +31,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
@@ -77,9 +79,9 @@ import com.esri.core.map.Graphic;
 import com.esri.core.symbol.MarkerSymbol;
 import com.esri.core.symbol.PictureMarkerSymbol;
 import com.esri.core.symbol.SimpleLineSymbol;
-import com.gc.materialdesign.views.ButtonFlat;
 import com.gc.materialdesign.views.ButtonFloat;
 import com.gc.materialdesign.views.ButtonIcon;
+import com.getbase.floatingactionbutton.FloatingActionsMenu;
 import com.qingdao.shiqu.arcgis.R;
 import com.qingdao.shiqu.arcgis.adapter.ContentAdapter;
 import com.qingdao.shiqu.arcgis.adapter.MyExpandableListAdapter;
@@ -97,6 +99,14 @@ import com.qingdao.shiqu.arcgis.utils.LocalDataModify;
 import com.qingdao.shiqu.arcgis.utils.NSXAsyncTask;
 import com.qingdao.shiqu.arcgis.utils.Session;
 import com.qingdao.shiqu.arcgis.utils.Util;
+
+import org.codehaus.jackson.Base64Variant;
+import org.codehaus.jackson.JsonFactory;
+import org.codehaus.jackson.JsonParseException;
+import org.codehaus.jackson.JsonParser;
+import org.codehaus.jackson.JsonToken;
+import org.codehaus.jackson.ObjectCodec;
+import org.codehaus.jackson.impl.JsonParserBase;
 
 /**
  * @author Administrator
@@ -158,6 +168,9 @@ public class Main extends Activity implements OnMapListener
     ButtonFloat mBtnLocation;
     TextView mTvNumSatellites;
 
+    ButtonFloat mBtnActionMenu;
+    FloatingActionsMenu mActionMenu;
+
     TextView mTvScale;
     TextView mTvCoordinate;
     private TextView mTvLongitude;
@@ -169,7 +182,7 @@ public class Main extends Activity implements OnMapListener
     private ContentAdapter adapter;
     private String GL_TYPE = "";
     // TOC
-    ExpandableListView mElvTov;
+    ExpandableListView mElvToc;
     // TOC 的子数据源
     private ArrayList<ArrayList<Layer>> childs = new ArrayList<ArrayList<Layer>>(); //USE IN MyExpandableListAdapter CLASS
     // TOC 的数据源
@@ -278,6 +291,7 @@ public class Main extends Activity implements OnMapListener
         mBtnToc.setDrawableIcon(getResources().getDrawable(R.drawable.ic_layers_white_48dp));
 
         map = (MapView) findViewById(R.id.map);
+        map.getSpatialReference();
         map.setOnStatusChangedListener(new OnStatusChangedListener() {
             @Override
             public void onStatusChanged(Object o, STATUS status) {
@@ -297,6 +311,30 @@ public class Main extends Activity implements OnMapListener
 
         mBtnLocation = (ButtonFloat) findViewById(R.id.btn_location);
         mBtnLocation.setDrawableIcon(getResources().getDrawable(R.drawable.ic_my_location_white_48dp));
+
+        // 按钮菜单
+        mActionMenu = (FloatingActionsMenu) findViewById(R.id.main_multiple_actions);
+        //mActionMenu.setAlpha(0);
+        mBtnActionMenu = (ButtonFloat) findViewById(R.id.main_btn_action_menu);
+        mBtnActionMenu.setDrawableIcon(getResources().getDrawable(R.drawable.ic_add_white_48dp));
+        mBtnActionMenu.setOnClickListener(new View.OnClickListener() {
+            int i = 0;
+            @Override
+            public void onClick(View v) {
+                switch (i) {
+                    case 0:
+                        mBtnActionMenu.setDrawableIcon(getResources().getDrawable(R.drawable.ic_clear_white_48dp));
+                        mActionMenu.expand();
+                        i++;
+                        break;
+                    case 1:
+                        mBtnActionMenu.setDrawableIcon(getResources().getDrawable(R.drawable.ic_add_white_48dp));
+                        mActionMenu.collapse();
+                        i = 0;
+                        break;
+                }
+            }
+        });
 
         createDrawer();
 
@@ -475,13 +513,14 @@ public class Main extends Activity implements OnMapListener
 
         rightLayout=(RelativeLayout) findViewById(R.id.right);
 
-        showLys();
+        createToc();
     }
 
-    private void showLys() {
-        mElvTov = (ExpandableListView)findViewById(R.id.right_listview);
+    /** 创建TOC **/
+    private void createToc() {
+        mElvToc = (ExpandableListView)findViewById(R.id.right_listview);
         MyExpandableListAdapter adapter = new MyExpandableListAdapter(Main.this, titles, childs);
-        mElvTov.setAdapter(adapter);
+        mElvToc.setAdapter(adapter);
     }
 
     /** 创建左抽屉数据 **/
@@ -637,10 +676,12 @@ public class Main extends Activity implements OnMapListener
 			btnAuthority.setVisibility(View.GONE);
 		}*/
         //		btnAuthority.setVisibility(View.VISIBLE);
-        showLys();
+        createToc();
+        loadTocSetting();
+
         loadMyDraw();
 
-        loadTocSetting();
+
     }
 
     @Override
@@ -676,6 +717,7 @@ public class Main extends Activity implements OnMapListener
         editor.commit();
     }
 
+    /** 读取TOC设置 **/
     private void loadTocSetting() {
         if (sharedPreferences == null) {
             sharedPreferences = getPreferences(Context.MODE_PRIVATE);
@@ -1365,6 +1407,7 @@ public class Main extends Activity implements OnMapListener
         map.setScale(1200.0000);
     }
 
+    /** 加载自定义图层 **/
     public void loadMyDraw() {
         PictureMarkerSymbol pms = null;
         Drawable img = null;
@@ -1490,6 +1533,7 @@ public class Main extends Activity implements OnMapListener
         }
     }
 
+    // 从本地数据库读取电缆路由数据
     public void loadDLLY() {
         Graphic tempGraphic ;
         db = new SQLiteDatabase(this);
@@ -1516,7 +1560,13 @@ public class Main extends Activity implements OnMapListener
             tempGraphic = new Graphic(pl, new SimpleLineSymbol(Color.LTGRAY, 1, SimpleLineSymbol.STYLE.SOLID));
 
             newdlly.addGraphic(tempGraphic);
+
+
         }
+
+        // TODO 测试读取保存的Graphic对象并显示到地图上
+
+        // TODO 测试结束，重构时删除以上测试代码
     }
 
     /** 按下动作条的图层按钮 **/

@@ -23,7 +23,7 @@
     <color name="blue">#274198</color>
     <color name="huibai">#F5F5F5</color>
     <color name="white">#FFFFFF</color>
-    <color name="tran">#00000000</color>
+    <color name="transparence">#00000000</color>
     <color name="wuwangse">#7bbfea</color>
     <color name="glistcolor">#EEC900</color>
     <color name="login_text_default">#60B9E6</color>

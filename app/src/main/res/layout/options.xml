@@ -29,7 +29,7 @@
             android:layout_height="50dp"
             android:layout_centerHorizontal="true"
             android:layout_centerVertical="true"
-            android:background="@color/tran"
+            android:background="@color/transparence"
             android:text="登录/注销"
             android:textColor="@color/white" />
 

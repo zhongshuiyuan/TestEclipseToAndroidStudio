@@ -3,6 +3,6 @@
     
     <item android:drawable="@color/linear_menu_pressed" android:state_focused="true"></item>
     <item android:drawable="@color/linear_menu_pressed" android:state_pressed="true"></item>
-    <item android:drawable="@color/tran"></item>
+    <item android:drawable="@color/transparence"></item>
 
 </selector>

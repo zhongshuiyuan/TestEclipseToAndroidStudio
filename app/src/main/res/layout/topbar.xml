@@ -11,7 +11,7 @@
         android:layout_width="70dp"
         android:layout_height="fill_parent"
         android:layout_centerVertical="true"
-        android:background="@color/tran"
+        android:background="@color/transparence"
         android:drawableLeft="@drawable/mm_title_back_normal"
         android:scaleType="centerInside"
         android:src="@drawable/mm_title_back_normal" />
@@ -33,7 +33,7 @@
         android:layout_height="30dp"
         android:layout_alignParentRight="true"
         android:layout_centerVertical="true"
-        android:background="@color/tran"
+        android:background="@color/transparence"
         android:scaleType="centerInside"
         android:textColor="@color/textview_title_default" />
 
@@ -43,7 +43,7 @@
         android:layout_height="30dp"
         android:layout_alignParentRight="true"
         android:layout_centerVertical="true"
-        android:background="@color/tran"
+        android:background="@color/transparence"
         android:gravity="left|center_vertical"
         android:textColor="@color/white"
         android:textSize="16sp"
@@ -56,7 +56,7 @@
         android:layout_alignParentBottom="true"
         android:layout_alignParentLeft="true"
         android:layout_alignParentTop="true"
-        android:background="@color/tran"
+        android:background="@color/transparence"
         android:gravity="right|center_vertical"
         android:text="返回"
         android:textColor="@color/white"

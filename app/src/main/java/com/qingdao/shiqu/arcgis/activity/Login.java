@@ -5,6 +5,7 @@ import java.io.IOException;
 import Eruntech.BirthStone.Base.Forms.Activity;
 import Eruntech.BirthStone.Base.Forms.Helper.FormHelper;
 import Eruntech.BirthStone.Base.Forms.Parse.CollectForm;
+import Eruntech.BirthStone.Core.Parse.DataCollection;
 import Eruntech.BirthStone.Core.Parse.DataTable;
 import Eruntech.BirthStone.Core.Sqlite.SQLiteDatabase;
 import Eruntech.BirthStone.UI.Controls.TextBox;

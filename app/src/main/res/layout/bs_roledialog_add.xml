@@ -3,14 +3,14 @@
     xmlns:eruntech="http://schemas.android.com/res/Eruntech.BirthStone.UI.Controls"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/tran" >
+    android:background="@color/transparence" >
 
     <RelativeLayout
         android:id="@+id/llFin"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
         android:layout_marginTop="45dp"
-        android:background="@color/tran"
+        android:background="@color/transparence"
         android:gravity="center"
         android:onClick="click" >
 

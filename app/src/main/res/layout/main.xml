@@ -216,7 +216,7 @@
                     android:layout_above="@+id/main_btn_zoomout"
                     android:layout_marginBottom="8dp"
                     android:onClick="click"
-                    app:iconDrawable="@drawable/ic_plus_white"
+                    app:iconDrawable="@drawable/ic_add_white_48dp"
                     app:animate="false"/>
 
                 <com.gc.materialdesign.views.ButtonFloatSmall
@@ -230,7 +230,7 @@
                     android:layout_above="@+id/btn_location"
                     android:layout_marginBottom="16dp"
                     android:onClick="click"
-                    app:iconDrawable="@drawable/ic_minus_white"
+                    app:iconDrawable="@drawable/ic_remove_white_48dp"
                     app:animate="false"/>
 
                 <!-- 按钮菜单 -->
@@ -241,12 +241,13 @@
                     android:layout_alignParentBottom="true"
                     android:layout_alignParentRight="true"
                     android:layout_alignParentEnd="true"
-                    android:layout_marginBottom="16dp"
-                    android:layout_marginRight="16dp"
-                    android:layout_marginEnd="16dp"
-                    app:fab_addButtonColorNormal="@color/app_design_background"
-                    app:fab_addButtonColorPressed="@color/app_design_background"
-                    app:fab_addButtonPlusIconColor="@color/white"
+                    android:layout_marginBottom="4.5dp"
+                    android:layout_marginRight="7dp"
+                    android:layout_marginEnd="7dp"
+                    android:clickable="false"
+                    app:fab_addButtonColorNormal="@color/transparence"
+                    app:fab_addButtonColorPressed="@color/transparence"
+                    app:fab_addButtonPlusIconColor="@color/transparence"
                     app:fab_labelStyle="@style/menu_labels_style">
                     <!--app:fab_addButtonSize="mini"-->
                     <!--app:fab_expandDirection="up"-->
@@ -276,7 +277,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:onClick="click"
-                        app:fab_icon="@drawable/ic_undo_white"
+                        app:fab_icon="@drawable/ic_undo_white_48dp"
                         app:fab_title="后退"
                         app:fab_colorNormal="@color/app_design_background"
                         app:fab_colorPressed="@color/app_design_ripple"/>
@@ -286,7 +287,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:onClick="click"
-                        app:fab_icon="@drawable/ic_redo_white"
+                        app:fab_icon="@drawable/ic_redo_white_48dp"
                         app:fab_title="前进"
                         app:fab_colorNormal="@color/app_design_background"
                         app:fab_colorPressed="@color/app_design_ripple"/>
@@ -302,6 +303,19 @@
                         app:fab_colorPressed="@color/app_design_ripple"/>
 
                 </com.getbase.floatingactionbutton.FloatingActionsMenu>
+                <com.gc.materialdesign.views.ButtonFloat
+                    android:id="@+id/main_btn_action_menu"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentRight="true"
+                    android:layout_alignParentEnd="true"
+                    android:layout_alignParentBottom="true"
+                    android:layout_marginRight="16dp"
+                    android:layout_marginEnd="16dp"
+                    android:layout_marginBottom="16dp"
+                    android:onClick="click"
+                    android:background="@color/app_design_background"
+                    app:animate="false" />
 
 
             </RelativeLayout>
