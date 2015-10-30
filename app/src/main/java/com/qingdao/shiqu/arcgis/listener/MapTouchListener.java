@@ -532,14 +532,6 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 					fristPoint = currentPoint;
 
 					// TODO 测试保存Graphic到数据库
-					DatabaseOpenHelper mDbHelper = new DatabaseOpenHelper(mContext);
-					android.database.sqlite.SQLiteDatabase db = mDbHelper.getWritableDatabase();
-					ContentValues cv = new ContentValues();//实例化一个ContentValues用来装载待插入的数据
-					//cv.put("username","Jack Johnson");//添加用户名
-					//cv.put("password","iLovePopMusic"); //添加密码
-					tempGraphic.getGeometry().
-					cv.put
-					db.insert("user", null, cv);//执行插入操作
 					// TODO 测试结束，重构时删除以上测试代码
 				}
 			}/*else*/ if (guangji != null) 

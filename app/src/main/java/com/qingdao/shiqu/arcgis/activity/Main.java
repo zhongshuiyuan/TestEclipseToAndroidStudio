@@ -1565,7 +1565,6 @@ public class Main extends Activity implements OnMapListener
         }
 
         // TODO 测试读取保存的Graphic对象并显示到地图上
-
         // TODO 测试结束，重构时删除以上测试代码
     }
 
