@@ -5,7 +5,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
 /**
- * Created by Administrator on 2015-10-30.
+ * 解决
  */
 public class DatabaseOpenHelper extends SQLiteOpenHelper {
 
@@ -18,7 +18,7 @@ public class DatabaseOpenHelper extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-        String sql = "create table custom(graphic blob not null );";
+        String sql = "create table geometry(polyline blob not null);";
         db.execSQL(sql);
     }
 

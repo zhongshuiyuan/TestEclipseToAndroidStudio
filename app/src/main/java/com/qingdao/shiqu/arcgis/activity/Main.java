@@ -73,8 +73,10 @@ import com.esri.core.geodatabase.Geodatabase;
 import com.esri.core.geodatabase.GeodatabaseFeatureTable;
 import com.esri.core.geometry.Envelope;
 import com.esri.core.geometry.Geometry;
+import com.esri.core.geometry.GeometryEngine;
 import com.esri.core.geometry.Point;
 import com.esri.core.geometry.Polyline;
+import com.esri.core.geometry.SpatialReference;
 import com.esri.core.map.Graphic;
 import com.esri.core.symbol.MarkerSymbol;
 import com.esri.core.symbol.PictureMarkerSymbol;
@@ -92,6 +94,7 @@ import com.qingdao.shiqu.arcgis.listener.MapTouchListener;
 import com.qingdao.shiqu.arcgis.listener.MapTouchListener.OnMapListener;
 import com.qingdao.shiqu.arcgis.mode.ContentModel;
 import com.qingdao.shiqu.arcgis.mode.Take;
+import com.qingdao.shiqu.arcgis.sqlite.DatabaseOpenHelper;
 import com.qingdao.shiqu.arcgis.sqlite.DoAction;
 import com.qingdao.shiqu.arcgis.utils.DBOpterate;
 import com.qingdao.shiqu.arcgis.utils.FileUtil;
@@ -295,6 +298,8 @@ public class Main extends Activity implements OnMapListener
                 if (STATUS.LAYER_LOADED == status) {
                     seeAll();
                     map.setEsriLogoVisible(false);
+                    SpatialReference spatialReference = map.getSpatialReference();
+
                 }
             }
         });
@@ -1606,6 +1611,21 @@ public class Main extends Activity implements OnMapListener
         }
 
         // TODO 测试读取保存的Graphic对象并显示到地图上
+//        DatabaseOpenHelper database = new DatabaseOpenHelper(this);
+//        android.database.sqlite.SQLiteDatabase db = null;
+//        db = database.getWritableDatabase();
+//        Cursor c = db.query("geometry", null, null, null, null, null, null);
+//        if (c.moveToFirst()) {
+//            SimpleLineSymbol lineSymbol = new SimpleLineSymbol(Color.BLUE, 2, SimpleLineSymbol.STYLE.DASH);
+//            for(int i = 0; i < c.getCount(); ++i){
+//                c.move(i);//移动到指定记录
+//                Geometry geometry;
+//                byte[] geometryByte = c.getBlob(c.getColumnIndex("polyline"));
+//                geometry = GeometryEngine.geometryFromEsriShape(geometryByte, Geometry.Type.POLYLINE);
+//                tempGraphic = new Graphic(geometry, lineSymbol);
+//                newdlly.addGraphic(tempGraphic);
+//            }
+//        }
         // TODO 测试结束，重构时删除以上测试代码
     }
 

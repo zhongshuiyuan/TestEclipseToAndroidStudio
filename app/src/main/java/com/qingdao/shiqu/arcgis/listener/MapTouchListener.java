@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import Eruntech.BirthStone.Core.Helper.DataType;
 import Eruntech.BirthStone.Core.Parse.Data;
 import Eruntech.BirthStone.Core.Parse.DataCollection;
 import Eruntech.BirthStone.Core.Parse.DataTable;
@@ -43,6 +44,7 @@ import com.esri.android.map.MapView;
 import com.esri.android.map.event.OnZoomListener;
 import com.esri.core.geometry.Geometry;
 import com.esri.core.geometry.Geometry.Type;
+import com.esri.core.geometry.GeometryEngine;
 import com.esri.core.geometry.Line;
 import com.esri.core.geometry.Point;
 import com.esri.core.geometry.Polygon;
@@ -61,6 +63,7 @@ import com.qingdao.shiqu.arcgis.helper.FunctionHelper;
 import com.qingdao.shiqu.arcgis.sqlite.DatabaseOpenHelper;
 import com.qingdao.shiqu.arcgis.sqlite.DoAction;
 import com.qingdao.shiqu.arcgis.utils.DBOpterate;
+import com.qingdao.shiqu.arcgis.utils.GeometryUtil;
 import com.qingdao.shiqu.arcgis.utils.LocalDataModify;
 import com.qingdao.shiqu.arcgis.utils.LocalDataAction;
 //import com.qingdao.shiqu.arcgis.utils.Util;
@@ -532,6 +535,13 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 					fristPoint = currentPoint;
 
 					// TODO 测试保存Graphic到数据库
+//					byte[] geometry = GeometryEngine.geometryToEsriShape(polyline);
+//					DatabaseOpenHelper database = new DatabaseOpenHelper(mContext);
+//					android.database.sqlite.SQLiteDatabase db = null;
+//					db = database.getWritableDatabase();
+//					ContentValues cv = new ContentValues();
+//					cv.put("polyline", geometry);
+//					db.insert("geometry", null, cv);
 					// TODO 测试结束，重构时删除以上测试代码
 				}
 			}/*else*/ if (guangji != null) 
