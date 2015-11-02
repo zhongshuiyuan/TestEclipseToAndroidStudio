@@ -130,6 +130,10 @@ public class Main extends Activity implements OnMapListener
     ArcGISLocalTiledLayer mLocalTiledLayerLabel;
     /** 光机 **/
     ArcGISLocalTiledLayer mLocalTiledLayerGuangJi;
+    /** 分配网 **/
+    ArcGISLocalTiledLayer mLocalTiledLayerFenpei;
+    /** 旧分配网 **/
+    ArcGISLocalTiledLayer mLocalTiledLayerFenpeiOld;
 
     /** 第一次加载地图时需要全图显示 **/
     private boolean mIsFullExtentNeeded = true;
@@ -266,11 +270,13 @@ public class Main extends Activity implements OnMapListener
                     });
 
             materialDialog.show();
-
             // 隐藏软键盘
             InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
             if (imm.isActive()) {
                 imm.toggleSoftInput(InputMethodManager.SHOW_IMPLICIT, InputMethodManager.HIDE_NOT_ALWAYS);
+                imm.toggleSoftInput(InputMethodManager.SHOW_FORCED, InputMethodManager.HIDE_NOT_ALWAYS);
+                imm.toggleSoftInput(InputMethodManager.RESULT_UNCHANGED_SHOWN, InputMethodManager.HIDE_NOT_ALWAYS);
+                imm.toggleSoftInput(InputMethodManager.RESULT_SHOWN, InputMethodManager.HIDE_NOT_ALWAYS);
             }
 
         }
@@ -347,6 +353,8 @@ public class Main extends Activity implements OnMapListener
         //mLocalTiledLayerMap = new ArcGISLocalTiledLayer(Environment.getExternalStorageDirectory().getAbsolutePath()+"/layers");
         mLocalTiledLayerLabel = new ArcGISLocalTiledLayer("file:///" + "sdcard/PDAlayers/annlayers");
         mLocalTiledLayerGuangJi = new ArcGISLocalTiledLayer("file:///" + "sdcard/PDAlayers/gjlay");
+        mLocalTiledLayerFenpei = new ArcGISLocalTiledLayer("file:///" + "sdcard/PDAlayers/fpwlay");
+        mLocalTiledLayerFenpeiOld = new ArcGISLocalTiledLayer("file:///" + "sdcard/PDAlayers/jfpwlay");
         mLocationGraphicsLayer = new GraphicsLayer();
         mLocationGraphicsLayer.setName("定位图层");
         newGraphicLayer = new GraphicsLayer();
@@ -372,12 +380,20 @@ public class Main extends Activity implements OnMapListener
         map.addLayer(mLocalTiledLayerMap);
         //mLocalTiledLayerMap.getExtent().queryEnvelope(extend_el);
         if (mLocalTiledLayerLabel != null) {
-            mLocalTiledLayerLabel.setName("标注图层");
+            mLocalTiledLayerLabel.setName("路牌号标注");
             map.addLayer(mLocalTiledLayerLabel);
         }
         if (mLocalTiledLayerGuangJi != null) {
-            mLocalTiledLayerGuangJi.setName("光机图层");
+            mLocalTiledLayerGuangJi.setName("光机标注");
             map.addLayer(mLocalTiledLayerGuangJi);
+        }
+        if (mLocalTiledLayerFenpei != null) {
+            mLocalTiledLayerFenpei.setName("分配网");
+            map.addLayer(mLocalTiledLayerFenpei);
+        }
+        if (mLocalTiledLayerFenpeiOld != null) {
+            mLocalTiledLayerFenpeiOld.setName("旧分配网");
+            map.addLayer(mLocalTiledLayerFenpeiOld);
         }
 
         // 添加绘画图层
@@ -557,6 +573,13 @@ public class Main extends Activity implements OnMapListener
     }
 
     @Override
+    protected void onStart() {
+        super.onStart();
+
+
+    }
+
+    @Override
     protected void onResume()
     {
         super.onResume();
@@ -680,14 +703,13 @@ public class Main extends Activity implements OnMapListener
         loadTocSetting();
 
         loadMyDraw();
-
-
     }
 
     @Override
     protected void onPause() {
         super.onPause();
         map.pause();
+        saveTocSetting();
         stopUpdatePositionMode();
     }
 
@@ -723,6 +745,19 @@ public class Main extends Activity implements OnMapListener
             sharedPreferences = getPreferences(Context.MODE_PRIVATE);
         }
         String tocSetting = sharedPreferences.getString(getString(R.string.preference_file_key_string_main_toc), null);
+        if (tocSetting == null) {
+            return;
+        }
+        // 判断tocSetting的长度和图层数量是否一致，不一致代表新版本新增了或减少了图层，则之前保存的设置就无效了
+        int tempCount = 0;
+        int tempSize = childs.size();
+        for (int i = 0; i< tempSize; ++i) {
+            tempCount += childs.get(i).size();
+        }
+        if (tempCount != tocSetting.length()) {
+            return;
+        }
+        // 开始恢复TOC设置
         if (tocSetting != null) {
             int stringIndex = 0;
             int titleCount = childs.size();
@@ -730,6 +765,11 @@ public class Main extends Activity implements OnMapListener
                 ArrayList<Layer> layers = childs.get(i);
                 int layerCount = layers.size();
                 for (int j = 0; j < layerCount; ++j) {
+                    try {
+                        tocSetting.charAt(stringIndex);
+                    } catch (IndexOutOfBoundsException e) {
+                        return;
+                    }
                     Layer layer = layers.get(j);
                     if (String.valueOf(tocSetting.charAt(stringIndex)).equals("0")) {
                         layer.setVisible(false);
