@@ -67,12 +67,6 @@ public class Login extends Activity
 				{
 					db = new SQLiteDatabase(Login.this);
 				}
-				// TODO 删除后门
-				// 后门
-				if (userNo.getText().toString().trim().equals("qwer")) {
-					userNo.setText("e401");
-					password.setText("123456");
-				}
 				if (userNo.getText().toString().trim().equals("") || password.getText().toString().trim().equals(""))
 				{
 					Toast.makeText(Login.this, "用户名或者密码不能为空!", Toast.LENGTH_SHORT).show();

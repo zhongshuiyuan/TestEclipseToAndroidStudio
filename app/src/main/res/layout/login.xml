@@ -31,8 +31,8 @@
             android:hint="用户名"
             android:paddingLeft="16dp"
             eruntech:collectSign="ForSave"
-            eruntech:isRequired="false" />
-            <!-- android:text="e401"> -->
+            eruntech:isRequired="false"
+            android:text="e401"/>
 
         <Eruntech.BirthStone.UI.Controls.TextBox
             android:id="@+id/password"
@@ -46,8 +46,8 @@
             android:paddingLeft="16dp"
             android:password="true"
             eruntech:collectSign="ForSave"
-            eruntech:isRequired="false" />
-            <!-- android:text="123456"/> -->
+            eruntech:isRequired="false"
+            android:text="123456"/>
 
         <RelativeLayout
             android:layout_width="match_parent"
