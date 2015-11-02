@@ -723,8 +723,7 @@ public class Main extends Activity implements OnMapListener
         if (sharedPreferences == null) {
             sharedPreferences = getPreferences(Context.MODE_PRIVATE);
         }
-
-        String tocSetting = "";
+        SharedPreferences.Editor editor = sharedPreferences.edit();
 
         int titleCount = childs.size();
         for (int i = 0; i < titleCount; ++i) {
@@ -732,16 +731,10 @@ public class Main extends Activity implements OnMapListener
             int layerCount = layers.size();
             for (int j = 0; j < layerCount; ++j) {
                 Layer layer = layers.get(j);
-                if (layer.isVisible()) {
-                    tocSetting += "1";
-                } else {
-                    tocSetting += "0";
-                }
+                editor.putBoolean(layer.getName(), layer.isVisible());
             }
         }
 
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.putString(getString(R.string.preference_file_key_string_main_toc), tocSetting);
         editor.commit();
     }
 
@@ -750,40 +743,28 @@ public class Main extends Activity implements OnMapListener
         if (sharedPreferences == null) {
             sharedPreferences = getPreferences(Context.MODE_PRIVATE);
         }
-        String tocSetting = sharedPreferences.getString(getString(R.string.preference_file_key_string_main_toc), null);
-        if (tocSetting == null) {
-            return;
-        }
-        // 判断tocSetting的长度和图层数量是否一致，不一致代表新版本新增了或减少了图层，则之前保存的设置就无效了
-        int tempCount = 0;
-        int tempSize = childs.size();
-        for (int i = 0; i< tempSize; ++i) {
-            tempCount += childs.get(i).size();
-        }
-        if (tempCount != tocSetting.length()) {
-            return;
-        }
+//        String tocSetting = sharedPreferences.getString(getString(R.string.preference_file_key_string_main_toc), null);
+//        if (tocSetting == null) {
+//            return;
+//        }
+//        // 判断tocSetting的长度和图层数量是否一致，不一致代表新版本新增了或减少了图层，则之前保存的设置就无效了
+//        int tempCount = 0;
+//        int tempSize = childs.size();
+//        for (int i = 0; i< tempSize; ++i) {
+//            tempCount += childs.get(i).size();
+//        }
+//        if (tempCount != tocSetting.length()) {
+//            return;
+//        }
         // 开始恢复TOC设置
-        if (tocSetting != null) {
-            int stringIndex = 0;
-            int titleCount = childs.size();
-            for (int i = 0; i < titleCount; ++i) {
-                ArrayList<Layer> layers = childs.get(i);
-                int layerCount = layers.size();
-                for (int j = 0; j < layerCount; ++j) {
-                    try {
-                        tocSetting.charAt(stringIndex);
-                    } catch (IndexOutOfBoundsException e) {
-                        return;
-                    }
-                    Layer layer = layers.get(j);
-                    if (String.valueOf(tocSetting.charAt(stringIndex)).equals("0")) {
-                        layer.setVisible(false);
-                    } else if (String.valueOf(tocSetting.charAt(stringIndex)).equals("1")) {
-                        layer.setVisible(true);
-                    }
-                    stringIndex++;
-                }
+        int titleCount = childs.size();
+        for (int i = 0; i < titleCount; ++i) {
+            ArrayList<Layer> layers = childs.get(i);
+            int layerCount = layers.size();
+            for (int j = 0; j < layerCount; ++j) {
+                Layer layer = layers.get(j);
+                Boolean visible = sharedPreferences.getBoolean(layer.getName(), true);
+                layer.setVisible(visible);
             }
         }
     }
