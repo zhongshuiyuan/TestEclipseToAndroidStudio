@@ -1170,8 +1170,7 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 			.create();
 			Window window = alertDialog.getWindow();        
 			WindowManager.LayoutParams lp = window.getAttributes();        
-			// 设置透明度为0.3         
-			lp.alpha = 0.6f;   
+			lp.alpha = 0.9f;
 			window.setAttributes(lp);        
 			alertDialog.show();
 
@@ -1219,7 +1218,7 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 			Window window = alertDialog.getWindow();        
 			WindowManager.LayoutParams lp = window.getAttributes();        
 			// 设置透明度为0.3         
-			lp.alpha = 0.6f;   
+			lp.alpha = 0.9f;
 			window.setAttributes(lp);        
 			alertDialog.show();
 
@@ -1407,8 +1406,7 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 		.create();
 		Window window = alertDialog.getWindow();        
 		WindowManager.LayoutParams lp = window.getAttributes();        
-		// 设置透明度为0.3         
-		lp.alpha = 0.6f;   
+		lp.alpha = 0.9f;
 		window.setAttributes(lp);        
 		alertDialog.show();
 	}
