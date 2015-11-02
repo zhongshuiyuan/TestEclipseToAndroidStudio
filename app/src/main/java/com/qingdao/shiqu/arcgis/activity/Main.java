@@ -270,15 +270,6 @@ public class Main extends Activity implements OnMapListener
                     });
 
             materialDialog.show();
-            // 隐藏软键盘
-            InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
-            if (imm.isActive()) {
-                imm.toggleSoftInput(InputMethodManager.SHOW_IMPLICIT, InputMethodManager.HIDE_NOT_ALWAYS);
-                imm.toggleSoftInput(InputMethodManager.SHOW_FORCED, InputMethodManager.HIDE_NOT_ALWAYS);
-                imm.toggleSoftInput(InputMethodManager.RESULT_UNCHANGED_SHOWN, InputMethodManager.HIDE_NOT_ALWAYS);
-                imm.toggleSoftInput(InputMethodManager.RESULT_SHOWN, InputMethodManager.HIDE_NOT_ALWAYS);
-            }
-
         }
     }
 
@@ -567,7 +558,17 @@ public class Main extends Activity implements OnMapListener
                 //seeAll();
                 //map.setEsriLogoVisible(false);
                 mIsFullExtentNeeded = false;
+
+                // 如果弹出更新日志，则保证隐藏软键盘
+                boolean show = sharedPreferences.getBoolean(getString(R.string.preference_file_key_main_boolean_show_changelog), true);
+                if (show) {
+                    InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
+                    if (imm.isActive()) {
+                        imm.toggleSoftInput(InputMethodManager.SHOW_IMPLICIT, InputMethodManager.HIDE_NOT_ALWAYS);
+                    }
+                }
             }
+
         }
 
     }
