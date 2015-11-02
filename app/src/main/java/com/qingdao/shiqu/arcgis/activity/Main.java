@@ -3,7 +3,6 @@ package com.qingdao.shiqu.arcgis.activity;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -31,7 +30,6 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
@@ -73,7 +71,6 @@ import com.esri.core.geodatabase.Geodatabase;
 import com.esri.core.geodatabase.GeodatabaseFeatureTable;
 import com.esri.core.geometry.Envelope;
 import com.esri.core.geometry.Geometry;
-import com.esri.core.geometry.GeometryEngine;
 import com.esri.core.geometry.Point;
 import com.esri.core.geometry.Polyline;
 import com.esri.core.geometry.SpatialReference;
@@ -94,7 +91,6 @@ import com.qingdao.shiqu.arcgis.listener.MapTouchListener;
 import com.qingdao.shiqu.arcgis.listener.MapTouchListener.OnMapListener;
 import com.qingdao.shiqu.arcgis.mode.ContentModel;
 import com.qingdao.shiqu.arcgis.mode.Take;
-import com.qingdao.shiqu.arcgis.sqlite.DatabaseOpenHelper;
 import com.qingdao.shiqu.arcgis.sqlite.DoAction;
 import com.qingdao.shiqu.arcgis.utils.DBOpterate;
 import com.qingdao.shiqu.arcgis.utils.FileUtil;
@@ -103,14 +99,6 @@ import com.qingdao.shiqu.arcgis.utils.NSXAsyncTask;
 import com.qingdao.shiqu.arcgis.utils.Session;
 import com.qingdao.shiqu.arcgis.utils.Util;
 
-import org.codehaus.jackson.Base64Variant;
-import org.codehaus.jackson.JsonFactory;
-import org.codehaus.jackson.JsonParseException;
-import org.codehaus.jackson.JsonParser;
-import org.codehaus.jackson.JsonToken;
-import org.codehaus.jackson.ObjectCodec;
-import org.codehaus.jackson.impl.JsonParserBase;
-
 /**
  * @author Administrator
  *
@@ -118,7 +106,10 @@ import org.codehaus.jackson.impl.JsonParserBase;
 public class Main extends Activity implements OnMapListener
 {
 
-    private final String TAG = "Main";
+    // 大部分变量都重新命名，补全了注释，原来连注释都没有，变量命名超级随意你敢信？ by Qin
+
+    /** Log Tag **/
+    private final String TAG = Main.this.getClass().getSimpleName();
     private int requestCode = 100;
     int index = 1;
     double xmin,xmax,ymin,ymax;
@@ -158,10 +149,18 @@ public class Main extends Activity implements OnMapListener
     /** 定位标志图层 **/
     GraphicsLayer mLocationGraphicsLayer;
 
-    // TODO 弄明白这些 GraphicsLayer 到底是啥
-    GraphicsLayer newGraphicLayer,newgdlayer,newgllayer,newglly,newdlly;
-    GraphicsLayer drawLayer;
-    GraphicsLayer daoLuLayer;
+    /** 新建节点图层 **/
+    GraphicsLayer newNodeLayer;
+    /** 新建管道图层 **/
+    GraphicsLayer newGuandaoLayer;
+    /** 新建光缆图层 **/
+    GraphicsLayer newgllayer;
+    /** 新建光缆路由图层 **/
+    GraphicsLayer newglly;
+    /** 新建电缆路由图层 **/
+    GraphicsLayer newdlly;
+    /** 用于标注的临时图层 **/
+    GraphicsLayer mTempDrawLayer;
 
     /** 方向传感器初始化 **/
     SensorManager sensorManager;
@@ -195,9 +194,10 @@ public class Main extends Activity implements OnMapListener
     // TOC 的数据源
     private ArrayList<String> titles = new ArrayList<String>(); //USE IN MyExpandableListAdapter CLASS
 
-
+    /** 退出App的Dialog **/
     ProgressDialog mProgressDialog = null;
-    Point mCurrentLocationPoint;// 定位
+    /** 最近一次通过GPS定位的位置 **/
+    Point mCurrentLocationPoint;
     // 定位点添加的graphicID
     int mLocationGraphicId = 0;
     // 定位点添加的graphic图片资源
@@ -353,20 +353,19 @@ public class Main extends Activity implements OnMapListener
         mLocalTiledLayerFenpeiOld = new ArcGISLocalTiledLayer("file:///" + "sdcard/PDAlayers/jfpwlay");
         mLocationGraphicsLayer = new GraphicsLayer();
         mLocationGraphicsLayer.setName("定位图层");
-        newGraphicLayer = new GraphicsLayer();
-        newGraphicLayer.setName("新加节点图层");
-        newgdlayer = new GraphicsLayer();
-        newgdlayer.setName("新加管道图层");
+        newNodeLayer = new GraphicsLayer();
+        newNodeLayer.setName("新加节点图层");
+        newGuandaoLayer = new GraphicsLayer();
+        newGuandaoLayer.setName("新加管道图层");
         newgllayer = new GraphicsLayer();
         newgllayer.setName("新加光缆图层");
-        drawLayer = new GraphicsLayer();
+        mTempDrawLayer = new GraphicsLayer();
+        mTempDrawLayer.setName("临时绘制图层");
         newglly = new GraphicsLayer();
         newglly.setName("新加光缆路由");
         newdlly = new GraphicsLayer();
         newdlly.setName("新加电缆路由");
-        drawLayer.setName("绘制图层");
-        daoLuLayer = new GraphicsLayer();
-        daoLuLayer.setName("道路图层");
+
         mLocalTiledLayerMap.setName("青岛底图");
 
         // 添加底图
@@ -393,12 +392,10 @@ public class Main extends Activity implements OnMapListener
         }
 
         // 添加绘画图层
-        map.addLayer(daoLuLayer);
-
         touchListener = new MapTouchListener(Main.this, map);
-        touchListener.setLayer(drawLayer);
-        touchListener.setNewEleLayer(newGraphicLayer);
-        touchListener.setNewgdlayer(newgdlayer);
+        touchListener.setLayer(mTempDrawLayer);
+        touchListener.setNewEleLayer(newNodeLayer);
+        touchListener.setNewgdlayer(newGuandaoLayer);
         touchListener.setNewGLLayer(newgllayer);
         touchListener.setNewglly(newglly);
         touchListener.setNewdlly(newdlly);
@@ -411,9 +408,9 @@ public class Main extends Activity implements OnMapListener
         loadExtraLayers();
 
 
-        map.addLayer(drawLayer);
-        map.addLayer(newGraphicLayer);
-        map.addLayer(newgdlayer);
+        map.addLayer(mTempDrawLayer);
+        map.addLayer(newNodeLayer);
+        map.addLayer(newGuandaoLayer);
         map.addLayer(newgllayer);
         map.addLayer(newglly);
         map.addLayer(newdlly);
@@ -1019,9 +1016,8 @@ public class Main extends Activity implements OnMapListener
                 touchListener.setGeoType(Geometry.Type.POLYLINE);
                 break;
             case R.id.main_btn_clear: // 清空计算长度画的线和点
-                drawLayer.removeAll();
+                mTempDrawLayer.removeAll();
                 touchListener.setGeoType(null);
-                daoLuLayer.removeAll();
                 map.postInvalidate();
                 break;
             case R.id.main_ll_search:// 搜索功能
@@ -1067,7 +1063,7 @@ public class Main extends Activity implements OnMapListener
     }
 
     /**
-     * 搜索回调,进行划线或者花点操作
+     * 搜索回调，进行画线或者画点操作
      */
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data)
@@ -1089,43 +1085,39 @@ public class Main extends Activity implements OnMapListener
                 String jtype = data.getStringExtra("jtype");
                 String gtype = data.getStringExtra("gltype");
                 String gdcq = data.getStringExtra("gdcq");
-                if(jtype != null){
+                if (jtype != null) {
                     touchListener.setAddEle(true);
                     touchListener.setJtype(jtype);
                     touchListener.setGdcq(gdcq);
-                }else if(gtype != null || GL_TYPE.equalsIgnoreCase("default")){
+                } else if (gtype != null || GL_TYPE.equalsIgnoreCase("default")) {
                     //不需要设置光缆类型，所以不用选择光缆类型
                     touchListener.setDrawGL(true);
                     touchListener.setGltype(GL_TYPE);
                     GL_TYPE = "";
-                }
-                else{
-                    if ("道路".equals(type))
-                    {
+                } else {
+                    if ("道路".equals(type)) {
                         List<Point> list = Util.convertLines(value);
-                        LayerOpter opter = new LayerOpter(this, daoLuLayer);
+                        LayerOpter opter = new LayerOpter(this, mTempDrawLayer);
                         //				opter.drawRoad(list);
                         opter.DrawRoad(list);
                         map.centerAt(list.get(list.size() / 2), true);
                         map.setScale(1200.0000);
-                    }else
-                    {
+                    } else {
                         Point point = Util.convertPoint(value);
-                        LayerOpter opter = new LayerOpter(this, daoLuLayer);
+                        LayerOpter opter = new LayerOpter(this, mTempDrawLayer);
                         Drawable drawable = Main.this.getResources().getDrawable(R.drawable.sendtocar_balloon);
                         opter.drwaPoint(point, drawable);
                         map.centerAt(point, true);
                         map.setScale(1200.0000);
-                        //map.set
                     }
 
                 }
-
+                break;
+            case RESULT_CANCELED:
+                Log.w(TAG, requestCode + "请求失败");
                 break;
         }
     }
-
-
 
     /**
      *
@@ -1183,22 +1175,6 @@ public class Main extends Activity implements OnMapListener
             }
         };
     };
-
-    /**
-     * ************************************ 功 能： 定位Handler处理
-     ***************************************
-     */
-    private class LocalHandler extends Handler
-    {
-        @Override
-        public void handleMessage(Message msg)
-        {
-            if (mMapState == MAP_STATE_NAVIGATION) {
-                Location location = (Location) msg.obj;
-                updateLocation(location, true);
-            }
-        }
-    }
 
     /********************* OnMapListener ******************/
     /**
@@ -1268,6 +1244,7 @@ public class Main extends Activity implements OnMapListener
      * */
     private void exit()
     {
+        saveTocSetting();
         saveExtent();
         //		copyFile("/data/data/com.qingdao.shiqu.arcgis/databases/gisdb.s3db", "/storage/sdcard0/SQL/gisdb.s3db");
         //TODO:delete
@@ -1325,9 +1302,6 @@ public class Main extends Activity implements OnMapListener
             db.execute("aqBS_UpdateExtent", params);
         else
             db.execute("aqBS_InsExtent", params);
-
-
-        saveTocSetting();
     }
     /**
      * 复制单个文件
@@ -1417,7 +1391,7 @@ public class Main extends Activity implements OnMapListener
     }
 
     private void markLocation(Location location) {
-        drawLayer.removeAll();
+        mTempDrawLayer.removeAll();
         double locx = location.getLongitude();
         double locy = location.getLatitude();
         Point wgspoint = new Point(locx, locy);
@@ -1425,9 +1399,9 @@ public class Main extends Activity implements OnMapListener
 
 		//图层的创建
 		Graphic graphic = new Graphic(mapPoint,locationSymbol);
-		drawLayer.addGraphic(graphic);	
+		mTempDrawLayer.addGraphic(graphic);
 		map.centerAt(mapPoint, true);*/
-        LayerOpter opter = new LayerOpter(this, daoLuLayer);
+        LayerOpter opter = new LayerOpter(this, mTempDrawLayer);
         Drawable drawable = Main.this.getResources().getDrawable(R.drawable.sendtocar_balloon);
         opter.drwaPoint(wgspoint, drawable);
         map.centerAt(wgspoint, true);
@@ -1463,10 +1437,8 @@ public class Main extends Activity implements OnMapListener
 				img = this.getResources().getDrawable(R.drawable.fjj);*/
             pms = new PictureMarkerSymbol(com.qingdao.shiqu.arcgis.utils.Utils.zoomDrawable(img, 40, 40));
             Graphic graphic = new Graphic(new Point(Double.valueOf(xmi),Double.valueOf(ymi)), pms);
-            newGraphicLayer.addGraphic(graphic);
+            newNodeLayer.addGraphic(graphic);
             long uid2 = graphic.getId();
-            int b = 2;
-            int aadf = b;
         }
         loadSegment();
         //		loadGL();
@@ -1501,7 +1473,7 @@ public class Main extends Activity implements OnMapListener
             tempGraphic = new Graphic(pl, new SimpleLineSymbol(DoAction.getGDColorByCQ(Main.this,type), DoAction.getGDWidthByCQ(Main.this, type), SimpleLineSymbol.STYLE.SOLID));
             pl.startPath(ex, ey);
             pl.lineTo(sx, sy);
-            newgdlayer.addGraphic(tempGraphic);
+            newGuandaoLayer.addGraphic(tempGraphic);
         }
     }
 
