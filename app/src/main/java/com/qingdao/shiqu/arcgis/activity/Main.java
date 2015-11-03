@@ -128,6 +128,9 @@ public class Main extends Activity implements OnMapListener
     ArcGISLocalTiledLayer mLocalTiledLayerFenpei;
     /** 旧分配网 **/
     ArcGISLocalTiledLayer mLocalTiledLayerFenpeiOld;
+    /** 谷歌切片图层 **/
+    ArcGISLocalTiledLayer mLocalTiledLayerGoogle;
+
 
     /** 第一次加载地图时需要全图显示 **/
     private boolean mIsFullExtentNeeded = true;
@@ -344,13 +347,17 @@ public class Main extends Activity implements OnMapListener
         locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
         // 讲解密后的文件写入sd卡
         // writeFiles();
-        mLocalTiledLayerMap = new ArcGISLocalTiledLayer("file:///" + "sdcard/PDAlayers/layers");
-        //mLocalTiledLayerMap = new ArcGISLocalTiledLayer("file:///mnt/sdcard/Layers");
-        //mLocalTiledLayerMap = new ArcGISLocalTiledLayer(Environment.getExternalStorageDirectory().getAbsolutePath()+"/layers");
-        mLocalTiledLayerLabel = new ArcGISLocalTiledLayer("file:///" + "sdcard/PDAlayers/annlayers");
-        mLocalTiledLayerGuangJi = new ArcGISLocalTiledLayer("file:///" + "sdcard/PDAlayers/gjlay");
-        mLocalTiledLayerFenpei = new ArcGISLocalTiledLayer("file:///" + "sdcard/PDAlayers/fpwlay");
-        mLocalTiledLayerFenpeiOld = new ArcGISLocalTiledLayer("file:///" + "sdcard/PDAlayers/jfpwlay");
+        mLocalTiledLayerMap = new ArcGISLocalTiledLayer(FileUtil.getFileAbsolutePath("/PDAlayers/layers"));
+        mLocalTiledLayerLabel = new ArcGISLocalTiledLayer(FileUtil.getFileAbsolutePath("/PDAlayers/annlayers"));
+        mLocalTiledLayerGuangJi = new ArcGISLocalTiledLayer(FileUtil.getFileAbsolutePath("/PDAlayers/gjlay"));
+        mLocalTiledLayerFenpei = new ArcGISLocalTiledLayer(FileUtil.getFileAbsolutePath("/PDAlayers/fpwlay"));
+        mLocalTiledLayerFenpeiOld = new ArcGISLocalTiledLayer(FileUtil.getFileAbsolutePath("/PDAlayers/jfpwlay"));
+        mLocalTiledLayerGoogle = new ArcGISLocalTiledLayer(FileUtil.getFileAbsolutePath("/PDAlayers/qdgoogle"));
+//        mLocalTiledLayerMap = new ArcGISLocalTiledLayer("file:///" + "sdcard/PDAlayers/layers");
+//        mLocalTiledLayerLabel = new ArcGISLocalTiledLayer("file:///" + "sdcard/PDAlayers/annlayers");
+//        mLocalTiledLayerGuangJi = new ArcGISLocalTiledLayer("file:///" + "sdcard/PDAlayers/gjlay");
+//        mLocalTiledLayerFenpei = new ArcGISLocalTiledLayer("file:///" + "sdcard/PDAlayers/fpwlay");
+//        mLocalTiledLayerFenpeiOld = new ArcGISLocalTiledLayer("file:///" + "sdcard/PDAlayers/jfpwlay");
         mLocationGraphicsLayer = new GraphicsLayer();
         mLocationGraphicsLayer.setName("定位图层");
         newNodeLayer = new GraphicsLayer();
@@ -390,10 +397,14 @@ public class Main extends Activity implements OnMapListener
             mLocalTiledLayerFenpeiOld.setName("旧分配网");
             map.addLayer(mLocalTiledLayerFenpeiOld);
         }
+        if (mLocalTiledLayerGoogle != null) {
+            mLocalTiledLayerGoogle.setName("谷歌图切片");
+            map.addLayer(mLocalTiledLayerGoogle);
+        }
 
         // 添加绘画图层
         touchListener = new MapTouchListener(Main.this, map);
-        touchListener.setLayer(mTempDrawLayer);
+        touchListener.setTempDrawingLayer(mTempDrawLayer);
         touchListener.setNewEleLayer(newNodeLayer);
         touchListener.setNewgdlayer(newGuandaoLayer);
         touchListener.setNewGLLayer(newgllayer);

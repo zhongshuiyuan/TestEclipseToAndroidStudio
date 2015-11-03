@@ -7,13 +7,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import Eruntech.BirthStone.Core.Helper.DataType;
 import Eruntech.BirthStone.Core.Parse.Data;
 import Eruntech.BirthStone.Core.Parse.DataCollection;
 import Eruntech.BirthStone.Core.Parse.DataTable;
 import Eruntech.BirthStone.Core.Sqlite.SQLiteDatabase;
 import android.app.AlertDialog;
-import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -44,7 +42,6 @@ import com.esri.android.map.MapView;
 import com.esri.android.map.event.OnZoomListener;
 import com.esri.core.geometry.Geometry;
 import com.esri.core.geometry.Geometry.Type;
-import com.esri.core.geometry.GeometryEngine;
 import com.esri.core.geometry.Line;
 import com.esri.core.geometry.Point;
 import com.esri.core.geometry.Polygon;
@@ -60,10 +57,8 @@ import com.qingdao.shiqu.arcgis.R;
 import com.qingdao.shiqu.arcgis.activity.Dialog_Range;
 import com.qingdao.shiqu.arcgis.dialog.DataShowDialog;
 import com.qingdao.shiqu.arcgis.helper.FunctionHelper;
-import com.qingdao.shiqu.arcgis.sqlite.DatabaseOpenHelper;
 import com.qingdao.shiqu.arcgis.sqlite.DoAction;
 import com.qingdao.shiqu.arcgis.utils.DBOpterate;
-import com.qingdao.shiqu.arcgis.utils.GeometryUtil;
 import com.qingdao.shiqu.arcgis.utils.LocalDataModify;
 import com.qingdao.shiqu.arcgis.utils.LocalDataAction;
 //import com.qingdao.shiqu.arcgis.utils.Util;
@@ -91,7 +86,8 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 	SimpleMarkerSymbol markerSymbol;
 	SimpleFillSymbol fillSymbol;
 	Point fristPoint;
-	GraphicsLayer layer;
+	/** 用于绘制和标注的临时图层 **/
+	GraphicsLayer mTempDrawingLayer;
 	Geometry.Type geoType;
 	OnMapListener click;
 	List<FeatureLayer> featureLayers;
@@ -121,6 +117,8 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 	TextView zb ;
 	FeatureLayer gisgj2,loufang,daolu,lupaihao,fenzhiqi;
 	FeatureLayer zhuanxiangl,zhixiangl,gugangl;
+
+	private int mMapTouchListenerState;
 
 
 
@@ -305,13 +303,13 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 
 	/**
 	 * 
-	 * 功 能：设置测距时划线图层
+	 * 功 能：设置用于绘制和标注的临时图层
 	 * 
-	 * @param layer
+	 * @param layer 用于绘制和标注的临时图层
 	 */
-	public void setLayer(GraphicsLayer layer)
+	public void setTempDrawingLayer(GraphicsLayer layer)
 	{
-		this.layer = layer;
+		this.mTempDrawingLayer = layer;
 	}
 
 	/**
@@ -489,7 +487,7 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 			}
 			return true;
 		}
-		else
+		else // 划线测距功能和单击选中要素事件
 		{
 			/**
 			 * 划线测距功能
@@ -500,7 +498,7 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 				Point currentPoint = mapView.toMapPoint(new Point(point.getX(), point.getY()));
 				points.add(currentPoint);
 				Graphic graphic = new Graphic(currentPoint, markerSymbol);
-				layer.addGraphic(graphic);
+				mTempDrawingLayer.addGraphic(graphic);
 
 
 				if (fristPoint == null)
@@ -528,7 +526,7 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 						polyline.addSegment(line, false);
 					}
 					Graphic tempGraphic = new Graphic(polyline, lineSymbol);
-					layer.addGraphic(tempGraphic);
+					mTempDrawingLayer.addGraphic(tempGraphic);
 
 					String lenth = Double.toString(Math.round(l.calculateLength2D())) + "米";
 					Toast.makeText(mContext, lenth, Toast.LENGTH_SHORT).show();
@@ -559,7 +557,7 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 
 			}
 			/*else */if(newEleLayer != null ){
-				SelectOneGraphic(point.getX(),point.getY(),newEleLayer);
+				SelectOneGraphic(point.getX(),point.getY(), newEleLayer);
 			}
 			/*else*/ if(newgdlayer != null && isnew){
 				SelectOneGraphic(point.getX(), point.getY(), newgdlayer);
@@ -1341,7 +1339,7 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 							al.add(pl1.getPoint(ii));
 						}
 						if(showglly){
-							glList = ldm.getGlPts(al,tlayer,layer);
+							glList = ldm.getGlPts(al,tlayer, mTempDrawingLayer);
 
 							Polyline polyline = new Polyline();
 							Point startPoint;
@@ -1358,7 +1356,7 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 								polyline.addSegment(line, false);
 							}
 							Graphic tempGraphic = new Graphic(polyline, lineSymbol);
-							layer.addGraphic(tempGraphic);
+							mTempDrawingLayer.addGraphic(tempGraphic);
 						}
 						else
 							ldm.modifySegment(al);
@@ -1443,6 +1441,8 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 			newglly.addGraphic(tempGraphic);
 		}
 	}
+
+	/** 加载本地新增（用户绘制）的电缆路由 **/
 	public void loadDLLY(){
 		Graphic tempGraphic ;
 		db = new SQLiteDatabase(mContext);
