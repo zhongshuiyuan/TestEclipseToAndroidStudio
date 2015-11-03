@@ -9,7 +9,7 @@ import android.database.sqlite.SQLiteOpenHelper;
  */
 public class DatabaseOpenHelper extends SQLiteOpenHelper {
 
-    private static final String DB_NAME = "test.db"; //数据库名称
+    private static final String DB_NAME = "customData.db"; //数据库名称
     private static final int version = 1; //数据库版本
 
     public DatabaseOpenHelper(Context context) {
@@ -19,7 +19,8 @@ public class DatabaseOpenHelper extends SQLiteOpenHelper {
     @Override
     public void onCreate(SQLiteDatabase db) {
         //String sql = "create table geometry(polyline blob not null);";
-        String sql = "create table geometry(polyline blob not null);";
+        // 创建光缆路由表
+        String sql = "create table glly(geometry blob not null);";
         db.execSQL(sql);
     }
 

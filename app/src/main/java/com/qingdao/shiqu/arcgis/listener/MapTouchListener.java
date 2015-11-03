@@ -57,6 +57,7 @@ import com.qingdao.shiqu.arcgis.R;
 import com.qingdao.shiqu.arcgis.activity.Dialog_Range;
 import com.qingdao.shiqu.arcgis.dialog.DataShowDialog;
 import com.qingdao.shiqu.arcgis.helper.FunctionHelper;
+import com.qingdao.shiqu.arcgis.mode.SimpleSymbolTemplate;
 import com.qingdao.shiqu.arcgis.sqlite.DoAction;
 import com.qingdao.shiqu.arcgis.utils.DBOpterate;
 import com.qingdao.shiqu.arcgis.utils.LocalDataModify;
@@ -1441,7 +1442,7 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 			}
 
 
-			tempGraphic = new Graphic(pl, new SimpleLineSymbol(Color.DKGRAY, 1, SimpleLineSymbol.STYLE.SOLID));
+			tempGraphic = new Graphic(pl, SimpleSymbolTemplate.GLLY);
 
 			newglly.addGraphic(tempGraphic);
 		}

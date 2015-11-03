@@ -89,7 +89,9 @@ import com.qingdao.shiqu.arcgis.helper.FunctionHelper;
 import com.qingdao.shiqu.arcgis.layer.LayerOpter;
 import com.qingdao.shiqu.arcgis.listener.MapTouchListener;
 import com.qingdao.shiqu.arcgis.listener.MapTouchListener.OnMapListener;
+import com.qingdao.shiqu.arcgis.listener.MapViewOnDrawEvenListener;
 import com.qingdao.shiqu.arcgis.mode.ContentModel;
+import com.qingdao.shiqu.arcgis.mode.SimpleSymbolTemplate;
 import com.qingdao.shiqu.arcgis.mode.Take;
 import com.qingdao.shiqu.arcgis.sqlite.DoAction;
 import com.qingdao.shiqu.arcgis.utils.DBOpterate;
@@ -98,6 +100,9 @@ import com.qingdao.shiqu.arcgis.utils.LocalDataModify;
 import com.qingdao.shiqu.arcgis.utils.NSXAsyncTask;
 import com.qingdao.shiqu.arcgis.utils.Session;
 import com.qingdao.shiqu.arcgis.utils.Util;
+import com.qingdao.shiqu.arcgis.utils.drawtool.DrawEvent;
+import com.qingdao.shiqu.arcgis.utils.drawtool.DrawEventListener;
+import com.qingdao.shiqu.arcgis.utils.drawtool.DrawTool;
 
 /**
  * @author Administrator
@@ -166,6 +171,10 @@ public class Main extends Activity implements OnMapListener
     GraphicsLayer newdlly;
     /** 用于标注的临时图层 **/
     GraphicsLayer mTempDrawLayer;
+    /** 绘图工具 **/
+    DrawTool mDrawTool;
+    /** 绘制事件类型 **/
+    private int mDrawType;
 
     /** 方向传感器初始化 **/
     SensorManager sensorManager;
@@ -376,14 +385,12 @@ public class Main extends Activity implements OnMapListener
         newdlly = new GraphicsLayer();
         newdlly.setName("新加电缆路由");
 
-        mLocalTiledLayerMap.setName("青岛底图");
-
         // 添加底图
         map.setMapBackground(0xffffff, 0xffffff, 0, 0);
-        double lms = mLocalTiledLayerMap.getMinScale();
-        //mLocalTiledLayerMap.setMinScale(0);
-        map.addLayer(mLocalTiledLayerMap);
-        //mLocalTiledLayerMap.getExtent().queryEnvelope(extend_el);
+        if (mLocalTiledLayerMap != null) {
+            mLocalTiledLayerMap.setName("青岛底图");
+            map.addLayer(mLocalTiledLayerMap);
+        }
         if (mLocalTiledLayerLabel != null) {
             mLocalTiledLayerLabel.setName("路牌号标注");
             map.addLayer(mLocalTiledLayerLabel);
@@ -400,15 +407,10 @@ public class Main extends Activity implements OnMapListener
             mLocalTiledLayerFenpeiOld.setName("旧分配网");
             map.addLayer(mLocalTiledLayerFenpeiOld);
         }
-        if (mLocalTiledLayerGoogle != null) {
-            mLocalTiledLayerGoogle.setName("谷歌图切片");
-            map.addLayer(mLocalTiledLayerGoogle);
-        }
         if (mLocalTiledLayerSanWang != null) {
             mLocalTiledLayerSanWang.setName("三网覆盖");
             map.addLayer(mLocalTiledLayerSanWang);
         }
-
 
         // 添加绘画图层
         touchListener = new MapTouchListener(Main.this, map);
@@ -420,12 +422,16 @@ public class Main extends Activity implements OnMapListener
         touchListener.setNewdlly(newdlly);
         map.setOnTouchListener(touchListener); // 地图手势操作监听事件
         map.setOnZoomListener(touchListener); // 地图缩放监听事件
-        //		btnAuthority = (LinearLayout) this.findViewById(R.id.btnAuthority);
 
         // 下面这两个方法包含了给 TOC 数据源赋值的过程 by QYY
         initGeodatabase();
         loadExtraLayers();
 
+        if (mLocalTiledLayerGoogle != null) {
+            mLocalTiledLayerGoogle.setName("谷歌切片图");
+            map.addLayer(mLocalTiledLayerGoogle);
+            childs.get(0).add(mLocalTiledLayerGoogle);
+        }
 
         map.addLayer(mTempDrawLayer);
         map.addLayer(newNodeLayer);
@@ -447,7 +453,21 @@ public class Main extends Activity implements OnMapListener
 
         mLocationDrawable = this.getResources().getDrawable(R.drawable.icon_track_map_bar);
 
+        setupDrawTool();
+
         super.onCreateView();
+    }
+
+    private void setupDrawTool() {
+        mDrawTool = new DrawTool(map);
+        MapViewOnDrawEvenListener onDrawEvenListener = new MapViewOnDrawEvenListener(this) {
+            @Override
+            public void onDrawEnd(DrawEvent event) {
+                onDrawEnd(event, mDrawType);
+            }
+        };
+        onDrawEvenListener.setGLLYLayer(newglly);
+        mDrawTool.setOnDrawEvenListener(onDrawEvenListener);
     }
 
     /** 为DrawerLayout添加抽屉 **/
@@ -535,20 +555,29 @@ public class Main extends Activity implements OnMapListener
                         break;
                     case 7: // 测试绘制工具
                         // TODO 添加测试代码
+                        drawerLayout.closeDrawers();
+                        mDrawTool.activate(DrawTool.FREEHAND_POLYLINE);
+                        mDrawType = MapViewOnDrawEvenListener.TYPE_ADD_GLLY;
+                        break;
+                    case 8:
+                        drawerLayout.closeDrawers();
+                        mDrawTool.deactivate();
+                        mDrawType = MapViewOnDrawEvenListener.TYPE_NULL;
+                        break;
                     default:
                         break;
                 }
             }
         });
 
-        rightLayout=(RelativeLayout) findViewById(R.id.right);
+        rightLayout = (RelativeLayout) findViewById(R.id.right);
 
         createToc();
     }
 
     /** 创建TOC **/
     private void createToc() {
-        mElvToc = (ExpandableListView)findViewById(R.id.right_listview);
+        mElvToc = (ExpandableListView) findViewById(R.id.right_listview);
         MyExpandableListAdapter adapter = new MyExpandableListAdapter(Main.this, titles, childs);
         mElvToc.setAdapter(adapter);
     }
@@ -566,6 +595,8 @@ public class Main extends Activity implements OnMapListener
         leftDrawerDatas.add(new ContentModel(R.drawable.infusion_selected, "编辑光缆路由图"));
         leftDrawerDatas.add(new ContentModel(R.drawable.infusion_selected, "编辑电缆路由图"));
         leftDrawerDatas.add(new ContentModel(R.drawable.infusion_selected, "查看管道光缆走向"));
+        leftDrawerDatas.add(new ContentModel(R.drawable.infusion_selected, "测试绘图"));
+        leftDrawerDatas.add(new ContentModel(R.drawable.infusion_selected, "停止绘图"));
         //		leftDrawerDatas.add(new ContentModel(R.drawable.infusion_selected, "井/管道类型"));
 
         return leftDrawerDatas;
@@ -911,7 +942,7 @@ public class Main extends Activity implements OnMapListener
      * @param path
      * 				geodatabase路径
      */
-    private void loadLayerByGeoPath(String title,String path){
+    private void loadLayerByGeoPath(String title, String path) {
 
         titles.add(title);
         Geodatabase tempGeodatabase = null;
@@ -1547,7 +1578,7 @@ public class Main extends Activity implements OnMapListener
             }
 
 
-            tempGraphic = new Graphic(pl, new SimpleLineSymbol(Color.DKGRAY, 1, SimpleLineSymbol.STYLE.SOLID));
+            tempGraphic = new Graphic(pl, SimpleSymbolTemplate.GLLY);
 
             newglly.addGraphic(tempGraphic);
         }
