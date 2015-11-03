@@ -130,6 +130,8 @@ public class Main extends Activity implements OnMapListener
     ArcGISLocalTiledLayer mLocalTiledLayerFenpeiOld;
     /** 谷歌切片图层 **/
     ArcGISLocalTiledLayer mLocalTiledLayerGoogle;
+    /** 三网覆盖图层 **/
+    ArcGISLocalTiledLayer mLocalTiledLayerSanWang;
 
 
     /** 第一次加载地图时需要全图显示 **/
@@ -353,6 +355,7 @@ public class Main extends Activity implements OnMapListener
         mLocalTiledLayerFenpei = new ArcGISLocalTiledLayer(FileUtil.getFileAbsolutePath(this, "/PDAlayers/fpwlay"));
         mLocalTiledLayerFenpeiOld = new ArcGISLocalTiledLayer(FileUtil.getFileAbsolutePath(this, "/PDAlayers/jfpwlay"));
         mLocalTiledLayerGoogle = new ArcGISLocalTiledLayer(FileUtil.getFileAbsolutePath(this, "/PDAlayers/qdgoogle"));
+        mLocalTiledLayerSanWang = new ArcGISLocalTiledLayer(FileUtil.getFileAbsolutePath(this, "/PDAlayers/swfglay"));
 //        mLocalTiledLayerMap = new ArcGISLocalTiledLayer("file:///" + "sdcard/PDAlayers/layers");
 //        mLocalTiledLayerLabel = new ArcGISLocalTiledLayer("file:///" + "sdcard/PDAlayers/annlayers");
 //        mLocalTiledLayerGuangJi = new ArcGISLocalTiledLayer("file:///" + "sdcard/PDAlayers/gjlay");
@@ -401,6 +404,11 @@ public class Main extends Activity implements OnMapListener
             mLocalTiledLayerGoogle.setName("谷歌图切片");
             map.addLayer(mLocalTiledLayerGoogle);
         }
+        if (mLocalTiledLayerSanWang != null) {
+            mLocalTiledLayerSanWang.setName("三网覆盖");
+            map.addLayer(mLocalTiledLayerSanWang);
+        }
+
 
         // 添加绘画图层
         touchListener = new MapTouchListener(Main.this, map);
@@ -525,6 +533,8 @@ public class Main extends Activity implements OnMapListener
                         touchListener.setShowglly(true);
                         drawerLayout.closeDrawers();
                         break;
+                    case 7: // 测试绘制工具
+                        // TODO 添加测试代码
                     default:
                         break;
                 }
