@@ -97,8 +97,12 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 	String startingPointName,endPointName;
 	Polygon tempPolygon = null;//记录绘制过程中的多边形  
 	boolean isrj = false;
-	boolean addEle = false;
-	GraphicsLayer newEleLayer,newgdlayer,newGLLayer,newglly,newdlly;
+	boolean addNode = false;
+	GraphicsLayer newNodeLayer;
+	GraphicsLayer newgdlayer;
+	GraphicsLayer newGLLayer;
+	GraphicsLayer newglly;
+	GraphicsLayer newdlly;
 	String gdcq;
 	int uid_point,uid_segment,uid_fiber;
 	ArrayList<Integer> uid_seg_list ;
@@ -231,20 +235,20 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 		this.newgdlayer = newgdlayer;
 	}
 
-	public GraphicsLayer getNewEleLayer() {
-		return newEleLayer;
+	public GraphicsLayer getNewNodeLayer() {
+		return newNodeLayer;
 	}
 
-	public void setNewEleLayer(GraphicsLayer newEleLayer) {
-		this.newEleLayer = newEleLayer;
+	public void setNewNodeLayer(GraphicsLayer newNodeLayer) {
+		this.newNodeLayer = newNodeLayer;
 	}
 
-	public boolean isAddEle() {
-		return addEle;
+	public boolean isAddNode() {
+		return addNode;
 	}
 
-	public void setAddEle(boolean addEle) {
-		this.addEle = addEle;
+	public void setAddNode(boolean addNode) {
+		this.addNode = addNode;
 	}
 
 	public boolean isIsrj() {
@@ -337,10 +341,11 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 		zb.setText(String.valueOf(point.getX()+","+String.valueOf(point.getY())));
 		Drawable img = null;
 		isnew = true;
+		// 新增光缆路由
 		if(drawglly){
 			// 光缆路由
 			Point currentPoint  = null;
-			if(SelectOneGraphic(point.getX(),point.getY(),newEleLayer)){
+			if(SelectOneGraphic(point.getX(),point.getY(), newNodeLayer)){
 				currentPoint = oldPoint;
 				points.add(oldPoint);
 			}
@@ -376,7 +381,7 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 		if(drawdlly){
 			// 电缆路由
 			Point currentPoint  = null;
-			if(SelectOneGraphic(point.getX(),point.getY(),newEleLayer)){
+			if(SelectOneGraphic(point.getX(),point.getY(), newNodeLayer)){
 				currentPoint = oldPoint;
 				points.add(oldPoint);
 			}
@@ -415,7 +420,7 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 		if(addGL){
 
 			Point currentPoint  = null;
-			if(SelectOneGraphic(point.getX(),point.getY(),newEleLayer)){
+			if(SelectOneGraphic(point.getX(),point.getY(), newNodeLayer)){
 				currentPoint = oldPoint;
 				points.add(oldPoint);
 			}
@@ -444,9 +449,9 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 		/**
 		 * 添加管道
 		 * **/
-		if(addEle){
+		if(addNode){
 			Point currentPoint  = null;
-			if(SelectOneGraphic(point.getX(),point.getY(),newEleLayer)){
+			if(SelectOneGraphic(point.getX(),point.getY(), newNodeLayer)){
 				currentPoint = oldPoint;
 				points.add(oldPoint);
 			}
@@ -461,7 +466,7 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 				img = bd;
 				pms = new PictureMarkerSymbol(com.qingdao.shiqu.arcgis.utils.Utils.zoomDrawable(img, 40, 40));
 				Graphic graphic = new Graphic(currentPoint, pms);
-				uid_point = newEleLayer.addGraphic(graphic);
+				uid_point = newNodeLayer.addGraphic(graphic);
 				sld.savePoint(currentPoint,jtype,uid_point);
 			}
 
@@ -556,8 +561,8 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 				}
 
 			}
-			/*else */if(newEleLayer != null ){
-				SelectOneGraphic(point.getX(),point.getY(), newEleLayer);
+			/*else */if(newNodeLayer != null ){
+				SelectOneGraphic(point.getX(),point.getY(), newNodeLayer);
 			}
 			/*else*/ if(newgdlayer != null && isnew){
 				SelectOneGraphic(point.getX(), point.getY(), newgdlayer);
@@ -1020,8 +1025,8 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 			Toast.makeText(mContext, "光缆添加成功！", Toast.LENGTH_SHORT).show();
 			return false;
 		}
-		if(addEle){
-			addEle = false;
+		if(addNode){
+			addNode = false;
 			fristPoint = null;
 
 			for(int i=0;i<points.size()-1;i++){
@@ -1089,7 +1094,7 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 		DataTable result = null;
 		super.onLongPress(event);
 		boolean next = true;
-		Graphic del = GetOneGraphicFromLayer(event.getX(),event.getY(),newEleLayer);
+		Graphic del = GetOneGraphicFromLayer(event.getX(),event.getY(), newNodeLayer);
 		if(del == null)
 			del = GetOneGraphicFromLayer(event.getX(),event.getY(),newgdlayer);
 		if(del != null){
@@ -1107,7 +1112,7 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 					//search the gjid in gdtable , if find the gj is not to be delete,should delete the linked gd first!
 					DataTable rst = DoAction.getSegmentInfoByPID(mContext, dc.get("gjid").Value.toString());
 					// show dialog 
-					showDelDialog(newEleLayer,del.getId(),Integer.valueOf(dc.get("gjid").Value.toString()),rst,ty);
+					showDelDialog(newNodeLayer,del.getId(),Integer.valueOf(dc.get("gjid").Value.toString()),rst,ty);
 				}
 			}else if(ty == Type.POLYLINE){
 				Polyline pl = (Polyline) gy;
@@ -1328,7 +1333,7 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 						oldPoint = pt;
 						String a = String.valueOf(pt.getX())+","+String.valueOf(pt.getY());
 						a += "/";
-						if(!addGL && !addEle){
+						if(!addGL && !addNode){
 							ldm.modifyPoint(pt.getX(), pt.getY());
 						}
 					}else{

@@ -18,6 +18,7 @@ public class DatabaseOpenHelper extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase db) {
+        //String sql = "create table geometry(polyline blob not null);";
         String sql = "create table geometry(polyline blob not null);";
         db.execSQL(sql);
     }

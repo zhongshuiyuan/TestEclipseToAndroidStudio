@@ -347,12 +347,12 @@ public class Main extends Activity implements OnMapListener
         locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
         // 讲解密后的文件写入sd卡
         // writeFiles();
-        mLocalTiledLayerMap = new ArcGISLocalTiledLayer(FileUtil.getFileAbsolutePath("/PDAlayers/layers"));
-        mLocalTiledLayerLabel = new ArcGISLocalTiledLayer(FileUtil.getFileAbsolutePath("/PDAlayers/annlayers"));
-        mLocalTiledLayerGuangJi = new ArcGISLocalTiledLayer(FileUtil.getFileAbsolutePath("/PDAlayers/gjlay"));
-        mLocalTiledLayerFenpei = new ArcGISLocalTiledLayer(FileUtil.getFileAbsolutePath("/PDAlayers/fpwlay"));
-        mLocalTiledLayerFenpeiOld = new ArcGISLocalTiledLayer(FileUtil.getFileAbsolutePath("/PDAlayers/jfpwlay"));
-        mLocalTiledLayerGoogle = new ArcGISLocalTiledLayer(FileUtil.getFileAbsolutePath("/PDAlayers/qdgoogle"));
+        mLocalTiledLayerMap = new ArcGISLocalTiledLayer(FileUtil.getFileAbsolutePath(this, "/PDAlayers/layers"));
+        mLocalTiledLayerLabel = new ArcGISLocalTiledLayer(FileUtil.getFileAbsolutePath(this, "/PDAlayers/annlayers"));
+        mLocalTiledLayerGuangJi = new ArcGISLocalTiledLayer(FileUtil.getFileAbsolutePath(this, "/PDAlayers/gjlay"));
+        mLocalTiledLayerFenpei = new ArcGISLocalTiledLayer(FileUtil.getFileAbsolutePath(this, "/PDAlayers/fpwlay"));
+        mLocalTiledLayerFenpeiOld = new ArcGISLocalTiledLayer(FileUtil.getFileAbsolutePath(this, "/PDAlayers/jfpwlay"));
+        mLocalTiledLayerGoogle = new ArcGISLocalTiledLayer(FileUtil.getFileAbsolutePath(this, "/PDAlayers/qdgoogle"));
 //        mLocalTiledLayerMap = new ArcGISLocalTiledLayer("file:///" + "sdcard/PDAlayers/layers");
 //        mLocalTiledLayerLabel = new ArcGISLocalTiledLayer("file:///" + "sdcard/PDAlayers/annlayers");
 //        mLocalTiledLayerGuangJi = new ArcGISLocalTiledLayer("file:///" + "sdcard/PDAlayers/gjlay");
@@ -405,7 +405,7 @@ public class Main extends Activity implements OnMapListener
         // 添加绘画图层
         touchListener = new MapTouchListener(Main.this, map);
         touchListener.setTempDrawingLayer(mTempDrawLayer);
-        touchListener.setNewEleLayer(newNodeLayer);
+        touchListener.setNewNodeLayer(newNodeLayer);
         touchListener.setNewgdlayer(newGuandaoLayer);
         touchListener.setNewGLLayer(newgllayer);
         touchListener.setNewglly(newglly);
@@ -788,7 +788,7 @@ public class Main extends Activity implements OnMapListener
             // UsernamePasswordCredentials("", "");
             //			 UserCredentials a = new UserCredentials();
             //			 a.setUserAccount(userName, password);
-            String map10 = FileUtil.getFileAbsolutePath("/map/map10.geodatabase");
+            String map10 = FileUtil.getFileAbsolutePath(this, "/map/map10.geodatabase");
             if(map10 != null) {
                 Geodatabase geodatabase = new Geodatabase(map10);
                 List<GeodatabaseFeatureTable> tables = geodatabase.getGeodatabaseTables();
@@ -804,7 +804,7 @@ public class Main extends Activity implements OnMapListener
                 // map.addLayer(guanli);
             }
 
-            String guandaoPath = FileUtil.getFileAbsolutePath("/map/guandao.geodatabase");
+            String guandaoPath = FileUtil.getFileAbsolutePath(this, "/map/guandao.geodatabase");
             if(guandaoPath != null) {
                 Geodatabase guandaogeodatabase = new Geodatabase(guandaoPath);
                 List<GeodatabaseFeatureTable> guandaotables = guandaogeodatabase.getGeodatabaseTables();
@@ -813,7 +813,7 @@ public class Main extends Activity implements OnMapListener
                 map.addLayer(Segment);
             }
 
-            String guanglanPath = FileUtil.getFileAbsolutePath("/map/guanglan.geodatabase");
+            String guanglanPath = FileUtil.getFileAbsolutePath(this, "/map/guanglan.geodatabase");
             if(guanglanPath != null) {
                 Geodatabase guanlangeodatabase = new Geodatabase(guanglanPath);
                 List<GeodatabaseFeatureTable> guanlantables = guanlangeodatabase.getGeodatabaseTables();
@@ -822,7 +822,7 @@ public class Main extends Activity implements OnMapListener
             }
 
             //加载道路
-            String daoluPath = FileUtil.getFileAbsolutePath("/map/daolu.geodatabase");
+            String daoluPath = FileUtil.getFileAbsolutePath(this, "/map/daolu.geodatabase");
             if(daoluPath != null) {
                 Geodatabase daolugeodatabase = new Geodatabase(daoluPath);
                 List<GeodatabaseFeatureTable> daolutables = daolugeodatabase.getGeodatabaseTables();
@@ -831,7 +831,7 @@ public class Main extends Activity implements OnMapListener
             }
 
 
-            String pad = FileUtil.getFileAbsolutePath("/map/pdageodatabase.geodatabase");
+            String pad = FileUtil.getFileAbsolutePath(this, "/map/pdageodatabase.geodatabase");
             if(pad != null) {
                 Geodatabase daolugeodatabase = new Geodatabase(pad);
                 List<GeodatabaseFeatureTable> daolutables = daolugeodatabase.getGeodatabaseTables();
@@ -854,43 +854,43 @@ public class Main extends Activity implements OnMapListener
     private void loadExtraLayers(){
         //加载道路
         ArrayList<Layer> hfc_lay = new ArrayList<>();
-        String htfPath = FileUtil.getFileAbsolutePath("/map/hfc.geodatabase");
+        String htfPath = FileUtil.getFileAbsolutePath(this, "/map/hfc.geodatabase");
         if(htfPath != null) {
             loadLayerByGeoPath("HFC", htfPath);
         }
 
 
-        String eponPath = FileUtil.getFileAbsolutePath("/map/epon.geodatabase");
+        String eponPath = FileUtil.getFileAbsolutePath(this, "/map/epon.geodatabase");
         if(eponPath != null) {
             loadLayerByGeoPath("EPON网", eponPath);
         }
 
         ///
-        String gj2Path = FileUtil.getFileAbsolutePath("/map/GISGJ.geodatabase");
+        String gj2Path = FileUtil.getFileAbsolutePath(this, "/map/GISGJ.geodatabase");
         if(gj2Path != null) {
             loadLayerByGeoPath("GIS新增数据", gj2Path);
         }
 
         //
-        String glpath = FileUtil.getFileAbsolutePath("/map/glw.geodatabase");
+        String glpath = FileUtil.getFileAbsolutePath(this, "/map/glw.geodatabase");
         if(glpath != null) {
             loadLayerByGeoPath("光缆网", glpath);
         }
 
         //
-        String fenpeipath = FileUtil.getFileAbsolutePath("/map/fenpeiwang.geodatabase");
+        String fenpeipath = FileUtil.getFileAbsolutePath(this, "/map/fenpeiwang.geodatabase");
         if(fenpeipath != null) {
             loadLayerByGeoPath("分配网", fenpeipath);
         }
 
         //
-        String PDAguanglan = FileUtil.getFileAbsolutePath("/map/pdagl.geodatabase");
+        String PDAguanglan = FileUtil.getFileAbsolutePath(this, "/map/pdagl.geodatabase");
         if(PDAguanglan != null) {
             loadLayerByGeoPath("PDA光缆网", PDAguanglan);
         }
 
         //
-        String daolupath = FileUtil.getFileAbsolutePath("/map/hfcdaolu.geodatabase");
+        String daolupath = FileUtil.getFileAbsolutePath(this, "/map/hfcdaolu.geodatabase");
         if(daolupath != null) {
             loadLayerByGeoPath("道路网", daolupath);
         }
@@ -1097,7 +1097,7 @@ public class Main extends Activity implements OnMapListener
                 String gtype = data.getStringExtra("gltype");
                 String gdcq = data.getStringExtra("gdcq");
                 if (jtype != null) {
-                    touchListener.setAddEle(true);
+                    touchListener.setAddNode(true);
                     touchListener.setJtype(jtype);
                     touchListener.setGdcq(gdcq);
                 } else if (gtype != null || GL_TYPE.equalsIgnoreCase("default")) {
