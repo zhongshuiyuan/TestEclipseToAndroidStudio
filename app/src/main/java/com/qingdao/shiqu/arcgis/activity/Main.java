@@ -330,25 +330,27 @@ public class Main extends Activity implements OnMapListener
 
         // 按钮菜单
         mActionMenu = (FloatingActionsMenu) findViewById(R.id.main_multiple_actions);
-        //mActionMenu.setAlpha(0);
         mBtnActionMenu = (ButtonFloat) findViewById(R.id.main_btn_action_menu);
-        mBtnActionMenu.setDrawableIcon(getResources().getDrawable(R.drawable.ic_add_white_48dp));
+        //mBtnActionMenu.setDrawableIcon(getResources().getDrawable(R.drawable.ic_map));
         mBtnActionMenu.setOnClickListener(new View.OnClickListener() {
-            int i = 0;
             @Override
             public void onClick(View v) {
-                switch (i) {
-                    case 0:
-                        mBtnActionMenu.setDrawableIcon(getResources().getDrawable(R.drawable.ic_clear_white_48dp));
-                        mActionMenu.expand();
-                        i++;
-                        break;
-                    case 1:
-                        mBtnActionMenu.setDrawableIcon(getResources().getDrawable(R.drawable.ic_add_white_48dp));
-                        mActionMenu.collapse();
-                        i = 0;
-                        break;
+                if (mActionMenu.isExpanded()) {
+                    mActionMenu.collapse();
+                } else {
+                    mActionMenu.expand();
                 }
+            }
+        });
+        mActionMenu.setOnFloatingActionsMenuUpdateListener(new FloatingActionsMenu.OnFloatingActionsMenuUpdateListener() {
+            @Override
+            public void onMenuExpanded() {
+                mBtnActionMenu.setDrawableIcon(getResources().getDrawable(R.drawable.ic_clear_white_48dp));
+            }
+
+            @Override
+            public void onMenuCollapsed() {
+                mBtnActionMenu.setDrawableIcon(getResources().getDrawable(R.drawable.ic_add_white_48dp));
             }
         });
 
@@ -1732,7 +1734,7 @@ public class Main extends Activity implements OnMapListener
     private void updateLongitude() {
         if (mLastLocationFromGps != null) {
             double longitude = mLastLocationFromGps.getLongitude();
-            String longitudeStr = String.valueOf(longitude).substring(0, 7);
+            String longitudeStr = String.valueOf(longitude).substring(0, 9);
             if (longitude > 0) {
                 longitudeStr += "°E";
             } else {
@@ -1747,7 +1749,7 @@ public class Main extends Activity implements OnMapListener
     private void updateLatitude() {
         if (mLastLocationFromGps != null) {
             double latitude = mLastLocationFromGps.getLatitude();
-            String latitudeStr = String.valueOf(latitude).substring(0, 7);
+            String latitudeStr = String.valueOf(latitude).substring(0, 8);
             if (latitude > 0) {
                 latitudeStr += "°N";
             } else {

@@ -67,7 +67,7 @@ public abstract class MapViewOnDrawEvenListener implements DrawEventListener {
         Graphic graphic = new Graphic(geometry, SimpleSymbolTemplate.GLLY);
         mGllyLayer.addGraphic(graphic);
 
-        storeGllyToDatabase(geometry);
+                                                                                                                                                                                                                    storeGllyToDatabase(geometry);
     }
 
     private void storeGllyToDatabase(Geometry geometry) {

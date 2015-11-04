@@ -102,6 +102,9 @@
                 <RelativeLayout
                     android:layout_width="180dp"
                     android:layout_height="147dp"
+                    android:layout_alignParentTop="true"
+                    android:layout_alignParentLeft="true"
+                    android:layout_alignParentStart="true"
                     android:layout_marginTop="8dp"
                     android:layout_marginLeft="8dp"
                     android:layout_marginStart="8dp">
@@ -171,7 +174,7 @@
                     <!-- 右 -->
                     <View
                         android:layout_width="2dp"
-                        android:layout_height="fill_parent"
+                        android:layout_height="144dp"
                         android:layout_marginLeft="178dp"
                         android:layout_marginStart="178dp"
                         android:background="@color/app_design_shadow" />
@@ -184,8 +187,121 @@
                     <!-- 左 -->
                     <View
                         android:layout_width="2dp"
-                        android:layout_height="fill_parent"
+                        android:layout_height="144dp"
                         android:background="@color/app_design_shadow" />
+
+                </RelativeLayout>
+
+                <!-- 绘图提示 -->
+                <RelativeLayout
+                    android:id="@+id/main_rl_drawing_toolbar"
+                    android:layout_width="180dp"
+                    android:layout_height="173dp"
+                    android:layout_alignParentTop="true"
+                    android:layout_alignParentRight="true"
+                    android:layout_alignParentEnd="true"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginRight="8dp"
+                    android:layout_marginEnd="8dp">
+
+                    <RelativeLayout
+                        android:layout_width="176dp"
+                        android:layout_height="144dp"
+                        android:layout_marginLeft="2dp"
+                        android:layout_marginStart="2dp"
+                        android:layout_marginTop="1dp"
+                        android:background="@color/white">
+
+                        <!-- 提示文字 -->
+                        <TextView
+                            android:id="@+id/main_drawing_tips"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginLeft="16dp"
+                            android:layout_marginStart="16dp"
+                            android:layout_marginRight="16dp"
+                            android:layout_marginEnd="16dp"
+                            android:layout_marginTop="16dp"
+                            android:text="在屏幕上点击以绘制线条"
+                            android:textSize="16sp"/>
+
+                        <LinearLayout
+                            android:layout_width="fill_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:layout_below="@id/main_drawing_tips"
+                            android:layout_marginLeft="16dp"
+                            android:layout_marginStart="16dp"
+                            android:layout_marginTop="8dp">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:textSize="16sp"
+                                android:text="自由线条"/>
+
+                            <CheckBox
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginLeft="16dp"
+                                android:layout_marginStart="16dp"/>
+
+                        </LinearLayout>
+
+                    </RelativeLayout>
+
+                    <!-- 阴影 -->
+                    <!-- 上 -->
+                    <View
+                        android:layout_width="fill_parent"
+                        android:layout_height="1dp"
+                        android:background="@color/app_design_shadow" />
+                    <!-- 右 -->
+                    <View
+                        android:layout_width="2dp"
+                        android:layout_height="145dp"
+                        android:layout_marginLeft="178dp"
+                        android:layout_marginStart="178dp"
+                        android:background="@color/app_design_shadow" />
+                    <!-- 下 -->
+                    <View
+                        android:layout_width="fill_parent"
+                        android:layout_height="2dp"
+                        android:layout_marginTop="144dp"
+                        android:background="@color/app_design_shadow" />
+                    <!-- 左 -->
+                    <View
+                        android:layout_width="2dp"
+                        android:layout_height="145dp"
+                        android:background="@color/app_design_shadow" />
+
+                    <!-- 按钮 -->
+                    <com.gc.materialdesign.views.ButtonFloat
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentLeft="true"
+                        android:layout_alignParentStart="true"
+                        android:layout_marginTop="116dp"
+                        android:layout_marginLeft="16dp"
+                        android:layout_marginStart="16dp"
+                        android:onClick="click"
+                        android:background="@color/red"
+                        app:iconDrawable="@drawable/ic_clear_white_48dp"
+                        app:animate="false"/>
+
+                    <com.gc.materialdesign.views.ButtonFloat
+                        android:id="@+id/main_btn_close_drawing_toolbar"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentRight="true"
+                        android:layout_alignParentEnd="true"
+                        android:layout_marginTop="116dp"
+                        android:layout_marginRight="16dp"
+                        android:layout_marginEnd="16dp"
+                        android:onClick="click"
+                        android:background="@color/red"
+                        app:iconDrawable="@drawable/ic_clear_white_48dp"
+                        app:animate="false"/>
 
                 </RelativeLayout>
 
@@ -315,6 +431,7 @@
                     android:layout_marginBottom="16dp"
                     android:onClick="click"
                     android:background="@color/app_design_background"
+                    app:iconDrawable="@drawable/ic_map"
                     app:animate="false" />
 
 

@@ -6,6 +6,7 @@
     <color name="edittext_txt_edit">#77787b</color>
 
     <drawable name="red">#fc0101</drawable>
+    <drawable name="green">#019801</drawable>
 
     <color name="button_txt_jieshao">#FFFFFF</color>
     <color name="textview_txt_pindao">#000000</color>
