@@ -71,8 +71,8 @@ public class DrawTool extends DrawToolBase {
 	public void activate(int drawType) {
 		if (mMapView == null)
 			return;
-		
-		deactivate();
+
+		resetDrawTool();
 		
 		mMapView.setOnTouchListener(mMapViewDrawListener);
 		mDrawType = drawType;
@@ -103,6 +103,10 @@ public class DrawTool extends DrawToolBase {
 
 	public void deactivate() {
 		mMapView.setOnTouchListener(mMapViewDefaultListener);
+		resetDrawTool();
+	}
+
+	private void resetDrawTool() {
 		mTempDrawLayer.removeAll();
 		mIsActive = false;
 		mDrawType = NULL;
@@ -141,9 +145,9 @@ public class DrawTool extends DrawToolBase {
 	private void sendDrawEndEvent() {
 		DrawEvent drawEvent = new DrawEvent(this, DrawEvent.DRAW_END, mDrawGraphic);
 		notifyEvent(drawEvent);
-		//int type = this.mDrawType;
-		//this.deactivate();
-		//this.activate(type);
+		//int type = mDrawType;
+		//deactivate();
+		//activate(type);
 		activate(mDrawType);
 	}
 
