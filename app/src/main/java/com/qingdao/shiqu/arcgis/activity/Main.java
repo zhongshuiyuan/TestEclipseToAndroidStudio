@@ -55,6 +55,7 @@ import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
+import android.widget.CheckBox;
 import android.widget.ExpandableListView;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
@@ -101,7 +102,6 @@ import com.qingdao.shiqu.arcgis.utils.NSXAsyncTask;
 import com.qingdao.shiqu.arcgis.utils.Session;
 import com.qingdao.shiqu.arcgis.utils.Util;
 import com.qingdao.shiqu.arcgis.utils.drawtool.DrawEvent;
-import com.qingdao.shiqu.arcgis.utils.drawtool.DrawEventListener;
 import com.qingdao.shiqu.arcgis.utils.drawtool.DrawTool;
 
 /**
@@ -173,8 +173,10 @@ public class Main extends Activity implements OnMapListener
     GraphicsLayer mTempDrawLayer;
     /** 绘图工具 **/
     DrawTool mDrawTool;
-    /** 绘制事件类型 **/
+    /** 绘制类型 **/
     private int mDrawType;
+    /** 绘制事件类型 **/
+    private int mDrawAction;
 
     /** 方向传感器初始化 **/
     SensorManager sensorManager;
@@ -191,10 +193,18 @@ public class Main extends Activity implements OnMapListener
     ButtonFloat mBtnActionMenu;
     FloatingActionsMenu mActionMenu;
 
+    // 位置信息显示
     TextView mTvScale;
     TextView mTvCoordinate;
     private TextView mTvLongitude;
     private TextView mTvLatitude;
+
+    // 绘图提示框
+    private RelativeLayout mDrawingToolbar;
+    private TextView mTvDrawingTips;
+    private CheckBox mCbIsFreehandDrawing;
+    private ButtonFloat mBtnStopDrawing;
+    private ButtonFloat mBtnStartOrPauseDrawing;
 
     private DrawerLayout drawerLayout;
     private RelativeLayout leftLayout;
@@ -324,6 +334,13 @@ public class Main extends Activity implements OnMapListener
         mTvNumSatellites = (TextView) findViewById(R.id.tv_num_satellites);
         mTvLongitude = (TextView) findViewById(R.id.main_tv_longitude);
         mTvLatitude = (TextView) findViewById(R.id.main_tv_latitude);
+
+        // 绘图提示框
+        mDrawingToolbar = (RelativeLayout) findViewById(R.id.main_rl_drawing_toolbar);
+        mTvDrawingTips = (TextView) findViewById(R.id.main_tv_drawing_tips);
+        mCbIsFreehandDrawing = (CheckBox) findViewById(R.id.main_cb_drawing_toolbar_isfreehand);
+        mBtnStartOrPauseDrawing = (ButtonFloat) findViewById(R.id.main_btn_drawing_toolbar_startandpause);
+        mBtnStopDrawing = (ButtonFloat) findViewById(R.id.main_btn_drawing_toolbar_stopandclose);
 
         mBtnLocation = (ButtonFloat) findViewById(R.id.btn_location);
         mBtnLocation.setDrawableIcon(getResources().getDrawable(R.drawable.ic_my_location_white_48dp));
@@ -465,7 +482,7 @@ public class Main extends Activity implements OnMapListener
         MapViewOnDrawEvenListener onDrawEvenListener = new MapViewOnDrawEvenListener(this) {
             @Override
             public void onDrawEnd(DrawEvent event) {
-                onDrawEnd(event, mDrawType);
+                onDrawEnd(event, mDrawAction);
             }
         };
         onDrawEvenListener.setGLLYLayer(newglly);
@@ -505,6 +522,7 @@ public class Main extends Activity implements OnMapListener
 
         leftLayout = (RelativeLayout) findViewById(R.id.left);
         final ListView lvLeftDrawer = (ListView) leftLayout.findViewById(R.id.left_listview);
+        // 创建左抽屉数据
         ArrayList<ContentModel> leftDrawerData = initLeftDrawerData();
         adapter = new ContentAdapter(this, leftDrawerData);
         lvLeftDrawer.setAdapter(adapter);
@@ -558,13 +576,10 @@ public class Main extends Activity implements OnMapListener
                     case 7: // 测试绘制工具
                         // TODO 添加测试代码
                         drawerLayout.closeDrawers();
-                        mDrawTool.activate(DrawTool.FREEHAND_POLYLINE);
-                        mDrawType = MapViewOnDrawEvenListener.TYPE_ADD_GLLY;
-                        break;
-                    case 8:
-                        drawerLayout.closeDrawers();
-                        mDrawTool.deactivate();
-                        mDrawType = MapViewOnDrawEvenListener.TYPE_NULL;
+                        mDrawType = DrawTool.POLYLINE;
+                        mDrawAction = MapViewOnDrawEvenListener.ACTION_ADD_GLLY;
+                        mDrawTool.activate(mDrawType);
+                        mDrawingToolbar.setVisibility(View.VISIBLE);
                         break;
                     default:
                         break;
@@ -598,7 +613,6 @@ public class Main extends Activity implements OnMapListener
         leftDrawerDatas.add(new ContentModel(R.drawable.infusion_selected, "编辑电缆路由图"));
         leftDrawerDatas.add(new ContentModel(R.drawable.infusion_selected, "查看管道光缆走向"));
         leftDrawerDatas.add(new ContentModel(R.drawable.infusion_selected, "测试绘图"));
-        leftDrawerDatas.add(new ContentModel(R.drawable.infusion_selected, "停止绘图"));
         //		leftDrawerDatas.add(new ContentModel(R.drawable.infusion_selected, "井/管道类型"));
 
         return leftDrawerDatas;
@@ -1077,7 +1091,7 @@ public class Main extends Activity implements OnMapListener
             case R.id.main_ll_search:// 搜索功能
                 onSearchClick();
                 break;
-            case R.id.mian_btn_previous: // 后退操作
+            case R.id.main_btn_previous: // 后退操作
                 List<Take> takes = Session.getTakes();
                 int size = takes.size();
                 if (index > 0 && size > 0)
@@ -1089,7 +1103,7 @@ public class Main extends Activity implements OnMapListener
                     map.centerAt(take.getPoint(), true);
                 }
                 break;
-            case R.id.mian_btn_next: // 前进操作
+            case R.id.main_btn_next: // 前进操作
                 List<Take> t = Session.getTakes();
                 int s = t.size();
                 if (index < s - 1)
@@ -1104,14 +1118,25 @@ public class Main extends Activity implements OnMapListener
             case R.id.btn_location: // 切换导航模式和普通模式
                 onBtnNavigationClick();
                 break;
-            case R.id.mian_btn_fullextent:
+            case R.id.main_btn_fullextent: // 全图按钮
                 seeAll();
                 break;
-            case R.id.main_btn_toc:
+            case R.id.main_btn_toc: // TOC按钮
                 onBtnTocClick();
                 break;
-            case R.id.main_av_menu:
+            case R.id.main_av_menu: // 菜单按钮
                 onActionViewClick();
+                break;
+            case R.id.main_cb_drawing_toolbar_isfreehand: // 使用自由线条绘图按钮
+                onCbIsFreehandDrawingClick();
+                break;
+            case R.id.main_btn_drawing_toolbar_startandpause: // 暂停或开始绘图按钮
+                onBtnStartOrPauseDrawingClick();
+                break;
+            case R.id.main_btn_drawing_toolbar_stopandclose: // 结束绘图按钮
+                onBtnStopDrawingClick();
+                break;
+            default:
                 break;
         }
     }
@@ -1347,7 +1372,7 @@ public class Main extends Activity implements OnMapListener
         ymax = extent.getYMax();
 
         DataCollection params = new DataCollection();
-        params.add(new Data("min_x",xmin));
+        params.add(new Data("min_x", xmin));
         params.add(new Data("min_y", ymin));
         params.add(new Data("max_x", xmax));
         params.add(new Data("max_y", ymax));
@@ -1634,6 +1659,45 @@ public class Main extends Activity implements OnMapListener
 //            }
 //        }
         // TODO 测试结束，重构时删除以上测试代码
+    }
+
+    /** 选中使用自由线条绘图 **/
+    private void onCbIsFreehandDrawingClick() {
+        if (mCbIsFreehandDrawing.isChecked()) {
+            mDrawType = DrawTool.FREEHAND_POLYLINE;
+            mTvDrawingTips.setText("在屏幕上滑动以绘制自由线条");
+        } else {
+            mDrawType = DrawTool.POLYLINE;
+            mTvDrawingTips.setText("单击绘制下一点\n双击完成绘制");
+        }
+        if (mDrawTool.isActivated()) {
+            mDrawTool.activate(mDrawType);
+        }
+    }
+
+    /** 按下开始（暂停）绘图 **/
+    private void onBtnStartOrPauseDrawingClick() {
+        if (mDrawTool.isActivated()) {
+            mDrawTool.deactivate();
+            mBtnStartOrPauseDrawing.setDrawableIcon(getResources().getDrawable(R.drawable.ic_play));
+            mBtnStartOrPauseDrawing.setBackgroundColor(getResources().getColor(R.color.dark_green));
+        } else {
+            mDrawTool.activate(mDrawType);
+            mBtnStartOrPauseDrawing.setDrawableIcon(getResources().getDrawable(R.drawable.ic_pause));
+            mBtnStartOrPauseDrawing.setBackgroundColor(getResources().getColor(R.color.app_design_background));
+        }
+    }
+
+    /** 按下停止绘图 **/
+    private void onBtnStopDrawingClick() {
+        mDrawTool.deactivate();
+        mDrawType = DrawTool.NULL;
+        mDrawAction = MapViewOnDrawEvenListener.ACTION_NULL;
+
+        mBtnStartOrPauseDrawing.setDrawableIcon(getResources().getDrawable(R.drawable.ic_pause));
+        mBtnStartOrPauseDrawing.setBackgroundColor(getResources().getColor(R.color.app_design_background));
+
+        mDrawingToolbar.setVisibility(View.GONE);
     }
 
     /** 按下动作条的图层按钮 **/

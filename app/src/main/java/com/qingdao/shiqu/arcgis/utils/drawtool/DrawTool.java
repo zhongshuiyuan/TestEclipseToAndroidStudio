@@ -21,8 +21,9 @@ import com.esri.core.symbol.SimpleLineSymbol;
 import com.esri.core.symbol.SimpleMarkerSymbol;
 
 /**
- * 
  * 画图实现类，支持画点、矩形、线、多边形、圆、手画线、手画多边形，可设置各种图形的symbol。
+ * @author Qinyy
+ * Date 2015-11-03
  */
 public class DrawTool extends DrawToolBase {
 
@@ -32,7 +33,6 @@ public class DrawTool extends DrawToolBase {
 	private MarkerSymbol mMarkerSymbol;
 	private LineSymbol mLineSymbol;
 	private FillSymbol mFillSymbol;
-	private boolean mIsActive;
 	private Point mPoint;
 	private Envelope mEnvelope;
 	private Polyline mPolyline;
@@ -41,12 +41,14 @@ public class DrawTool extends DrawToolBase {
 	private DrawTouchListener mMapViewDrawListener;
 	/** mMapView 原本的 MapOnTouchListener **/
 	private MapOnTouchListener mMapViewDefaultListener;
+	/** 是否保存了当前绘制的图形 **/
+	private boolean mIsSavedCurrentGraphic;
 	private Graphic mDrawGraphic;
 	private Point mStartPoint;
 	private int mGraphicID;
 
 	private int mDrawType;
-	private static final int NULL = -1;
+	public static final int NULL = -1;
 	public static final int POINT = 1;
 	public static final int ENVELOPE = 2;
 	public static final int POLYLINE = 3;
@@ -55,6 +57,11 @@ public class DrawTool extends DrawToolBase {
 	public static final int ELLIPSE = 6;
 	public static final int FREEHAND_POLYGON = 7;
 	public static final int FREEHAND_POLYLINE = 8;
+
+	private boolean mIsActivated;
+	public boolean isActivated() {
+		return mIsActivated;
+	}
 
 	public DrawTool(MapView mapView) {
 		mMapView = mapView;
@@ -68,15 +75,28 @@ public class DrawTool extends DrawToolBase {
 		mFillSymbol.setAlpha(90);
 	}
 
+	/**
+	 * 激活绘图工具，开始绘图
+	 * @param drawType 绘制的图形类型
+	 */
 	public void activate(int drawType) {
 		if (mMapView == null)
 			return;
 
-		resetDrawTool();
-		
+		if (!mIsSavedCurrentGraphic) {
+			if (mDrawGraphic != null) {
+				if (!mDrawGraphic.getGeometry().isEmpty()) {
+					sendDrawEndEvent();
+				}
+			}
+		}
+
+		reset();
+
 		mMapView.setOnTouchListener(mMapViewDrawListener);
 		mDrawType = drawType;
-		mIsActive = true;
+		mIsActivated = true;
+		mIsSavedCurrentGraphic = false;
 		switch (mDrawType) {
 		case DrawTool.POINT:
 			mPoint = new Point();
@@ -101,14 +121,27 @@ public class DrawTool extends DrawToolBase {
 		mGraphicID = mTempDrawLayer.addGraphic(mDrawGraphic);
 	}
 
+	/**
+	 * 关闭绘图工具
+	 */
 	public void deactivate() {
+		if (!mIsSavedCurrentGraphic) {
+			if (mDrawGraphic != null) {
+				if (!mDrawGraphic.getGeometry().isEmpty()) {
+					sendDrawEndEvent();
+				}
+			}
+		}
+		reset();
 		mMapView.setOnTouchListener(mMapViewDefaultListener);
-		resetDrawTool();
 	}
 
-	private void resetDrawTool() {
+	/**
+	 * 重置绘图工具
+	 */
+	private void reset() {
 		mTempDrawLayer.removeAll();
-		mIsActive = false;
+		mIsActivated = false;
 		mDrawType = NULL;
 		mPoint = null;
 		mEnvelope = null;
@@ -142,13 +175,15 @@ public class DrawTool extends DrawToolBase {
 		mFillSymbol = fillSymbol;
 	}
 
+	private void finishCurrentDrawingAndStartNext() {
+		sendDrawEndEvent();
+		activate(mDrawType);
+	}
+
 	private void sendDrawEndEvent() {
 		DrawEvent drawEvent = new DrawEvent(this, DrawEvent.DRAW_END, mDrawGraphic);
 		notifyEvent(drawEvent);
-		//int type = mDrawType;
-		//deactivate();
-		//activate(type);
-		activate(mDrawType);
+		mIsSavedCurrentGraphic = true;
 	}
 
 	/**
@@ -162,7 +197,7 @@ public class DrawTool extends DrawToolBase {
 
 		@Override
 		public boolean onTouch(View view, MotionEvent event) {
-			if (mIsActive
+			if (mIsActivated
 					&& (mDrawType == POINT || mDrawType == ENVELOPE
 							|| mDrawType == CIRCLE
 							|| mDrawType == FREEHAND_POLYLINE || mDrawType == FREEHAND_POLYGON)
@@ -171,12 +206,11 @@ public class DrawTool extends DrawToolBase {
 				switch (mDrawType) {
 				case DrawTool.POINT:
 					mPoint.setXY(point.getX(), point.getY());
-					sendDrawEndEvent();
+					finishCurrentDrawingAndStartNext();
 					break;
 				case DrawTool.ENVELOPE:
 					mStartPoint = point;
-					mEnvelope.setCoords(point.getX(), point.getY(),
-							point.getX(), point.getY());
+					mEnvelope.setCoords(point.getX(), point.getY(), point.getX(), point.getY());
 					break;
 				case DrawTool.CIRCLE:
 					mStartPoint = point;
@@ -194,20 +228,16 @@ public class DrawTool extends DrawToolBase {
 
 		@Override
 		public boolean onDragPointerMove(MotionEvent from, MotionEvent to) {
-			if (mIsActive
+			if (mIsActivated
 					&& (mDrawType == ENVELOPE || mDrawType == FREEHAND_POLYGON
 							|| mDrawType == FREEHAND_POLYLINE || mDrawType == CIRCLE)) {
 				Point point = mMapView.toMapPoint(to.getX(), to.getY());
 				switch (mDrawType) {
 				case DrawTool.ENVELOPE:
-					mEnvelope.setXMin(mStartPoint.getX() > point.getX() ? point
-							.getX() : mStartPoint.getX());
-					mEnvelope.setYMin(mStartPoint.getY() > point.getY() ? point
-							.getY() : mStartPoint.getY());
-					mEnvelope.setXMax(mStartPoint.getX() < point.getX() ? point
-							.getX() : mStartPoint.getX());
-					mEnvelope.setYMax(mStartPoint.getY() < point.getY() ? point
-							.getY() : mStartPoint.getY());
+					mEnvelope.setXMin(mStartPoint.getX() > point.getX() ? point.getX() : mStartPoint.getX());
+					mEnvelope.setYMin(mStartPoint.getY() > point.getY() ? point.getY() : mStartPoint.getY());
+					mEnvelope.setXMax(mStartPoint.getX() < point.getX() ? point.getX() : mStartPoint.getX());
+					mEnvelope.setYMax(mStartPoint.getY() < point.getY() ? point.getY() : mStartPoint.getY());
 					mTempDrawLayer.updateGraphic(mGraphicID, mEnvelope.copy());
 					break;
 				case DrawTool.FREEHAND_POLYGON:
@@ -219,8 +249,7 @@ public class DrawTool extends DrawToolBase {
 					mTempDrawLayer.updateGraphic(mGraphicID, mPolyline);
 					break;
 				case DrawTool.CIRCLE:
-					double radius = Math.sqrt(Math.pow(mStartPoint.getX()
-							- point.getX(), 2)
+					double radius = Math.sqrt(Math.pow(mStartPoint.getX() - point.getX(), 2)
 							+ Math.pow(mStartPoint.getY() - point.getY(), 2));
 					getCircle(mStartPoint, radius, mPolygon);
 					mTempDrawLayer.updateGraphic(mGraphicID, mPolygon);
@@ -232,19 +261,15 @@ public class DrawTool extends DrawToolBase {
 		}
 
 		public boolean onDragPointerUp(MotionEvent from, MotionEvent to) {
-			if (mIsActive && (mDrawType == ENVELOPE || mDrawType == FREEHAND_POLYGON
+			if (mIsActivated && (mDrawType == ENVELOPE || mDrawType == FREEHAND_POLYGON
 					|| mDrawType == FREEHAND_POLYLINE || mDrawType == CIRCLE)) {
 				Point point = mMapView.toMapPoint(to.getX(), to.getY());
 				switch (mDrawType) {
 				case DrawTool.ENVELOPE:
-					mEnvelope.setXMin(mStartPoint.getX() > point.getX() ? point
-							.getX() : mStartPoint.getX());
-					mEnvelope.setYMin(mStartPoint.getY() > point.getY() ? point
-							.getY() : mStartPoint.getY());
-					mEnvelope.setXMax(mStartPoint.getX() < point.getX() ? point
-							.getX() : mStartPoint.getX());
-					mEnvelope.setYMax(mStartPoint.getY() < point.getY() ? point
-							.getY() : mStartPoint.getY());
+					mEnvelope.setXMin(mStartPoint.getX() > point.getX() ? point.getX() : mStartPoint.getX());
+					mEnvelope.setYMin(mStartPoint.getY() > point.getY() ? point.getY() : mStartPoint.getY());
+					mEnvelope.setXMax(mStartPoint.getX() < point.getX() ? point.getX() : mStartPoint.getX());
+					mEnvelope.setYMax(mStartPoint.getY() < point.getY() ? point.getY() : mStartPoint.getY());
 					break;
 				case DrawTool.FREEHAND_POLYGON:
 					mPolygon.lineTo(point);
@@ -253,13 +278,12 @@ public class DrawTool extends DrawToolBase {
 					mPolyline.lineTo(point);
 					break;
 				case DrawTool.CIRCLE:
-					double radius = Math.sqrt(Math.pow(mStartPoint.getX()
-							- point.getX(), 2)
+					double radius = Math.sqrt(Math.pow(mStartPoint.getX() - point.getX(), 2)
 							+ Math.pow(mStartPoint.getY() - point.getY(), 2));
 					getCircle(mStartPoint, radius, mPolygon);
 					break;
 				}
-				sendDrawEndEvent();
+				finishCurrentDrawingAndStartNext();
 				mStartPoint = null;
 				return true;
 			}
@@ -267,8 +291,8 @@ public class DrawTool extends DrawToolBase {
 		}
 
 		public boolean onSingleTap(MotionEvent event) {
-			Point point = mMapView.toMapPoint(event.getX(), event.getY());
-			if (mIsActive && (mDrawType ==POLYGON || mDrawType ==POLYLINE)) {
+			if (mIsActivated && (mDrawType == POLYGON || mDrawType == POLYLINE)) {
+				Point point = mMapView.toMapPoint(event.getX(), event.getY());
 				switch (mDrawType) {
 				case DrawTool.POLYGON:
 					if (mStartPoint == null) {
@@ -294,7 +318,7 @@ public class DrawTool extends DrawToolBase {
 		}
 
 		public boolean onDoubleTap(MotionEvent event) {
-			if (mIsActive && (mDrawType == POLYGON || mDrawType == POLYLINE)) {
+			if (mIsActivated && (mDrawType == POLYGON || mDrawType == POLYLINE)) {
 				Point point = mMapView.toMapPoint(event.getX(), event.getY());
 				switch (mDrawType) {
 				case DrawTool.POLYGON:
@@ -304,11 +328,21 @@ public class DrawTool extends DrawToolBase {
 					mPolyline.lineTo(point);
 					break;
 				}
-				sendDrawEndEvent();
+				finishCurrentDrawingAndStartNext();
 				mStartPoint = null;
 				return true;
 			}
-			return super.onDoubleTap(event);
+			return false;
+			//return super.onDoubleTap(event);
+		}
+
+		@Override
+		public boolean onFling(MotionEvent from, MotionEvent to, float velocityX, float velocityY) {
+			if (mIsActivated && (mDrawType == FREEHAND_POLYLINE)) {
+				finishCurrentDrawingAndStartNext();
+				return true;
+			}
+			return super.onFling(from, to, velocityX, velocityY);
 		}
 
 		private void getCircle(Point center, double radius, Polygon circle) {

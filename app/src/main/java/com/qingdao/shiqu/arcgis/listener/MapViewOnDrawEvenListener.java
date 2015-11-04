@@ -16,17 +16,19 @@ import com.qingdao.shiqu.arcgis.utils.drawtool.DrawEventListener;
  * Main activity 上画图工具的监听器，
  * 原来的{@link MapTouchListener}太臃肿了，既要监听选中对象，又要实现画图，
  * 所以新写一个专门监听绘图事件的，将绘图逐步从{@link MapTouchListener}里分离出来
+ * @author Qinyy
+ * @Date 2015-11-03
  */
 public abstract class MapViewOnDrawEvenListener implements DrawEventListener {
 
     // const
-    /** 绘制类型 **/
-    private int mType;
-    public static final int TYPE_NULL = 0;
+    /** 绘制动作类型 **/
+    private int mAction;
+    public static final int ACTION_NULL = 0;
     /** 新增光缆路由 **/
-    public static final int TYPE_ADD_GLLY = 1;
+    public static final int ACTION_ADD_GLLY = 1;
     /** 新增电缆路由 **/
-    public static final int TYPE_ADD_DLLY = 2;
+    public static final int ACTION_ADD_DLLY = 2;
 
     // private field
     private Context mContext;
@@ -51,9 +53,9 @@ public abstract class MapViewOnDrawEvenListener implements DrawEventListener {
 
     public void onDrawEnd(DrawEvent event, int drawType) {
         switch (drawType) {
-            case TYPE_ADD_GLLY:
+            case ACTION_ADD_GLLY:
                 onAddGllyEnd(event);
-            case TYPE_NULL:
+            case ACTION_NULL:
                 break;
             default:
                 break;

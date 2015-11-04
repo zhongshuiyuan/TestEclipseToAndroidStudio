@@ -195,8 +195,9 @@
                 <!-- 绘图提示 -->
                 <RelativeLayout
                     android:id="@+id/main_rl_drawing_toolbar"
+                    android:visibility="gone"
                     android:layout_width="180dp"
-                    android:layout_height="173dp"
+                    android:layout_height="960dp"
                     android:layout_alignParentTop="true"
                     android:layout_alignParentRight="true"
                     android:layout_alignParentEnd="true"
@@ -214,7 +215,7 @@
 
                         <!-- 提示文字 -->
                         <TextView
-                            android:id="@+id/main_drawing_tips"
+                            android:id="@+id/main_tv_drawing_tips"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginLeft="16dp"
@@ -222,14 +223,14 @@
                             android:layout_marginRight="16dp"
                             android:layout_marginEnd="16dp"
                             android:layout_marginTop="16dp"
-                            android:text="在屏幕上点击以绘制线条"
+                            android:text="单击绘制下一点\n双击完成绘制"
                             android:textSize="16sp"/>
 
                         <LinearLayout
                             android:layout_width="fill_parent"
                             android:layout_height="wrap_content"
                             android:orientation="horizontal"
-                            android:layout_below="@id/main_drawing_tips"
+                            android:layout_below="@id/main_tv_drawing_tips"
                             android:layout_marginLeft="16dp"
                             android:layout_marginStart="16dp"
                             android:layout_marginTop="8dp">
@@ -241,10 +242,12 @@
                                 android:text="自由线条"/>
 
                             <CheckBox
+                                android:id="@+id/main_cb_drawing_toolbar_isfreehand"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_marginLeft="16dp"
-                                android:layout_marginStart="16dp"/>
+                                android:layout_marginStart="16dp"
+                                android:onClick="click"/>
 
                         </LinearLayout>
 
@@ -277,6 +280,7 @@
 
                     <!-- 按钮 -->
                     <com.gc.materialdesign.views.ButtonFloat
+                        android:id="@+id/main_btn_drawing_toolbar_startandpause"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_alignParentLeft="true"
@@ -285,23 +289,23 @@
                         android:layout_marginLeft="16dp"
                         android:layout_marginStart="16dp"
                         android:onClick="click"
-                        android:background="@color/red"
-                        app:iconDrawable="@drawable/ic_clear_white_48dp"
+                        android:background="@color/app_design_background"
+                        app:iconDrawable="@drawable/ic_pause"
                         app:animate="false"/>
 
                     <com.gc.materialdesign.views.ButtonFloat
-                        android:id="@+id/main_btn_close_drawing_toolbar"
+                        android:id="@+id/main_btn_drawing_toolbar_stopandclose"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_alignParentRight="true"
                         android:layout_alignParentEnd="true"
-                        android:layout_marginTop="116dp"
+                        android:layout_marginTop="140dp"
                         android:layout_marginRight="16dp"
                         android:layout_marginEnd="16dp"
                         android:onClick="click"
                         android:background="@color/red"
-                        app:iconDrawable="@drawable/ic_clear_white_48dp"
-                        app:animate="false"/>
+                        app:iconDrawable="@drawable/ic_stop"
+                        app:animate="true"/>
 
                 </RelativeLayout>
 
@@ -389,7 +393,7 @@
                         app:fab_colorPressed="@color/app_design_ripple"/>
 
                     <com.getbase.floatingactionbutton.FloatingActionButton
-                        android:id="@+id/mian_btn_previous"
+                        android:id="@+id/main_btn_previous"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:onClick="click"
@@ -399,7 +403,7 @@
                         app:fab_colorPressed="@color/app_design_ripple"/>
 
                     <com.getbase.floatingactionbutton.FloatingActionButton
-                        android:id="@+id/mian_btn_next"
+                        android:id="@+id/main_btn_next"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:onClick="click"
@@ -409,7 +413,7 @@
                         app:fab_colorPressed="@color/app_design_ripple"/>
 
                     <com.getbase.floatingactionbutton.FloatingActionButton
-                        android:id="@+id/mian_btn_fullextent"
+                        android:id="@+id/main_btn_fullextent"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:onClick="click"

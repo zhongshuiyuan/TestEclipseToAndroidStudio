@@ -5,7 +5,9 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
 /**
- * 解决
+ * 解决使用平台托管的数据库无法正常存取Blob数据
+ * @author Qinyy
+ * @Date 2015-11-04
  */
 public class DatabaseOpenHelper extends SQLiteOpenHelper {
 

@@ -1,9 +1,9 @@
 package com.qingdao.shiqu.arcgis.utils.drawtool;
 
 /**
- *
  * DrawTool的父类，具备添加监听的能力
- *
+ * @author Qinyy
+ * @Date 2015-11-03
  */
 public class DrawToolBase {
 

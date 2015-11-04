@@ -5,10 +5,10 @@ import java.util.EventObject;
 import com.esri.core.map.Graphic;
 
 /**
- * 
  * 绘图事件
  * 目前只有DRAW_END事件
- *
+ * @author Qinyy
+ * @Date 2015-11-03
  */
 public class DrawEvent extends EventObject {
 
