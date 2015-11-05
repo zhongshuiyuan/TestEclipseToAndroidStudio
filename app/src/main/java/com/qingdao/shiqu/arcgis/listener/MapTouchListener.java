@@ -42,6 +42,7 @@ import com.esri.android.map.MapView;
 import com.esri.android.map.event.OnZoomListener;
 import com.esri.core.geometry.Geometry;
 import com.esri.core.geometry.Geometry.Type;
+import com.esri.core.geometry.GeometryEngine;
 import com.esri.core.geometry.Line;
 import com.esri.core.geometry.Point;
 import com.esri.core.geometry.Polygon;
@@ -52,17 +53,16 @@ import com.esri.core.symbol.PictureMarkerSymbol;
 import com.esri.core.symbol.SimpleFillSymbol;
 import com.esri.core.symbol.SimpleLineSymbol;
 import com.esri.core.symbol.SimpleMarkerSymbol;
-//import com.gc.materialdesign.utils.Utils;
 import com.qingdao.shiqu.arcgis.R;
 import com.qingdao.shiqu.arcgis.activity.Dialog_Range;
 import com.qingdao.shiqu.arcgis.dialog.DataShowDialog;
 import com.qingdao.shiqu.arcgis.helper.FunctionHelper;
 import com.qingdao.shiqu.arcgis.mode.SimpleSymbolTemplate;
+import com.qingdao.shiqu.arcgis.sqlite.DatabaseOpenHelper;
 import com.qingdao.shiqu.arcgis.sqlite.DoAction;
 import com.qingdao.shiqu.arcgis.utils.DBOpterate;
 import com.qingdao.shiqu.arcgis.utils.LocalDataModify;
 import com.qingdao.shiqu.arcgis.utils.LocalDataAction;
-//import com.qingdao.shiqu.arcgis.utils.Util;
 import com.qingdao.shiqu.arcgis.utils.XMLToServer;
 
 /**
@@ -80,6 +80,8 @@ import com.qingdao.shiqu.arcgis.utils.XMLToServer;
  */
 public class MapTouchListener extends MapOnTouchListener implements OnZoomListener
 {
+	private final String LOG_TAG = this.getClass().getSimpleName();
+
 	List<Point> points;
 	Context mContext;
 	MapView mapView;
@@ -123,9 +125,10 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 	FeatureLayer gisgj2,loufang,daolu,lupaihao,fenzhiqi;
 	FeatureLayer zhuanxiangl,zhixiangl,gugangl;
 
+	//Qinyy 新增
 	private int mMapTouchListenerState;
-
-
+	private android.database.sqlite.SQLiteDatabase mSQLiteDatabase;
+	//Qinyy 新增完毕
 
 	public void setZhuanxiangl(FeatureLayer zhuanxiangl) {
 		this.zhuanxiangl = zhuanxiangl;
@@ -280,6 +283,10 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 		glList = new ArrayList<Point>();
 		uid_seg_list = new ArrayList<Integer>();
 		zb = (TextView)LayoutInflater.from(context).inflate(R.layout.main, null).findViewById(R.id.coordinate);
+
+
+		DatabaseOpenHelper databaseOpenHelper = new DatabaseOpenHelper(mContext);
+		mSQLiteDatabase = databaseOpenHelper.getWritableDatabase();
 	}
 
 	public void setFeatureLayers(List<FeatureLayer> featureLayers)
@@ -537,16 +544,6 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 					String lenth = Double.toString(Math.round(l.calculateLength2D())) + "米";
 					Toast.makeText(mContext, lenth, Toast.LENGTH_SHORT).show();
 					fristPoint = currentPoint;
-
-					// TODO 测试保存Graphic到数据库
-//					byte[] geometry = GeometryEngine.geometryToEsriShape(polyline);
-//					DatabaseOpenHelper database = new DatabaseOpenHelper(mContext);
-//					android.database.sqlite.SQLiteDatabase db = null;
-//					db = database.getWritableDatabase();
-//					ContentValues cv = new ContentValues();
-//					cv.put("polyline", geometry);
-//					db.insert("geometry", null, cv);
-					// TODO 测试结束，重构时删除以上测试代码
 				}
 			}/*else*/ if (guangji != null) 
 			{
@@ -1092,21 +1089,26 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 	@Override
 	public void onLongPress(MotionEvent event)
 	{
-		DataTable result = null;
 		super.onLongPress(event);
+
+		DataTable result = null;
 		boolean next = true;
-		Graphic del = GetOneGraphicFromLayer(event.getX(),event.getY(), newNodeLayer);
-		// 删除管道
-		if(del == null) {
-			del = GetOneGraphicFromLayer(event.getX(),event.getY(),newgdlayer);
+
+		// 删除节点
+		Graphic del = getGraphicFromLayer(event.getX(), event.getY(), newNodeLayer);
+		if (del != null) {
+			next = false;
 		}
+
+		// 删除管道
+		del = getGraphicFromLayer(event.getX(), event.getY(), newgdlayer);
 		if(del != null) {
 			next = false;
 			// Get the graphic type and do different things by the type
 			Geometry gy = del.getGeometry();
 			Type ty = gy.getType();
 			del.getSymbol();
-			if(ty == Type.POINT){
+			if (ty == Type.POINT) {
 				Point pt = (Point)gy;
 				result = DoAction.getPointInfoByXY(mContext,pt);
 				//				result = DoAction.getPointInfoByUID(mContext, String.valueOf(del.getId()));
@@ -1114,10 +1116,10 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 					DataCollection dc = result.next();
 					//search the gjid in gdtable , if find the gj is not to be delete,should delete the linked gd first!
 					DataTable rst = DoAction.getSegmentInfoByPID(mContext, dc.get("gjid").Value.toString());
-					// show dialog 
+					// show dialog
 					showDelDialog(newNodeLayer,del.getId(),Integer.valueOf(dc.get("gjid").Value.toString()),rst,ty);
 				}
-			}else if(ty == Type.POLYLINE){
+			} else if (ty == Type.POLYLINE) {
 				Polyline pl = (Polyline) gy;
 				ArrayList<Point> alpl = new ArrayList<Point>();
 				for(int i=0;i<pl.getPointCount();i++){
@@ -1128,111 +1130,127 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 				for(int i=0;i<result.size();i++){
 					DataCollection dc = result.next();
 					DataTable rst = DoAction.ChargeSegIsinGD2GL(mContext,dc.get("gdid").Value.toString());
-					// show dialog 
+					// show dialog
 					showDelDialog(newgdlayer,del.getId(),Integer.valueOf(dc.get("gdid").Value.toString()),rst,ty);
 				}
 			}
 		}
-		// TODO 修改删除光缆路由的方法
+
 		// 删除光缆路由
-		if(del == null)
-			del = GetOneGraphicFromLayer(event.getX(),event.getY(),newglly);
+		del = getGraphicFromLayer(event.getX(), event.getY(), newglly);
 		if(del != null && next){
 			next = false;
 			final Graphic temp = del;
 			AlertDialog alertDialog = new AlertDialog.Builder(mContext)
-			.setIcon(R.drawable.logo)
-			.setTitle("删除光缆路由")
-			.setMessage("你确定要删除该条光缆路由吗？")
-			.setPositiveButton("确定", new DialogInterface.OnClickListener() { 
-
-				@Override 
-				public void onClick(DialogInterface dialog, int which) {
-					Geometry gt = temp.getGeometry();
-					if(gt.getType() == Type.POLYLINE){
-						Polyline  line = (Polyline)gt;
-						ArrayList<Point> gllist = new ArrayList<Point>();
-						for(int i=0;i<line.getPointCount();i++){
-							gllist.add(line.getPoint(i));
+					.setIcon(R.drawable.logo)
+					.setTitle("删除光缆路由")
+					.setMessage("你确定要删除该条光缆路由吗？")
+					.setPositiveButton("确定", new DialogInterface.OnClickListener() {
+						@Override
+						public void onClick(DialogInterface dialog, int which) {
+							Geometry geometry = temp.getGeometry();
+							if(geometry.getType() == Type.POLYLINE) {
+								// 从旧数据库移除数据(已弃用)
+								Polyline polyline = (Polyline) geometry;
+								ArrayList<Point> gllist = new ArrayList<>();
+								for(int i=0;i<polyline.getPointCount();i++){
+									gllist.add(polyline.getPoint(i));
+								}
+								//组合节点字符串
+								StringBuffer sb = new StringBuffer();
+								for(int i=0;i<gllist.size();i++){
+									sb.append(gllist.get(i).getX() + "," + gllist.get(i).getY());
+									if(i != gllist.size()-1)
+										sb.append("/");
+								}
+								DoAction.removeGLLY(mContext, sb.toString());
+								// 从数据库移除数据
+								byte[] geometryByte = GeometryEngine.geometryToEsriShape(geometry);
+								Integer hashcode = geometry.hashCode();
+								String whereClause = "hashcode=?";
+								String[] whereArgs = {hashcode.toString()};
+								mSQLiteDatabase.delete("glly", whereClause, whereArgs);
+								// 从图层中移除符号
+								newglly.removeGraphic(temp.getUid());
+							}
 						}
-						//组合节点字符串
-						StringBuffer sb = new StringBuffer();
-						for(int i=0;i<gllist.size();i++){
-							sb.append(gllist.get(i).getX()+","+gllist.get(i).getY());
-							if(i != gllist.size()-1)
-								sb.append("/");
-						}
-						DoAction.removeGLLY(mContext, sb.toString());
-						//从图层中移除符号
-						newglly.removeGraphic(temp.getUid());
-					}
-				} 
-			})
-			.setNegativeButton("取消", new DialogInterface.OnClickListener() { 
+					})
+					.setNegativeButton("取消", new DialogInterface.OnClickListener() {
 
-				@Override 
-				public void onClick(DialogInterface dialog, int which) { 
-					return;
-				} 
-			})
-			.create();
-			Window window = alertDialog.getWindow();        
-			WindowManager.LayoutParams lp = window.getAttributes();        
+						@Override
+						public void onClick(DialogInterface dialog, int which) {
+							return;
+						}
+					})
+					.create();
+			Window window = alertDialog.getWindow();
+			WindowManager.LayoutParams lp = window.getAttributes();
 			lp.alpha = 0.9f;
-			window.setAttributes(lp);        
+			window.setAttributes(lp);
 			alertDialog.show();
 
 		}
+
+		// TODO 修改删除电缆路由的方法
 		// 删除电缆路由
-		if(del == null)
-			del = GetOneGraphicFromLayer(event.getX(),event.getY(),newdlly);
-		if(del != null && next){
+		del = getGraphicFromLayer(event.getX(), event.getY(), newdlly);
+		if (del != null && next) {
+			next = false;
 			final Graphic temp = del;
 			AlertDialog alertDialog = new AlertDialog.Builder(mContext)
-			.setIcon(R.drawable.logo)
-			.setTitle("删除电缆路由")
-			.setMessage("你确定要删除该条电缆路由吗？")
-			.setPositiveButton("确定", new DialogInterface.OnClickListener() { 
+					.setIcon(R.drawable.logo)
+					.setTitle("删除电缆路由")
+					.setMessage("你确定要删除该条电缆路由吗？")
+					.setPositiveButton("确定", new DialogInterface.OnClickListener() {
 
-				@Override 
-				public void onClick(DialogInterface dialog, int which) {
-					Geometry gt = temp.getGeometry();
-					if(gt.getType() == Type.POLYLINE){
-						Polyline  line = (Polyline)gt;
-						ArrayList<Point> gllist = new ArrayList<Point>();
-						for(int i=0;i<line.getPointCount();i++){
-							gllist.add(line.getPoint(i));
+						@Override
+						public void onClick(DialogInterface dialog, int which) {
+							Geometry geometry = temp.getGeometry();
+							if (geometry.getType() == Type.POLYLINE) {
+								// 从旧数据库移除数据(已弃用)
+								Polyline polyline = (Polyline) geometry;
+								ArrayList<Point> gllist = new ArrayList<>();
+								for(int i=0;i<polyline.getPointCount();i++){
+									gllist.add(polyline.getPoint(i));
+								}
+								// 组合节点字符串
+								StringBuffer sb = new StringBuffer();
+								for(int i=0;i<gllist.size();i++){
+									sb.append(gllist.get(i).getX()+","+gllist.get(i).getY());
+									if(i != gllist.size()-1)
+										sb.append("/");
+								}
+								DoAction.removeDLLY(mContext, sb.toString());
+								// 从数据库移除数据
+								byte[] geometryByte = GeometryEngine.geometryToEsriShape(geometry);
+								Integer hashcode = geometry.hashCode();
+								String whereClause = "hashcode=?";
+								String[] whereArgs = {hashcode.toString()};
+								mSQLiteDatabase.delete("dlly", whereClause, whereArgs);
+								// 从图层中移除符号
+								newdlly.removeGraphic(temp.getUid());
+							}
 						}
-						//组合节点字符串
-						StringBuffer sb = new StringBuffer();
-						for(int i=0;i<gllist.size();i++){
-							sb.append(gllist.get(i).getX()+","+gllist.get(i).getY());
-							if(i != gllist.size()-1)
-								sb.append("/");
-						}
-						DoAction.removeDLLY(mContext, sb.toString());
-						//从图层中移除符号
-						newdlly.removeGraphic(temp.getUid());
-					}
-				} 
-			})
-			.setNegativeButton("取消", new DialogInterface.OnClickListener() { 
+					})
+					.setNegativeButton("取消", new DialogInterface.OnClickListener() {
 
-				@Override 
-				public void onClick(DialogInterface dialog, int which) { 
-					return;
-				} 
-			})
-			.create();
-			Window window = alertDialog.getWindow();        
-			WindowManager.LayoutParams lp = window.getAttributes();        
-			// 设置透明度为0.3         
+						@Override
+						public void onClick(DialogInterface dialog, int which) {
+							return;
+						}
+					})
+					.create();
+			Window window = alertDialog.getWindow();
+			WindowManager.LayoutParams lp = window.getAttributes();
+			// 设置透明度为0.3
 			lp.alpha = 0.9f;
-			window.setAttributes(lp);        
+			window.setAttributes(lp);
 			alertDialog.show();
-
 		}
 
+		if (next) {
+			Log.i(LOG_TAG, "长按地图没有可选中的对象");
+		}
 
 	}
 
@@ -1304,8 +1322,8 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 	 * 从一个图层里里 查找获得 Graphics对象. x,y是屏幕坐标,layer
 	 * 是GraphicsLayer目标图层（要查找的）。相差的距离是50像素。
 	 */
-	private Graphic GetOneGraphicFromLayer(double xScreen, double yScreen,
-			GraphicsLayer layer){
+	private Graphic getGraphicFromLayer(double xScreen, double yScreen,
+										GraphicsLayer layer){
 		Graphic result = null;
 		try {
 			int[] idsArr = layer.getGraphicIDs((float)xScreen,(float)yScreen,30);
@@ -1319,6 +1337,7 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 		}
 		return result;
 	}
+
 	private Graphic GetGraphicsFromLayer(double xScreen, double yScreen,
 			GraphicsLayer tlayer) {
 		Graphic result = null;

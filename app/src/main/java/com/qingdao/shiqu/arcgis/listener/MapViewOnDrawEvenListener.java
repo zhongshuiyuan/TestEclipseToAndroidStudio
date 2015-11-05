@@ -2,6 +2,7 @@ package com.qingdao.shiqu.arcgis.listener;
 
 import android.content.ContentValues;
 import android.content.Context;
+import android.database.Cursor;
 
 import com.esri.android.map.GraphicsLayer;
 import com.esri.core.geometry.Geometry;
@@ -33,7 +34,6 @@ public abstract class MapViewOnDrawEvenListener implements DrawEventListener {
     // private field
     private Context mContext;
     private android.database.sqlite.SQLiteDatabase mSQLiteDatabase;
-    //private DatabaseOpenHelper mDatabaseOpenHelper;
 
     // property (including setter and getter)
     private GraphicsLayer mGllyLayer;
@@ -51,10 +51,13 @@ public abstract class MapViewOnDrawEvenListener implements DrawEventListener {
     @Override
     public abstract void onDrawEnd(DrawEvent event);
 
-    public void onDrawEnd(DrawEvent event, int drawType) {
-        switch (drawType) {
+    public void onDrawEnd(DrawEvent event, int actionType) {
+        switch (actionType) {
             case ACTION_ADD_GLLY:
                 onAddGllyEnd(event);
+            case ACTION_ADD_DLLY:
+                onAddDllyEnd(event);
+                break;
             case ACTION_NULL:
                 break;
             default:
@@ -62,20 +65,53 @@ public abstract class MapViewOnDrawEvenListener implements DrawEventListener {
         }
     }
 
-    /** 绘制光缆路由完毕 **/
+    /**
+     * 绘制光缆路由完毕，使用光缆路由的符号将绘制的光缆路由添加到地图上，保存光缆路由到数据库
+     * @param event
+     */
     private void onAddGllyEnd(DrawEvent event) {
-        //mGllyLayer.addGraphic(event.getDrawGraphic());
         Geometry geometry = event.getDrawGraphic().getGeometry();
         Graphic graphic = new Graphic(geometry, SimpleSymbolTemplate.GLLY);
         mGllyLayer.addGraphic(graphic);
 
-                                                                                                                                                                                                                    storeGllyToDatabase(geometry);
+        storeGllyToDatabase(geometry);
     }
 
+    /**
+     * 保存光缆路由到数据库
+     * @param geometry 光缆路由的Geometry
+     */
     private void storeGllyToDatabase(Geometry geometry) {
+        Integer hashcode = geometry.hashCode();
         byte[] geometryByte = GeometryEngine.geometryToEsriShape(geometry);
         ContentValues cv = new ContentValues();
         cv.put("geometry", geometryByte);
-        //mSQLiteDatabase.insert("glly", null, cv);
+        cv.put("hashcode", hashcode.toString());
+        mSQLiteDatabase.insert("glly", null, cv);
+    }
+
+    /**
+     * 绘制光缆路由完毕，使用光缆路由的符号将绘制的光缆路由添加到地图上，保存光缆路由到数据库
+     * @param event
+     */
+    private void onAddDllyEnd(DrawEvent event) {
+        Geometry geometry = event.getDrawGraphic().getGeometry();
+        Graphic graphic = new Graphic(geometry, SimpleSymbolTemplate.DLLY);
+        mGllyLayer.addGraphic(graphic);
+
+        storeGllyToDatabase(geometry);
+    }
+
+    /**
+     * 保存光缆路由到数据库
+     * @param geometry 光缆路由的Geometry
+     */
+    private void storeDllyToDatabase(Geometry geometry) {
+        Integer hashcode = geometry.hashCode();
+        byte[] geometryByte = GeometryEngine.geometryToEsriShape(geometry);
+        ContentValues cv = new ContentValues();
+        cv.put("geometry", geometryByte);
+        cv.put("hashcode", hashcode.toString());
+        mSQLiteDatabase.insert("dlly", null, cv);
     }
 }

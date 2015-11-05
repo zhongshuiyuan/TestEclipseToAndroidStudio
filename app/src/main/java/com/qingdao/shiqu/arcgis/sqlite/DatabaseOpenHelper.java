@@ -11,8 +11,10 @@ import android.database.sqlite.SQLiteOpenHelper;
  */
 public class DatabaseOpenHelper extends SQLiteOpenHelper {
 
-    private static final String DB_NAME = "customData.db"; //数据库名称
+    public static final String DB_NAME = "customData.db"; //数据库名称
     private static final int version = 1; //数据库版本
+
+    private static final String SQL_DELETE_ENTRIES = "DROP TABLE IF EXISTS " + "glly";
 
     public DatabaseOpenHelper(Context context) {
         super(context, DB_NAME, null, version);
@@ -22,12 +24,21 @@ public class DatabaseOpenHelper extends SQLiteOpenHelper {
     public void onCreate(SQLiteDatabase db) {
         //String sql = "create table geometry(polyline blob not null);";
         // 创建光缆路由表
-        String sql = "create table glly(geometry blob not null);";
-        db.execSQL(sql);
+        String creatGlly = "create table glly(geometry blob not null, hashcode TEXT not null);";
+        db.execSQL(creatGlly);
+        // 创建电缆路由表
+        String creatDlly = "create table dlly(geometry blob not null, hashcode TEXT not null);";
+        db.execSQL(creatDlly);
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+        db.execSQL(SQL_DELETE_ENTRIES);
+        onCreate(db);
+    }
 
+    @Override
+    public void onDowngrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+        onUpgrade(db, oldVersion, newVersion);
     }
 }

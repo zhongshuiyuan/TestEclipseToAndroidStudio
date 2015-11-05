@@ -10,4 +10,6 @@ import com.esri.core.symbol.SimpleLineSymbol;
 public class SimpleSymbolTemplate {
     /** 光缆路由 **/
     public static final SimpleLineSymbol GLLY = new SimpleLineSymbol(Color.DKGRAY, 1, SimpleLineSymbol.STYLE.SOLID);
+    /** 电缆路由 **/
+    public static final SimpleLineSymbol DLLY = new SimpleLineSymbol(Color.LTGRAY, 1, SimpleLineSymbol.STYLE.SOLID);
 }

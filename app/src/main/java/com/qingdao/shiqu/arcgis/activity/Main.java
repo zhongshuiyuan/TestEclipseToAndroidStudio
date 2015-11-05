@@ -30,6 +30,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
@@ -72,6 +73,7 @@ import com.esri.core.geodatabase.Geodatabase;
 import com.esri.core.geodatabase.GeodatabaseFeatureTable;
 import com.esri.core.geometry.Envelope;
 import com.esri.core.geometry.Geometry;
+import com.esri.core.geometry.GeometryEngine;
 import com.esri.core.geometry.Point;
 import com.esri.core.geometry.Polyline;
 import com.esri.core.geometry.SpatialReference;
@@ -94,6 +96,7 @@ import com.qingdao.shiqu.arcgis.listener.MapViewOnDrawEvenListener;
 import com.qingdao.shiqu.arcgis.mode.ContentModel;
 import com.qingdao.shiqu.arcgis.mode.SimpleSymbolTemplate;
 import com.qingdao.shiqu.arcgis.mode.Take;
+import com.qingdao.shiqu.arcgis.sqlite.DatabaseOpenHelper;
 import com.qingdao.shiqu.arcgis.sqlite.DoAction;
 import com.qingdao.shiqu.arcgis.utils.DBOpterate;
 import com.qingdao.shiqu.arcgis.utils.FileUtil;
@@ -120,6 +123,8 @@ public class Main extends Activity implements OnMapListener
     double xmin,xmax,ymin,ymax;
     SQLiteDatabase db = null;
 
+    /** 新数据库 **/
+    android.database.sqlite.SQLiteDatabase mSQLiteDatabase;
 
     /** 地图控件 **/
     MapView map = null;
@@ -470,6 +475,9 @@ public class Main extends Activity implements OnMapListener
             }
         }
 
+        DatabaseOpenHelper databaseOpenHelper = new DatabaseOpenHelper(this);
+        mSQLiteDatabase = databaseOpenHelper.getWritableDatabase();
+
         mLocationDrawable = this.getResources().getDrawable(R.drawable.icon_track_map_bar);
 
         setupDrawTool();
@@ -562,7 +570,8 @@ public class Main extends Activity implements OnMapListener
                         GL_TYPE = "";
                         break;
                     case 4: // 编辑光缆路由
-                        touchListener.setDrawglly(true);
+                        startAddingGlly();
+                        //startAddingGllyOld();
                         drawerLayout.closeDrawers();
                         break;
                     case 5: // 编辑电缆路由
@@ -577,7 +586,7 @@ public class Main extends Activity implements OnMapListener
                         // TODO 添加测试代码
                         drawerLayout.closeDrawers();
                         mDrawType = DrawTool.POLYLINE;
-                        mDrawAction = MapViewOnDrawEvenListener.ACTION_ADD_GLLY;
+                        mDrawAction = MapViewOnDrawEvenListener.ACTION_ADD_DLLY;
                         mDrawTool.activate(mDrawType);
                         mDrawingToolbar.setVisibility(View.VISIBLE);
                         break;
@@ -1582,8 +1591,12 @@ public class Main extends Activity implements OnMapListener
         }
     }
 
+    /**
+     * 加载自定义光缆路由数据到地图
+     */
     public void loadGLLY() {
         Graphic tempGraphic ;
+        // 从平台数据库读取旧数据
         db = new SQLiteDatabase(this);
         DataCollection params = new DataCollection();
         params.add(new Data("uname", FunctionHelper.userName));
@@ -1609,11 +1622,26 @@ public class Main extends Activity implements OnMapListener
 
             newglly.addGraphic(tempGraphic);
         }
+        // 从新数据库读取新数据
+        Cursor c = mSQLiteDatabase.query("glly", null, null, null, null, null, null);
+        if(c.moveToFirst()){
+            for(int i = 0; i < c.getCount(); ++i) {
+                c.moveToPosition(i);
+                byte[] geometryByte = c.getBlob(c.getColumnIndex("geometry"));
+                String hashcode = c.getString(c.getColumnIndex("hashcode"));
+                Geometry geometry = GeometryEngine.geometryFromEsriShape(geometryByte, Geometry.Type.POLYLINE);
+                tempGraphic = new Graphic(geometry, SimpleSymbolTemplate.GLLY);
+                newglly.addGraphic(tempGraphic);
+            }
+        }
     }
 
-    // 从本地数据库读取电缆路由数据
+    /**
+     * 加载自定义光缆路由数据到地图
+     */
     public void loadDLLY() {
         Graphic tempGraphic ;
+        // 从平台数据库读取旧数据
         db = new SQLiteDatabase(this);
         DataCollection params = new DataCollection();
         params.add(new Data("uname",FunctionHelper.userName));
@@ -1634,31 +1662,22 @@ public class Main extends Activity implements OnMapListener
                     pl.lineTo(points.get(j));
             }
 
-
             tempGraphic = new Graphic(pl, new SimpleLineSymbol(Color.LTGRAY, 1, SimpleLineSymbol.STYLE.SOLID));
-
             newdlly.addGraphic(tempGraphic);
-
-
         }
 
-        // TODO 测试读取保存的Graphic对象并显示到地图上
-//        DatabaseOpenHelper database = new DatabaseOpenHelper(this);
-//        android.database.sqlite.SQLiteDatabase db = null;
-//        db = database.getWritableDatabase();
-//        Cursor c = db.query("geometry", null, null, null, null, null, null);
-//        if (c.moveToFirst()) {
-//            SimpleLineSymbol lineSymbol = new SimpleLineSymbol(Color.BLUE, 2, SimpleLineSymbol.STYLE.DASH);
-//            for(int i = 0; i < c.getCount(); ++i){
-//                c.move(i);//移动到指定记录
-//                Geometry geometry;
-//                byte[] geometryByte = c.getBlob(c.getColumnIndex("polyline"));
-//                geometry = GeometryEngine.geometryFromEsriShape(geometryByte, Geometry.Type.POLYLINE);
-//                tempGraphic = new Graphic(geometry, lineSymbol);
-//                newdlly.addGraphic(tempGraphic);
-//            }
-//        }
-        // TODO 测试结束，重构时删除以上测试代码
+        // 从新数据库读取新数据
+        Cursor c = mSQLiteDatabase.query("dlly", null, null, null, null, null, null);
+        if(c.moveToFirst()){
+            for(int i = 0; i < c.getCount(); ++i) {
+                c.moveToPosition(i);
+                byte[] geometryByte = c.getBlob(c.getColumnIndex("geometry"));
+                String hashcode = c.getString(c.getColumnIndex("hashcode"));
+                Geometry geometry = GeometryEngine.geometryFromEsriShape(geometryByte, Geometry.Type.POLYLINE);
+                tempGraphic = new Graphic(geometry, SimpleSymbolTemplate.DLLY);
+                newdlly.addGraphic(tempGraphic);
+            }
+        }
     }
 
     /** 选中使用自由线条绘图 **/
@@ -1686,6 +1705,25 @@ public class Main extends Activity implements OnMapListener
             mBtnStartOrPauseDrawing.setDrawableIcon(getResources().getDrawable(R.drawable.ic_pause));
             mBtnStartOrPauseDrawing.setBackgroundColor(getResources().getColor(R.color.app_design_background));
         }
+    }
+
+    /**
+     * 开启地图编辑模式，新增光缆路由
+     */
+    private void startAddingGlly() {
+        mDrawType = DrawTool.POLYLINE;
+        mDrawAction = MapViewOnDrawEvenListener.ACTION_ADD_GLLY;
+        mDrawTool.activate(mDrawType);
+        mDrawingToolbar.setVisibility(View.VISIBLE);
+    }
+
+    /**
+     * 旧的添加光缆路由的方法，已弃用
+     * @deprecated
+     */
+    @Deprecated
+    private void startAddingGllyOld() {
+        touchListener.setDrawglly(true);
     }
 
     /** 按下停止绘图 **/
