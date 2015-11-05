@@ -64,13 +64,29 @@ public class MyExpandableListAdapter extends BaseExpandableListAdapter {
 	}
 
 	@Override
+	public View getGroupView(int groupPosition, boolean isExpanded, View convertView, ViewGroup parent) {
+		LinearLayout ll = new LinearLayout(context);
+		ll.setOrientation(LinearLayout.HORIZONTAL);
+		ImageView logo = new ImageView(context);
+		logo.setImageResource(R.drawable.ic_layers);
+		logo.setPadding(70, 0, 0, 0);
+		ll.addView(logo);
+		TextView tev = getParentTextView();
+		tev.setTextColor(Color.BLACK);
+		tev.setText(getGroup(groupPosition).toString());
+		ll.addView(tev);
+
+		return ll;
+	}
+
+	@Override
 	public View getChildView(final int groupPosition, final int childPosition, boolean isLastChild, View convertView,
 			ViewGroup parent) {
 		// TODO 自动生成的方法存根
 		LinearLayout ll = new LinearLayout(context);
-		ll.setOrientation(0);
+		ll.setOrientation(LinearLayout.HORIZONTAL);
 		LinearLayout lll = new LinearLayout(context);
-		lll.setOrientation(0);
+		lll.setOrientation(LinearLayout.HORIZONTAL);
 		lll.setPadding(85, 0, 0, 0);
 		CheckBox cb = new CheckBox(context);
 		/*if(lys[childPosition].isVisible())
@@ -121,23 +137,6 @@ public class MyExpandableListAdapter extends BaseExpandableListAdapter {
 	public long getGroupId(int arg0) {
 		// TODO 自动生成的方法存根
 		return arg0;
-	}
-
-	@Override
-	public View getGroupView(int arg0, boolean arg1, View arg2, ViewGroup arg3) {
-		// TODO 自动生成的方法存根
-		LinearLayout ll = new LinearLayout(context);
-		ll.setOrientation(0);
-		ImageView logo = new ImageView(context);
-		logo.setImageResource(R.drawable.layers);
-		logo.setPadding(70, 0, 0, 0);
-		ll.addView(logo);
-		TextView tev = getParentTextView();
-		tev.setTextColor(Color.BLACK);
-		tev.setText(getGroup(arg0).toString());
-		ll.addView(tev);
-
-		return ll;
 	}
 
 	@Override

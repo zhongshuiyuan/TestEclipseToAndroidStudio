@@ -458,15 +458,15 @@
         <!-- 左抽屉 -->
         <RelativeLayout
             android:id="@+id/left"
-            android:layout_width="200dp"
+            android:layout_width="240dp"
             android:layout_height="match_parent"
-            android:layout_gravity="left"
+            android:layout_gravity="start"
             android:background="@android:color/white" >
 
             <ListView
                 android:id="@+id/left_listview"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
+                android:layout_height="wrap_content"
                 android:cacheColorHint="#4F94CD">
             </ListView>
         </RelativeLayout>
@@ -474,9 +474,9 @@
         <!-- 右抽屉 -->
         <RelativeLayout
             android:id="@+id/right"
-            android:layout_width="260dp"
+            android:layout_width="240dp"
             android:layout_height="match_parent"
-            android:layout_gravity="right"
+            android:layout_gravity="end"
             android:background="@android:color/background_light" >
 
             <ExpandableListView

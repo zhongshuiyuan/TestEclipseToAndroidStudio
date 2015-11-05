@@ -618,14 +618,14 @@ public class Main extends Activity implements OnMapListener
 
 		/*leftDrawerDatas.add(new ContentModel(R.drawable.doctoradvice2, "新闻"));
 		leftDrawerDatas.add(new ContentModel(R.drawable.infusion_selected, "查阅"));*/
-        leftDrawerDatas.add(new ContentModel(R.drawable.mypatient_selected, "权限控制"));
-        leftDrawerDatas.add(new ContentModel(R.drawable.rj, "查看熔接信息"));
-        leftDrawerDatas.add(new ContentModel(R.drawable.personal_selected, "编辑管井"));
-        leftDrawerDatas.add(new ContentModel(R.drawable.nursingcareplan2, "编辑光缆"));
-        leftDrawerDatas.add(new ContentModel(R.drawable.infusion_selected, "查看管道光缆走向"));
+        leftDrawerDatas.add(new ContentModel(R.drawable.ic_account_star_variant, "权限控制"));
+        leftDrawerDatas.add(new ContentModel(R.drawable.ic_link_variant, "查看熔接信息"));
+        leftDrawerDatas.add(new ContentModel(R.drawable.ic_nest_protect, "编辑管井"));
+        leftDrawerDatas.add(new ContentModel(R.drawable.ic_led_on, "编辑光缆"));
+        leftDrawerDatas.add(new ContentModel(R.drawable.ic_directions, "查看管道光缆走向"));
         leftDrawerDatas.add(new ContentModel(R.drawable.ic_flashlight, "新增光缆路由"));
         leftDrawerDatas.add(new ContentModel(R.drawable.ic_battery, "新增电缆路由"));
-        leftDrawerDatas.add(new ContentModel(R.drawable.infusion_selected, "测试绘图"));
+        leftDrawerDatas.add(new ContentModel(R.drawable.ic_pencil, "测试绘图"));
         //		leftDrawerDatas.add(new ContentModel(R.drawable.infusion_selected, "井/管道类型"));
 
         return leftDrawerDatas;
