@@ -36,9 +36,17 @@ public abstract class MapViewOnDrawEvenListener implements DrawEventListener {
     private android.database.sqlite.SQLiteDatabase mSQLiteDatabase;
 
     // property (including setter and getter)
+    /** 光缆路由图层 **/
     private GraphicsLayer mGllyLayer;
-    public void setGLLYLayer(GraphicsLayer gllyLayer) {
+    /** 设置光缆路由图层 **/
+    public void setGllyLayer(GraphicsLayer gllyLayer) {
         mGllyLayer = gllyLayer;
+    }
+    /** 电缆路由图层 **/
+    private GraphicsLayer mDllyLayer;
+    /** 设置电缆路由图层 **/
+    public void setDllyLayer(GraphicsLayer dllyLayer) {
+        mDllyLayer = dllyLayer;
     }
 
     public MapViewOnDrawEvenListener(Context context) {
@@ -55,6 +63,7 @@ public abstract class MapViewOnDrawEvenListener implements DrawEventListener {
         switch (actionType) {
             case ACTION_ADD_GLLY:
                 onAddGllyEnd(event);
+                break;
             case ACTION_ADD_DLLY:
                 onAddDllyEnd(event);
                 break;
@@ -91,15 +100,15 @@ public abstract class MapViewOnDrawEvenListener implements DrawEventListener {
     }
 
     /**
-     * 绘制光缆路由完毕，使用光缆路由的符号将绘制的光缆路由添加到地图上，保存光缆路由到数据库
+     * 绘制电缆路由完毕，使用电缆路由的符号将绘制的电缆路由添加到地图上，保存电缆路由到数据库
      * @param event
      */
     private void onAddDllyEnd(DrawEvent event) {
         Geometry geometry = event.getDrawGraphic().getGeometry();
         Graphic graphic = new Graphic(geometry, SimpleSymbolTemplate.DLLY);
-        mGllyLayer.addGraphic(graphic);
+        mDllyLayer.addGraphic(graphic);
 
-        storeGllyToDatabase(geometry);
+        storeDllyToDatabase(geometry);
     }
 
     /**

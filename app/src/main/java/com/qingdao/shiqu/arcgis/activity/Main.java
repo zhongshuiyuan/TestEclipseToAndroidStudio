@@ -206,6 +206,7 @@ public class Main extends Activity implements OnMapListener
 
     // 绘图提示框
     private RelativeLayout mDrawingToolbar;
+    private TextView mTvDrawingTitle;
     private TextView mTvDrawingTips;
     private CheckBox mCbIsFreehandDrawing;
     private ButtonFloat mBtnStopDrawing;
@@ -342,6 +343,7 @@ public class Main extends Activity implements OnMapListener
 
         // 绘图提示框
         mDrawingToolbar = (RelativeLayout) findViewById(R.id.main_rl_drawing_toolbar);
+        mTvDrawingTitle = (TextView) findViewById(R.id.main_tv_drawing_title);
         mTvDrawingTips = (TextView) findViewById(R.id.main_tv_drawing_tips);
         mCbIsFreehandDrawing = (CheckBox) findViewById(R.id.main_cb_drawing_toolbar_isfreehand);
         mBtnStartOrPauseDrawing = (ButtonFloat) findViewById(R.id.main_btn_drawing_toolbar_startandpause);
@@ -493,7 +495,8 @@ public class Main extends Activity implements OnMapListener
                 onDrawEnd(event, mDrawAction);
             }
         };
-        onDrawEvenListener.setGLLYLayer(newglly);
+        onDrawEvenListener.setGllyLayer(newglly);
+        onDrawEvenListener.setDllyLayer(newdlly);
         mDrawTool.setOnDrawEvenListener(onDrawEvenListener);
     }
 
@@ -569,17 +572,18 @@ public class Main extends Activity implements OnMapListener
                         touchListener.setGltype(GL_TYPE);
                         GL_TYPE = "";
                         break;
-                    case 4: // 编辑光缆路由
+                    case 4: // 查看管道光缆走向
+                        touchListener.setShowglly(true);
+                        drawerLayout.closeDrawers();
+                        break;
+                    case 5: // 新增光缆路由
                         startAddingGlly();
                         //startAddingGllyOld();
                         drawerLayout.closeDrawers();
                         break;
-                    case 5: // 编辑电缆路由
-                        touchListener.setDrawdlly(true);
-                        drawerLayout.closeDrawers();
-                        break;
-                    case 6: // 查看管道光缆走向
-                        touchListener.setShowglly(true);
+                    case 6: // 新增电缆路由
+                        startAddingDlly();
+                        //startAddingDllyOld();
                         drawerLayout.closeDrawers();
                         break;
                     case 7: // 测试绘制工具
@@ -588,7 +592,7 @@ public class Main extends Activity implements OnMapListener
                         mDrawType = DrawTool.POLYLINE;
                         mDrawAction = MapViewOnDrawEvenListener.ACTION_ADD_DLLY;
                         mDrawTool.activate(mDrawType);
-                        mDrawingToolbar.setVisibility(View.VISIBLE);
+                        showDrawingToolbar("测试绘制工具");
                         break;
                     default:
                         break;
@@ -618,9 +622,9 @@ public class Main extends Activity implements OnMapListener
         leftDrawerDatas.add(new ContentModel(R.drawable.rj, "查看熔接信息"));
         leftDrawerDatas.add(new ContentModel(R.drawable.personal_selected, "编辑管井"));
         leftDrawerDatas.add(new ContentModel(R.drawable.nursingcareplan2, "编辑光缆"));
-        leftDrawerDatas.add(new ContentModel(R.drawable.infusion_selected, "编辑光缆路由图"));
-        leftDrawerDatas.add(new ContentModel(R.drawable.infusion_selected, "编辑电缆路由图"));
         leftDrawerDatas.add(new ContentModel(R.drawable.infusion_selected, "查看管道光缆走向"));
+        leftDrawerDatas.add(new ContentModel(R.drawable.ic_flashlight, "新增光缆路由"));
+        leftDrawerDatas.add(new ContentModel(R.drawable.ic_battery, "新增电缆路由"));
         leftDrawerDatas.add(new ContentModel(R.drawable.infusion_selected, "测试绘图"));
         //		leftDrawerDatas.add(new ContentModel(R.drawable.infusion_selected, "井/管道类型"));
 
@@ -1698,13 +1702,31 @@ public class Main extends Activity implements OnMapListener
     private void onBtnStartOrPauseDrawingClick() {
         if (mDrawTool.isActivated()) {
             mDrawTool.deactivate();
-            mBtnStartOrPauseDrawing.setDrawableIcon(getResources().getDrawable(R.drawable.ic_play));
-            mBtnStartOrPauseDrawing.setBackgroundColor(getResources().getColor(R.color.dark_green));
+            setBtnStartOrPauseDrawingToStartState();
         } else {
             mDrawTool.activate(mDrawType);
-            mBtnStartOrPauseDrawing.setDrawableIcon(getResources().getDrawable(R.drawable.ic_pause));
-            mBtnStartOrPauseDrawing.setBackgroundColor(getResources().getColor(R.color.app_design_background));
+            setBtnStartOrPauseDrawingToPauseState();
         }
+    }
+
+    private void setBtnStartOrPauseDrawingToStartState() {
+        mBtnStartOrPauseDrawing.setDrawableIcon(getResources().getDrawable(R.drawable.ic_play));
+        mBtnStartOrPauseDrawing.setBackgroundColor(getResources().getColor(R.color.dark_green));
+    }
+
+    private void setBtnStartOrPauseDrawingToPauseState() {
+        mBtnStartOrPauseDrawing.setDrawableIcon(getResources().getDrawable(R.drawable.ic_pause));
+        mBtnStartOrPauseDrawing.setBackgroundColor(getResources().getColor(R.color.app_design_background));
+    }
+
+    /**
+     * 显示绘图工具栏
+     */
+    private void showDrawingToolbar(String title) {
+        setBtnStartOrPauseDrawingToPauseState();
+        mTvDrawingTitle.setText(title);
+        mCbIsFreehandDrawing.setChecked(false);
+        mDrawingToolbar.setVisibility(View.VISIBLE);
     }
 
     /**
@@ -1714,7 +1736,7 @@ public class Main extends Activity implements OnMapListener
         mDrawType = DrawTool.POLYLINE;
         mDrawAction = MapViewOnDrawEvenListener.ACTION_ADD_GLLY;
         mDrawTool.activate(mDrawType);
-        mDrawingToolbar.setVisibility(View.VISIBLE);
+        showDrawingToolbar("新增光缆路由");
     }
 
     /**
@@ -1724,6 +1746,25 @@ public class Main extends Activity implements OnMapListener
     @Deprecated
     private void startAddingGllyOld() {
         touchListener.setDrawglly(true);
+    }
+
+    /**
+     * 开启地图编辑模式，新增电缆路由
+     */
+    private void startAddingDlly() {
+        mDrawType = DrawTool.POLYLINE;
+        mDrawAction = MapViewOnDrawEvenListener.ACTION_ADD_DLLY;
+        mDrawTool.activate(mDrawType);
+        showDrawingToolbar("新增电缆路由");
+    }
+
+    /**
+     * 旧的添加电缆路由的方法，已弃用
+     * @deprecated
+     */
+    @Deprecated
+    private void startAddingDllyOld() {
+        touchListener.setDrawdlly(true);
     }
 
     /** 按下停止绘图 **/
