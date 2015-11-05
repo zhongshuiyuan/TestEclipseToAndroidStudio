@@ -63,12 +63,13 @@ public class DrawTool extends DrawToolBase {
 		return mIsActivated;
 	}
 
-	public DrawTool(MapView mapView) {
+	public DrawTool(MapView mapView, MapOnTouchListener defaultMapOnTouchListener) {
 		mMapView = mapView;
 		mTempDrawLayer = new GraphicsLayer();
 		mMapView.addLayer(mTempDrawLayer);
 		mMapViewDrawListener = new DrawTouchListener(mMapView.getContext(), mMapView);
-		mMapViewDefaultListener = new MapOnTouchListener(mMapView.getContext(), mMapView);
+		//mMapViewDefaultListener = new MapOnTouchListener(mMapView.getContext(), mMapView);
+		mMapViewDefaultListener = defaultMapOnTouchListener;
 		mMarkerSymbol = new SimpleMarkerSymbol(Color.BLACK, 16, SimpleMarkerSymbol.STYLE.CIRCLE);
 		mLineSymbol = new SimpleLineSymbol(Color.BLACK, 2);
 		mFillSymbol = new SimpleFillSymbol(Color.BLACK);

@@ -478,7 +478,7 @@ public class Main extends Activity implements OnMapListener
     }
 
     private void setupDrawTool() {
-        mDrawTool = new DrawTool(map);
+        mDrawTool = new DrawTool(map, touchListener);
         MapViewOnDrawEvenListener onDrawEvenListener = new MapViewOnDrawEvenListener(this) {
             @Override
             public void onDrawEnd(DrawEvent event) {

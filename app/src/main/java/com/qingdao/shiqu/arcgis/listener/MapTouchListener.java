@@ -1096,9 +1096,11 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 		super.onLongPress(event);
 		boolean next = true;
 		Graphic del = GetOneGraphicFromLayer(event.getX(),event.getY(), newNodeLayer);
-		if(del == null)
+		// 删除管道
+		if(del == null) {
 			del = GetOneGraphicFromLayer(event.getX(),event.getY(),newgdlayer);
-		if(del != null){
+		}
+		if(del != null) {
 			next = false;
 			// Get the graphic type and do different things by the type
 			Geometry gy = del.getGeometry();
@@ -1131,6 +1133,8 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 				}
 			}
 		}
+		// TODO 修改删除光缆路由的方法
+		// 删除光缆路由
 		if(del == null)
 			del = GetOneGraphicFromLayer(event.getX(),event.getY(),newglly);
 		if(del != null && next){
@@ -1179,6 +1183,7 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 			alertDialog.show();
 
 		}
+		// 删除电缆路由
 		if(del == null)
 			del = GetOneGraphicFromLayer(event.getX(),event.getY(),newdlly);
 		if(del != null && next){
