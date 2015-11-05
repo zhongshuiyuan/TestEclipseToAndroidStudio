@@ -485,8 +485,10 @@
                 android:layout_height="fill_parent"
                 android:background="#ffffff"
                 android:cacheColorHint="#00000000"
-                android:groupIndicator="@drawable/lt_expandablelistviewselector"
-                android:listSelector="#00000000" ><!-- 修改箭头图标 -->
+                android:groupIndicator="@null"
+                android:listSelector="#00000000" >
+                <!--android:groupIndicator="@drawable/lt_expandablelistviewselector"-->
+               <!-- 修改箭头图标 -->
             </ExpandableListView>
         </RelativeLayout>
 

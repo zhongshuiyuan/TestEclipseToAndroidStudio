@@ -8,6 +8,7 @@ import com.qingdao.shiqu.arcgis.activity.Main;
 
 import android.content.Context;
 import android.graphics.Color;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.View.OnClickListener;
@@ -65,53 +66,84 @@ public class MyExpandableListAdapter extends BaseExpandableListAdapter {
 
 	@Override
 	public View getGroupView(int groupPosition, boolean isExpanded, View convertView, ViewGroup parent) {
-		LinearLayout ll = new LinearLayout(context);
-		ll.setOrientation(LinearLayout.HORIZONTAL);
-		ImageView logo = new ImageView(context);
-		logo.setImageResource(R.drawable.ic_layers);
-		logo.setPadding(70, 0, 0, 0);
-		ll.addView(logo);
-		TextView tev = getParentTextView();
-		tev.setTextColor(Color.BLACK);
-		tev.setText(getGroup(groupPosition).toString());
-		ll.addView(tev);
+		ParrentContent parrentContent;
+		if (convertView == null) {
+			parrentContent = new ParrentContent();
+			convertView = LayoutInflater.from(context).inflate(R.layout.toc_parent, null);
+			convertView.setTag(parrentContent);
+		} else {
+			parrentContent = (ParrentContent) convertView.getTag();
+		}
 
-		return ll;
+		parrentContent.indicator = (ImageView) convertView.findViewById(R.id.toc_parent_iv_group_indicator);
+		parrentContent.icon = (ImageView) convertView.findViewById(R.id.toc_parent_iv_icon);
+		parrentContent.title = (TextView) convertView.findViewById(R.id.toc_parent_tv_title);
+
+
+		if (isExpanded) {
+			parrentContent.indicator.setImageResource(R.drawable.ic_chevron_down);
+		} else {
+			parrentContent.indicator.setImageResource(R.drawable.ic_chevron_right);
+		}
+		parrentContent.icon.setImageResource(R.drawable.ic_layers);
+		parrentContent.title.setText(getGroup(groupPosition).toString());
+		return convertView;
 	}
 
 	@Override
-	public View getChildView(final int groupPosition, final int childPosition, boolean isLastChild, View convertView,
-			ViewGroup parent) {
-		// TODO 自动生成的方法存根
-		LinearLayout ll = new LinearLayout(context);
-		ll.setOrientation(LinearLayout.HORIZONTAL);
-		LinearLayout lll = new LinearLayout(context);
-		lll.setOrientation(LinearLayout.HORIZONTAL);
-		lll.setPadding(85, 0, 0, 0);
-		CheckBox cb = new CheckBox(context);
-		/*if(lys[childPosition].isVisible())
-			cb.setChecked(true);*/
-		if(childs.get(groupPosition).get(childPosition).isVisible())
-			cb.setChecked(true);
-		cb.setPadding(0,0,0, 0);
-		cb.setOnClickListener(new OnClickListener() {
+	public View getChildView(final int groupPosition, final int childPosition, boolean isLastChild, View convertView, ViewGroup parent) {
+		ChildContent childContent;
+		if (convertView == null) {
+			childContent = new ChildContent();
+			convertView = LayoutInflater.from(context).inflate(R.layout.toc_child, null);
+			convertView.setTag(childContent);
+		} else {
+			childContent = (ChildContent) convertView.getTag();
+		}
 
+		childContent.isVisible = (CheckBox) convertView.findViewById(R.id.toc_cb_isvisible);
+		childContent.layerName = (TextView) convertView.findViewById(R.id.toc_tv_layername);
+
+		if(childs.get(groupPosition).get(childPosition).isVisible()) {
+			childContent.isVisible.setChecked(true);
+		}
+		childContent.isVisible.setOnClickListener(new OnClickListener() {
 			@Override
-			public void onClick(View arg0) {
-				// TODO 自动生成的方法存根
-//				lys[childPosition].setVisible(!lys[childPosition].isVisible());
+			public void onClick(View v) {
 				childs.get(groupPosition).get(childPosition).setVisible(!childs.get(groupPosition).get(childPosition).isVisible());
 			}
 		});
-		lll.addView(cb);
-
-		TextView tex = new TextView(context);
-//		tex.setText(lys[childPosition].getName());
-		tex.setText(childs.get(groupPosition).get(childPosition).getName());
-		//				tex.setPadding(50, 0, 0, 0);
-		lll.addView(tex);
-		ll.addView(lll);
-		return ll;
+		childContent.layerName.setText(childs.get(groupPosition).get(childPosition).getName());
+		return convertView;
+//		LinearLayout ll = new LinearLayout(context);
+//		ll.setOrientation(LinearLayout.HORIZONTAL);
+//		LinearLayout lll = new LinearLayout(context);
+//		lll.setOrientation(LinearLayout.HORIZONTAL);
+//		lll.setPadding(85, 0, 0, 0);
+//		CheckBox cb = new CheckBox(context);
+//		/*if(lys[childPosition].isVisible())
+//			cb.setChecked(true);*/
+//		if(childs.get(groupPosition).get(childPosition).isVisible())
+//			cb.setChecked(true);
+//		cb.setPadding(0,0,0, 0);
+//		cb.setOnClickListener(new OnClickListener() {
+//
+//			@Override
+//			public void onClick(View arg0) {
+//				// TODO 自动生成的方法存根
+////				lys[childPosition].setVisible(!lys[childPosition].isVisible());
+//				childs.get(groupPosition).get(childPosition).setVisible(!childs.get(groupPosition).get(childPosition).isVisible());
+//			}
+//		});
+//		lll.addView(cb);
+//
+//		TextView tex = new TextView(context);
+////		tex.setText(lys[childPosition].getName());
+//		tex.setText(childs.get(groupPosition).get(childPosition).getName());
+//		//				tex.setPadding(50, 0, 0, 0);
+//		lll.addView(tex);
+//		ll.addView(lll);
+//		return ll;
 	}
 
 	@Override
@@ -149,6 +181,17 @@ public class MyExpandableListAdapter extends BaseExpandableListAdapter {
 	public boolean isChildSelectable(int arg0, int arg1) {
 		// TODO 自动生成的方法存根
 		return true;
+	}
+
+	private static class ParrentContent {
+		public ImageView indicator;
+		public ImageView icon;
+		public TextView title;
+	}
+
+	private static class ChildContent {
+		public CheckBox isVisible;
+		public TextView layerName;
 	}
 
 }
