@@ -293,7 +293,7 @@
 
                     <!-- 按钮 -->
                     <com.gc.materialdesign.views.ButtonFloat
-                        android:id="@+id/main_btn_drawing_toolbar_startandpause"
+                        android:id="@+id/main_btn_drawing_toolbar_startorfinish"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_alignParentLeft="true"
@@ -307,7 +307,7 @@
                         app:animate="false"/>
 
                     <com.gc.materialdesign.views.ButtonFloat
-                        android:id="@+id/main_btn_drawing_toolbar_stopandclose"
+                        android:id="@+id/main_btn_close_drawing_toolbar"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_alignParentRight="true"
@@ -316,8 +316,8 @@
                         android:layout_marginRight="16dp"
                         android:layout_marginEnd="16dp"
                         android:onClick="click"
-                        android:background="@color/red"
-                        app:iconDrawable="@drawable/ic_stop"
+                        android:background="@color/app_design_background"
+                        app:iconDrawable="@drawable/ic_clear_white_48dp"
                         app:animate="true"/>
 
                 </RelativeLayout>

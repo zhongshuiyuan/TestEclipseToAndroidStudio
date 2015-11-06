@@ -209,8 +209,8 @@ public class Main extends Activity implements OnMapListener
     private TextView mTvDrawingTitle;
     private TextView mTvDrawingTips;
     private CheckBox mCbIsFreehandDrawing;
-    private ButtonFloat mBtnStopDrawing;
-    private ButtonFloat mBtnStartOrPauseDrawing;
+    private ButtonFloat mBtnCloseDrawing;
+    private ButtonFloat mBtnStartOrFinishDrawing;
 
     private DrawerLayout drawerLayout;
     private RelativeLayout leftLayout;
@@ -346,8 +346,8 @@ public class Main extends Activity implements OnMapListener
         mTvDrawingTitle = (TextView) findViewById(R.id.main_tv_drawing_title);
         mTvDrawingTips = (TextView) findViewById(R.id.main_tv_drawing_tips);
         mCbIsFreehandDrawing = (CheckBox) findViewById(R.id.main_cb_drawing_toolbar_isfreehand);
-        mBtnStartOrPauseDrawing = (ButtonFloat) findViewById(R.id.main_btn_drawing_toolbar_startandpause);
-        mBtnStopDrawing = (ButtonFloat) findViewById(R.id.main_btn_drawing_toolbar_stopandclose);
+        mBtnStartOrFinishDrawing = (ButtonFloat) findViewById(R.id.main_btn_drawing_toolbar_startorfinish);
+        mBtnCloseDrawing = (ButtonFloat) findViewById(R.id.main_btn_close_drawing_toolbar);
 
         mBtnLocation = (ButtonFloat) findViewById(R.id.btn_location);
         mBtnLocation.setDrawableIcon(getResources().getDrawable(R.drawable.ic_my_location_white_48dp));
@@ -1143,11 +1143,11 @@ public class Main extends Activity implements OnMapListener
             case R.id.main_cb_drawing_toolbar_isfreehand: // 使用自由线条绘图按钮
                 onCbIsFreehandDrawingClick();
                 break;
-            case R.id.main_btn_drawing_toolbar_startandpause: // 暂停或开始绘图按钮
-                onBtnStartOrPauseDrawingClick();
+            case R.id.main_btn_drawing_toolbar_startorfinish: // 暂停或开始绘图按钮
+                onBtnStartOrFinishDrawingClick();
                 break;
-            case R.id.main_btn_drawing_toolbar_stopandclose: // 结束绘图按钮
-                onBtnStopDrawingClick();
+            case R.id.main_btn_close_drawing_toolbar: // 关闭绘图按钮
+                onBtnCloseDrawingToolbarClick();
                 break;
             default:
                 break;
@@ -1699,31 +1699,31 @@ public class Main extends Activity implements OnMapListener
     }
 
     /** 按下开始（暂停）绘图 **/
-    private void onBtnStartOrPauseDrawingClick() {
+    private void onBtnStartOrFinishDrawingClick() {
         if (mDrawTool.isActivated()) {
             mDrawTool.deactivate();
-            setBtnStartOrPauseDrawingToStartState();
+            setBtnStartOrFinishDrawingToStartState();
         } else {
             mDrawTool.activate(mDrawType);
-            setBtnStartOrPauseDrawingToPauseState();
+            setBtnStartOrFinishDrawingToFinishState();
         }
     }
 
-    private void setBtnStartOrPauseDrawingToStartState() {
-        mBtnStartOrPauseDrawing.setDrawableIcon(getResources().getDrawable(R.drawable.ic_play));
-        mBtnStartOrPauseDrawing.setBackgroundColor(getResources().getColor(R.color.dark_green));
+    private void setBtnStartOrFinishDrawingToStartState() {
+        mBtnStartOrFinishDrawing.setDrawableIcon(getResources().getDrawable(R.drawable.ic_play));
+        mBtnStartOrFinishDrawing.setBackgroundColor(getResources().getColor(R.color.dark_green));
     }
 
-    private void setBtnStartOrPauseDrawingToPauseState() {
-        mBtnStartOrPauseDrawing.setDrawableIcon(getResources().getDrawable(R.drawable.ic_pause));
-        mBtnStartOrPauseDrawing.setBackgroundColor(getResources().getColor(R.color.app_design_background));
+    private void setBtnStartOrFinishDrawingToFinishState() {
+        mBtnStartOrFinishDrawing.setDrawableIcon(getResources().getDrawable(R.drawable.ic_stop));
+        mBtnStartOrFinishDrawing.setBackgroundColor(getResources().getColor(R.color.red));
     }
 
     /**
      * 显示绘图工具栏
      */
     private void showDrawingToolbar(String title) {
-        setBtnStartOrPauseDrawingToPauseState();
+        setBtnStartOrFinishDrawingToFinishState();
         mTvDrawingTitle.setText(title);
         mCbIsFreehandDrawing.setChecked(false);
         mDrawingToolbar.setVisibility(View.VISIBLE);
@@ -1768,13 +1768,13 @@ public class Main extends Activity implements OnMapListener
     }
 
     /** 按下停止绘图 **/
-    private void onBtnStopDrawingClick() {
+    private void onBtnCloseDrawingToolbarClick() {
         mDrawTool.deactivate();
         mDrawType = DrawTool.NULL;
         mDrawAction = MapViewOnDrawEvenListener.ACTION_NULL;
 
-        mBtnStartOrPauseDrawing.setDrawableIcon(getResources().getDrawable(R.drawable.ic_pause));
-        mBtnStartOrPauseDrawing.setBackgroundColor(getResources().getColor(R.color.app_design_background));
+        mBtnStartOrFinishDrawing.setDrawableIcon(getResources().getDrawable(R.drawable.ic_pause));
+        mBtnStartOrFinishDrawing.setBackgroundColor(getResources().getColor(R.color.app_design_background));
 
         mDrawingToolbar.setVisibility(View.GONE);
     }
