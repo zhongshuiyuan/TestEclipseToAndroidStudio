@@ -86,7 +86,7 @@ import com.gc.materialdesign.views.ButtonIcon;
 import com.getbase.floatingactionbutton.FloatingActionsMenu;
 import com.qingdao.shiqu.arcgis.R;
 import com.qingdao.shiqu.arcgis.adapter.ContentAdapter;
-import com.qingdao.shiqu.arcgis.adapter.MyExpandableListAdapter;
+import com.qingdao.shiqu.arcgis.adapter.TocExpandableListAdapter;
 import com.qingdao.shiqu.arcgis.dialog.Dialog;
 import com.qingdao.shiqu.arcgis.helper.FunctionHelper;
 import com.qingdao.shiqu.arcgis.layer.LayerOpter;
@@ -220,9 +220,9 @@ public class Main extends Activity implements OnMapListener
     // TOC
     ExpandableListView mElvToc;
     // TOC 的子数据源
-    private ArrayList<ArrayList<Layer>> childs = new ArrayList<ArrayList<Layer>>(); //USE IN MyExpandableListAdapter CLASS
+    private ArrayList<ArrayList<Layer>> childs = new ArrayList<ArrayList<Layer>>(); //USE IN TocExpandableListAdapter CLASS
     // TOC 的数据源
-    private ArrayList<String> titles = new ArrayList<String>(); //USE IN MyExpandableListAdapter CLASS
+    private ArrayList<String> titles = new ArrayList<String>(); //USE IN TocExpandableListAdapter CLASS
 
     /** 退出App的Dialog **/
     ProgressDialog mProgressDialog = null;
@@ -608,7 +608,7 @@ public class Main extends Activity implements OnMapListener
     /** 创建TOC **/
     private void createToc() {
         mElvToc = (ExpandableListView) findViewById(R.id.right_listview);
-        MyExpandableListAdapter adapter = new MyExpandableListAdapter(Main.this, titles, childs);
+        TocExpandableListAdapter adapter = new TocExpandableListAdapter(Main.this, titles, childs);
         mElvToc.setAdapter(adapter);
     }
 
