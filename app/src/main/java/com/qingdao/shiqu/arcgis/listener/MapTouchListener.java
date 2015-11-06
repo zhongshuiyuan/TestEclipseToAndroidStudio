@@ -84,7 +84,7 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 
 	List<Point> points;
 	Context mContext;
-	MapView mapView;
+	MapView mMapView;
 	SimpleLineSymbol lineSymbol,lineSysb;
 	SimpleMarkerSymbol markerSymbol;
 	SimpleFillSymbol fillSymbol;
@@ -101,6 +101,7 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 	Polygon tempPolygon = null;//记录绘制过程中的多边形  
 	boolean isrj = false;
 	boolean addNode = false;
+	/** 用于临时绘制 **/
 	GraphicsLayer newNodeLayer;
 	GraphicsLayer newgdlayer;
 	GraphicsLayer newGLLayer;
@@ -121,7 +122,6 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 	LocalDataAction sld;
 	boolean showglly = false;
 	ArrayList<Point> glList;
-	TextView zb ;
 	FeatureLayer gisgj2,loufang,daolu,lupaihao,fenzhiqi;
 	FeatureLayer zhuanxiangl,zhixiangl,gugangl;
 
@@ -129,6 +129,11 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 	private int mMapTouchListenerState;
 	private android.database.sqlite.SQLiteDatabase mSQLiteDatabase;
 	//Qinyy 新增完毕
+
+	TextView mTvCoordinate;
+	public void setTvCoordinate(TextView tvCoordinate) {
+		mTvCoordinate = tvCoordinate;
+	}
 
 	public void setZhuanxiangl(FeatureLayer zhuanxiangl) {
 		this.zhuanxiangl = zhuanxiangl;
@@ -268,7 +273,7 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 		super(context, mapView);
 		this.mContext = context;
 		db = new SQLiteDatabase(context);
-		this.mapView = mapView;
+		this.mMapView = mapView;
 		points = new ArrayList<Point>();
 		Drawable img = context.getResources().getDrawable(R.drawable.fjj);
 		pms = new PictureMarkerSymbol(com.qingdao.shiqu.arcgis.utils.Utils.zoomDrawable(img, 40, 40));
@@ -282,8 +287,6 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 		sld = new LocalDataAction(context);
 		glList = new ArrayList<Point>();
 		uid_seg_list = new ArrayList<Integer>();
-		zb = (TextView)LayoutInflater.from(context).inflate(R.layout.main, null).findViewById(R.id.coordinate);
-
 
 		DatabaseOpenHelper databaseOpenHelper = new DatabaseOpenHelper(mContext);
 		mSQLiteDatabase = databaseOpenHelper.getWritableDatabase();
@@ -340,25 +343,39 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 		}
 	}
 
+	/****************** OnZoomListener回调事件 ***************/
+	@Override
+	public void postAction(float arg0, float arg1, double arg2)
+	{
+		// 记录缩放操作，用来实现前进后退
+		click.onMoveAndZoom();
+	}
+
+	@Override
+	public void preAction(float arg0, float arg1, double arg2)
+	{
+
+	}
+
 	/**
 	 * 地图单击事件
 	 */
 	@Override
-	public boolean onSingleTap(MotionEvent point)
+	public boolean onSingleTap(MotionEvent event)
 	{
-		zb.setText(String.valueOf(point.getX()+","+String.valueOf(point.getY())));
 		Drawable img = null;
 		isnew = true;
-		// 新增光缆路由
+
+		// 新增光缆路由，已弃用
 		if(drawglly){
 			// 光缆路由
 			Point currentPoint  = null;
-			if(SelectOneGraphic(point.getX(),point.getY(), newNodeLayer)){
+			if(isSelectedGraphic(event.getX(), event.getY(), newNodeLayer)){
 				currentPoint = oldPoint;
 				points.add(oldPoint);
 			}
 			else{
-				currentPoint = mapView.toMapPoint(new Point(point.getX(), point.getY()));
+				currentPoint = mMapView.toMapPoint(new Point(event.getX(), event.getY()));
 				points.add(currentPoint);
 				/*SimpleMarkerSymbol msb = new SimpleMarkerSymbol(Color.RED, 8, SimpleMarkerSymbol.STYLE.CIRCLE);
 				Graphic graphic = new Graphic(currentPoint, msb);
@@ -386,15 +403,17 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 			}
 			return true;
 		}
+
+		// 新增电缆路由，已弃用
 		if(drawdlly){
 			// 电缆路由
 			Point currentPoint  = null;
-			if(SelectOneGraphic(point.getX(),point.getY(), newNodeLayer)){
+			if(isSelectedGraphic(event.getX(), event.getY(), newNodeLayer)){
 				currentPoint = oldPoint;
 				points.add(oldPoint);
 			}
 			else{
-				currentPoint = mapView.toMapPoint(new Point(point.getX(), point.getY()));
+				currentPoint = mMapView.toMapPoint(new Point(event.getX(), event.getY()));
 				points.add(currentPoint);
 				/*SimpleMarkerSymbol msb = new SimpleMarkerSymbol(Color.RED, 8, SimpleMarkerSymbol.STYLE.CIRCLE);
 				Graphic graphic = new Graphic(currentPoint, msb);
@@ -422,13 +441,12 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 			}
 			return true;
 		}
-		/**
-		 * 添加光缆
-		 * **/
+
+		// 新增光缆
 		if(addGL){
 
 			Point currentPoint  = null;
-			if(SelectOneGraphic(point.getX(),point.getY(), newNodeLayer)){
+			if(isSelectedGraphic(event.getX(), event.getY(), newNodeLayer)){
 				currentPoint = oldPoint;
 				points.add(oldPoint);
 			}
@@ -454,17 +472,16 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 			}*/
 			return true;
 		}
-		/**
-		 * 添加管道
-		 * **/
+
+		// 新增管道
 		if(addNode){
 			Point currentPoint  = null;
-			if(SelectOneGraphic(point.getX(),point.getY(), newNodeLayer)){
+			if(isSelectedGraphic(event.getX(), event.getY(), newNodeLayer)){
 				currentPoint = oldPoint;
 				points.add(oldPoint);
 			}
 			else{
-				currentPoint = mapView.toMapPoint(new Point(point.getX(), point.getY()));
+				currentPoint = mMapView.toMapPoint(new Point(event.getX(), event.getY()));
 				points.add(currentPoint);
 				//Get jing pictrue path
 				String path = DoAction.getGJPathByName(mContext,jtype);
@@ -500,26 +517,25 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 			}
 			return true;
 		}
-		else // 划线测距功能和单击选中要素事件
-		{
-			/**
-			 * 划线测距功能
-			 */
+
+		// 上面是某个人写的代码
+		// ------- 不同人的分割线
+		// 下面是另一个人写的代码
+		// 什么，你问我？我是给你写注释的人
+		// 划线测距功能和单击选中要素事件
+		else {
+			//划线测距功能
 			if (geoType != null && geoType != Geometry.Type.POLYGON)
 			{
-
-				Point currentPoint = mapView.toMapPoint(new Point(point.getX(), point.getY()));
+				Point currentPoint = mMapView.toMapPoint(new Point(event.getX(), event.getY()));
 				points.add(currentPoint);
 				Graphic graphic = new Graphic(currentPoint, markerSymbol);
 				mTempDrawingLayer.addGraphic(graphic);
 
-
 				if (fristPoint == null)
 				{
 					fristPoint = currentPoint;
-				}
-				else
-				{
+				} else	{
 					Line l = new Line();
 					l.setStart(fristPoint);
 					l.setEnd(currentPoint);
@@ -545,9 +561,11 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 					Toast.makeText(mContext, lenth, Toast.LENGTH_SHORT).show();
 					fristPoint = currentPoint;
 				}
-			}/*else*/ if (guangji != null) 
-			{
-				long[] featureIDs = guangji.getFeatureIDs(point.getX(), point.getY(), 30);
+			}
+
+			// 点击光机范围图层显示工程附图
+			if (guangji != null) {
+				long[] featureIDs = guangji.getFeatureIDs(event.getX(), event.getY(), 30);
 				if (featureIDs.length > 0)
 				{
 					// Toast.makeText(mContext, "查出光机信息"+featureIDs[0],
@@ -559,24 +577,28 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 				}
 
 			}
-			/*else */if(newNodeLayer != null ){
-				SelectOneGraphic(point.getX(),point.getY(), newNodeLayer);
+
+			// TODO 修复好添加管井的功能之后再回来看看这些功能
+			if(newNodeLayer != null ){
+				isSelectedGraphic(event.getX(), event.getY(), newNodeLayer);
 			}
-			/*else*/ if(newgdlayer != null && isnew){
-				SelectOneGraphic(point.getX(), point.getY(), newgdlayer);
+			if(newgdlayer != null && isnew){
+				isSelectedGraphic(event.getX(), event.getY(), newgdlayer);
 			}
 			if(newGLLayer != null && showglly){
 				showglly = false;
-				SelectOneGraphic(point.getX(), point.getY(), newGLLayer);
+				isSelectedGraphic(event.getX(), event.getY(), newGLLayer);
 			}
 
-			boolean is = true;
+			// 单击选中对象查看对象属性
+			boolean isSelectObject = false;
+			// 展示属性信息，管井，单元
 			if (featureLayers != null)
-			{ // 展示属性信息
+			{
 				for (int i = 0; i < featureLayers.size(); i++)
 				{
 					FeatureLayer featureLayer = featureLayers.get(i);
-					long[] featureIDs = featureLayer.getFeatureIDs(point.getX(), point.getY(), 20);
+					long[] featureIDs = featureLayer.getFeatureIDs(event.getX(), event.getY(), 20);
 					featureLayer.clearSelection();
 					if (featureIDs.length > 0)
 					{
@@ -595,20 +617,20 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 								String[] selectionArgs = {"tt_id","tt_name","refname","astext(Geometry)","cadtype","nodename","funtype","state","areaid","userlocati"};
 								List<Data> list = dbo.searchPointByID(nodeid, selectionArgs);
 								DataShowDialog.showDialog_List(list, "节点属性信息", mContext);
-								is = false;
 
+								isSelectObject = true;
 							}
 						}
 					}
 				} 
 			}
-			if (guandao != null && is)
-			{
+			// 显示管道属性信息或者开启查看管道熔接信息
+			if (guandao != null && !isSelectObject) {
 				long[] featureIDs ;
 				if(geoType == Geometry.Type.POLYGON)
-					featureIDs = guandao.getFeatureIDs(point.getX(), point.getY(), 50);
+					featureIDs = guandao.getFeatureIDs(event.getX(), event.getY(), 50);
 				else
-					featureIDs = guandao.getFeatureIDs(point.getX(), point.getY(), 30);
+					featureIDs = guandao.getFeatureIDs(event.getX(), event.getY(), 30);
 				guandao.clearSelection();
 				if (featureIDs.length > 0)
 				{
@@ -654,7 +676,7 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 						}
 						DataShowDialog.gdIDs = gdIDs;
 						DataShowDialog.showDialog_StringArray(gdNames, "光纤熔接选择", mContext);
-					}else{
+					} else {
 						List<Feature> selectedFeatures = guandao.getSelectedFeatures();
 						for (int j = 0; j < selectedFeatures.size(); j++)
 						{
@@ -727,14 +749,15 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 						}
 					}
 
-					is = false;
+					isSelectObject = true;
 				}
 			}
-			if (gisgj2 != null && is){
+			// 显示光机属性信息，大红圈
+			if (gisgj2 != null && !isSelectObject) {
 				long[] featureIDs ;
 				gisgj2.clearSelection();
 				// 获取该图层中，point点 100 误差范围内的所有id
-				featureIDs = gisgj2.getFeatureIDs(point.getX(), point.getY(), 100);
+				featureIDs = gisgj2.getFeatureIDs(event.getX(), event.getY(), 100);
 				if(featureIDs.length > 0){
 					//选择获取到的所有ID
 					gisgj2.selectFeatures(featureIDs, true);
@@ -768,13 +791,14 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 							DataShowDialog.showDialog_List(gisinfo, "光机属性信息", mContext);
 						}
 					}
-					is = false;
+					isSelectObject = true;
 				}
 			}
-			if (loufang != null && is){
+			// 显示楼放属性信息
+			if (loufang != null && !isSelectObject) {
 				long[] featureIDs ;
 				loufang.clearSelection();
-				featureIDs = loufang.getFeatureIDs(point.getX(), point.getY(), 20);
+				featureIDs = loufang.getFeatureIDs(event.getX(), event.getY(), 20);
 				if(featureIDs.length > 0){
 					loufang.selectFeatures(featureIDs, true);
 					List<Feature> selectFeatures  = loufang.getSelectedFeatures();
@@ -796,13 +820,14 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 							DataShowDialog.showDialog_List(gisinfo, "楼放属性信息", mContext);
 						}
 					}
-					is = false;
+					isSelectObject = true;
 				}
 			}
-			if(daolu != null && is){
+			// 显示道路属性信息
+			if (daolu != null && !isSelectObject) {
 				long[] featureIDs ;
 				daolu.clearSelection();
-				featureIDs = daolu.getFeatureIDs(point.getX(), point.getY(), 20);
+				featureIDs = daolu.getFeatureIDs(event.getX(), event.getY(), 20);
 				if(featureIDs.length > 0){
 					daolu.selectFeatures(featureIDs, true);
 					List<Feature> selectFeatures  = daolu.getSelectedFeatures();
@@ -821,13 +846,14 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 							DataShowDialog.showDialog_List(gisinfo, "道路属性信息", mContext);
 						}
 					}
-					is = false;
+					isSelectObject = true;
 				}
 			}
-			if(lupaihao != null && is){
+			// 显示路牌号属性信息
+			if (lupaihao != null && !isSelectObject){
 				long[] featureIDs ;
 				lupaihao.clearSelection();
-				featureIDs = lupaihao.getFeatureIDs(point.getX(), point.getY(), 20);
+				featureIDs = lupaihao.getFeatureIDs(event.getX(), event.getY(), 20);
 				if(featureIDs.length > 0){
 					lupaihao.selectFeatures(featureIDs, true);
 					List<Feature> selectFeatures  = lupaihao.getSelectedFeatures();
@@ -848,13 +874,14 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 							DataShowDialog.showDialog_List(gisinfo, "路牌号属性信息", mContext);
 						}
 					}
-					is = false;
+					isSelectObject = true;
 				}
 			}
-			if(fenzhiqi != null && is){
+			// 显示分支器属性信息
+			if (fenzhiqi != null && !isSelectObject) {
 				long[] featureIDs ;
 				fenzhiqi.clearSelection();
-				featureIDs = fenzhiqi.getFeatureIDs(point.getX(), point.getY(), 20);
+				featureIDs = fenzhiqi.getFeatureIDs(event.getX(), event.getY(), 20);
 				if(featureIDs.length > 0){
 					fenzhiqi.selectFeatures(featureIDs, true);
 					List<Feature> selectFeatures  = fenzhiqi.getSelectedFeatures();
@@ -879,13 +906,14 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 							DataShowDialog.showDialog_List(gisinfo, "分支器属性信息", mContext);
 						}
 					}
-					is = false;
+					isSelectObject = true;
 				}
 			}
-			if(zhuanxiangl != null && is){
+			// 显示专网光缆属性信息
+			if (zhuanxiangl != null && !isSelectObject) {
 				long[] featureIDs ;
 				zhuanxiangl.clearSelection();
-				featureIDs = zhuanxiangl.getFeatureIDs(point.getX(), point.getY(), 20);
+				featureIDs = zhuanxiangl.getFeatureIDs(event.getX(), event.getY(), 20);
 				if(featureIDs.length > 0){
 					zhuanxiangl.selectFeatures(featureIDs, true);
 					List<Feature> selectFeatures  = zhuanxiangl.getSelectedFeatures();
@@ -910,13 +938,14 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 							DataShowDialog.showDialog_List(gisinfo, "专网光缆属性信息", mContext);
 						}
 					}
-					is = false;
+					isSelectObject = true;
 				}
 			}
-			if(zhixiangl != null && is){
+			//显示支线光缆属性信息
+			if (zhixiangl != null && !isSelectObject) {
 				long[] featureIDs ;
 				zhixiangl.clearSelection();
-				featureIDs = zhixiangl.getFeatureIDs(point.getX(), point.getY(), 20);
+				featureIDs = zhixiangl.getFeatureIDs(event.getX(), event.getY(), 20);
 				if(featureIDs.length > 0){
 					zhixiangl.selectFeatures(featureIDs, true);
 					List<Feature> selectFeatures  = zhixiangl.getSelectedFeatures();
@@ -924,7 +953,7 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 						Feature tempFea = selectFeatures.get(i);
 						Map<String, Object> attributes = tempFea.getAttributes();
 						Set<String> keySet = attributes.keySet();
-						if(attributes!=null && attributes.size()>0){
+						if(attributes != null && attributes.size()>0){
 							List<Data> gisinfo = new ArrayList<Data>();
 							String a = attributes.get("起点")!=null?attributes.get("起点").toString():"";
 							String b = attributes.get("终点")!=null?attributes.get("终点").toString():"";
@@ -945,13 +974,14 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 							DataShowDialog.showDialog_List(gisinfo, "支线光缆属性信息", mContext);
 						}
 					}
-					is = false;
+					isSelectObject = true;
 				}
 			}
-			if(gugangl != null && is){
+			// 显示骨干光缆属性信息
+			if (gugangl != null && !isSelectObject) {
 				long[] featureIDs ;
 				gugangl.clearSelection();
-				featureIDs = gugangl.getFeatureIDs(point.getX(), point.getY(), 20);
+				featureIDs = gugangl.getFeatureIDs(event.getX(), event.getY(), 20);
 				if(featureIDs.length > 0){
 					gugangl.selectFeatures(featureIDs, true);
 					List<Feature> selectFeatures  = gugangl.getSelectedFeatures();
@@ -976,10 +1006,13 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 							DataShowDialog.showDialog_List(gisinfo, "骨干光缆属性信息", mContext);
 						}
 					}
-					is = false;
+					isSelectObject = true;
 				}
 			}
-			
+			if (!isSelectObject) {
+				Log.i(LOG_TAG, "单击地图没有选中对象");
+			}
+
 			return true;
 		}
 
@@ -987,8 +1020,8 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 
 	@Override
 	public boolean onDoubleTap(MotionEvent point) {
-		if(drawglly){
-			//保存光缆路由数据
+		//保存光缆路由数据，已弃用
+		if (drawglly) {
 			drawglly = false;
 			DoAction.saveGLLY(mContext, points);
 			fristPoint = null;
@@ -997,8 +1030,8 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 			loadGLLY();
 			return false;
 		}
-		if(drawdlly){
-			//保存电缆路由数据
+		//保存电缆路由数据，已弃用
+		if (drawdlly) {
 			drawdlly = false;
 			DoAction.saveDLLY(mContext, points);
 			fristPoint = null;
@@ -1007,7 +1040,8 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 			loadDLLY();
 			return false;
 		}
-		if(addGL){
+		// 新增光缆
+		if (addGL) {
 			addGL = false;
 			/*Polyline polyline = new Polyline();
 			polyline.startPath(points.get(0));
@@ -1023,6 +1057,7 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 			Toast.makeText(mContext, "光缆添加成功！", Toast.LENGTH_SHORT).show();
 			return false;
 		}
+		// TODO 这是啥
 		if(addNode){
 			addNode = false;
 			fristPoint = null;
@@ -1034,11 +1069,11 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 			points.clear();
 			return false;
 		}
-		else{
-			mapView.zoomin();
+		// 放大地图
+		else {
+			mMapView.zoomin();
 			return false;
 		}
-
 	}
 
 	float startX = 0;
@@ -1072,24 +1107,19 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 		return super.onTouch(v, event);
 	}
 
-	/****************** OnZoomListener回调事件 ***************/
-	@Override
-	public void postAction(float arg0, float arg1, double arg2)
-	{
-		// 记录缩放操作，用来实现前进后退
-		click.onMoveAndZoom();
-	}
-
-	@Override
-	public void preAction(float arg0, float arg1, double arg2)
-	{
-
-	}
-
 	@Override
 	public void onLongPress(MotionEvent event)
 	{
 		super.onLongPress(event);
+
+		// 在坐标TextView显示当前按压位置的坐标
+		Point onSingleTapPoint = new Point(event.getX(), event.getY());
+		Point mapPoint = mMapView.toMapPoint(onSingleTapPoint);
+		if (mapPoint != null) {
+			String x = String.valueOf(mapPoint.getX()).substring(0, 8);
+			String y = String.valueOf(mapPoint.getY()).substring(0, 8);
+			mTvCoordinate.setText(x + ", " + y);
+		}
 
 		DataTable result = null;
 		boolean next = true;
@@ -1191,7 +1221,6 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 
 		}
 
-		// TODO 修改删除电缆路由的方法
 		// 删除电缆路由
 		del = getGraphicFromLayer(event.getX(), event.getY(), newdlly);
 		if (del != null && next) {
@@ -1255,19 +1284,10 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 	}
 
 	/**
-	 *************************************** 
-	 * 功 能：事件回调接口
-	 *************************************** 
+	 *
+	 * @param nList
+	 * @param title
 	 */
-	public interface OnMapListener
-	{
-		/**
-		 * 
-		 * 功 能：放大和缩小监听回来记录前进后退
-		 */
-		public void onMoveAndZoom();
-	}
-
 	private void showAlertDialog( final String[] nList,String title) {
 		ListAdapter mAdapter = new ArrayAdapter(mContext, R.layout.item, nList);
 		LayoutInflater inflater = LayoutInflater.from(mContext);
@@ -1296,6 +1316,12 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 		mAlertDialog.getWindow().setContentView(view);
 		//		mAlertDialog.getWindow().setLayout(600, 400);
 	}
+
+	/**
+	 *
+	 * @param name
+	 * @return
+	 */
 	private String searchNodeIDbyName(String name){
 		String nodeid="";
 		DataTable result = db.executeTable( "spNodeInfoByName", null);
@@ -1306,7 +1332,15 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 		return nodeid;
 
 	}
-	private boolean SelectOneGraphic(float x, float y,GraphicsLayer llayer) {
+
+	/**
+	 *
+	 * @param x
+	 * @param y
+	 * @param llayer
+	 * @return
+	 */
+	private boolean isSelectedGraphic(float x, float y, GraphicsLayer llayer) {
 		// 获得图层
 		//         GraphicsLayer layer = GetGraphicLayer();
 		if (llayer != null && llayer.isInitialized() && llayer.isVisible()) {
@@ -1338,38 +1372,45 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 		return result;
 	}
 
-	private Graphic GetGraphicsFromLayer(double xScreen, double yScreen,
-			GraphicsLayer tlayer) {
+	/**
+	 *
+	 * @param xScreen
+	 * @param yScreen
+	 * @param layer
+	 * @return
+	 */
+	private Graphic GetGraphicsFromLayer(double xScreen, double yScreen, GraphicsLayer layer) {
 		Graphic result = null;
 		try {
-			int[] idsArr = tlayer.getGraphicIDs((float)xScreen,(float)yScreen,30);
-			if(idsArr.length > 0)
+			int[] graphicIDs = layer.getGraphicIDs((float)xScreen,(float)yScreen,30);
+			if(graphicIDs.length > 0)
 				isnew = false;
-			for (int i = 0; i < idsArr.length; i++) {
-				Graphic gpVar = tlayer.getGraphic(idsArr[i]);
-				result = gpVar;
+			for (int i = 0; i < graphicIDs.length; i++) {
+				Graphic graphic = layer.getGraphic(graphicIDs[i]);
+				result = graphic;
 
-				if (gpVar != null) {
-					Geometry gy = gpVar.getGeometry();
-					Type ty = gy.getType();
-					LocalDataModify ldm = new LocalDataModify(mContext);
-					if(0 == ty.compareTo(Type.POINT)){
-						Point pt = (Point)gpVar.getGeometry();
-						oldPoint = pt;
-						String a = String.valueOf(pt.getX())+","+String.valueOf(pt.getY());
+				// TODO 弄明白下面这是啥
+				if (graphic != null) {
+					Geometry geometry = graphic.getGeometry();
+					Type type = geometry.getType();
+					LocalDataModify localDataModify = new LocalDataModify(mContext);
+					if(0 == type.compareTo(Type.POINT)){
+						Point point = (Point) graphic.getGeometry();
+						oldPoint = point;
+						String a = String.valueOf(point.getX())+","+String.valueOf(point.getY());
 						a += "/";
 						if(!addGL && !addNode){
-							ldm.modifyPoint(pt.getX(), pt.getY());
+							localDataModify.modifyPoint(point.getX(), point.getY());
 						}
-					}else{
-						Polyline pl1 = (Polyline) gpVar.getGeometry();
+					} else {
+						Polyline pl1 = (Polyline) graphic.getGeometry();
 						pl1.getPathCount();
 						ArrayList<Point> al = new ArrayList<Point>();
 						for(int ii=0;ii<pl1.getPointCount();ii++){
 							al.add(pl1.getPoint(ii));
 						}
-						if(showglly){
-							glList = ldm.getGlPts(al,tlayer, mTempDrawingLayer);
+						if (showglly) {
+							glList = localDataModify.getGlPts(al,layer, mTempDrawingLayer);
 
 							Polyline polyline = new Polyline();
 							Point startPoint;
@@ -1387,9 +1428,10 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 							}
 							Graphic tempGraphic = new Graphic(polyline, lineSymbol);
 							mTempDrawingLayer.addGraphic(tempGraphic);
+						} else {
+							localDataModify.modifySegment(al);
 						}
-						else
-							ldm.modifySegment(al);
+
 					}
 
 				}
@@ -1399,6 +1441,7 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 		}
 		return result;
 	}
+
 	private void showDelDialog(final GraphicsLayer layer,final long graphicid,final int pkid,final DataTable rst,final Type t){
 		AlertDialog alertDialog = new AlertDialog.Builder(mContext)
 		.setIcon(R.drawable.logo)
@@ -1438,11 +1481,14 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 		window.setAttributes(lp);        
 		alertDialog.show();
 	}
+
 	void AlertMsg(String str, Object... arg) {
 		String msg = String.format(str, arg);
 		Toast.makeText(mContext, msg, Toast.LENGTH_LONG).show();
 		Log.i("AlertMsg", msg);
 	}
+
+	/** 加载本地新增（用户绘制）的光缆路由 **/
 	public void loadGLLY(){
 		Graphic tempGraphic ;
 		db = new SQLiteDatabase(mContext);
@@ -1456,15 +1502,11 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 			String pts = dc.get("points").Value.toString();
 			ArrayList<Point> points = LocalDataModify.splitePts(pts);
 			for(int j=0;j<points.size();j++){
-				/*SimpleMarkerSymbol msb = new SimpleMarkerSymbol(Color.RED, 8, SimpleMarkerSymbol.STYLE.CIRCLE);
-				Graphic graphic = new Graphic(points.get(j), msb);
-				newglly.addGraphic(graphic);*/
 				if(j == 0)
 					pl.startPath(points.get(j));
 				else
 					pl.lineTo(points.get(j));
 			}
-
 
 			tempGraphic = new Graphic(pl, SimpleSymbolTemplate.GLLY);
 
@@ -1486,19 +1528,29 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 			String pts = dc.get("points").Value.toString();
 			ArrayList<Point> points = LocalDataModify.splitePts(pts);
 			for(int j=0;j<points.size();j++){
-				/*SimpleMarkerSymbol msb = new SimpleMarkerSymbol(Color.RED, 8, SimpleMarkerSymbol.STYLE.CIRCLE);
-				Graphic graphic = new Graphic(points.get(j), msb);
-				newdlly.addGraphic(graphic);*/
 				if(j == 0)
 					pl.startPath(points.get(j));
 				else
 					pl.lineTo(points.get(j));
 			}
 
-
 			tempGraphic = new Graphic(pl, new SimpleLineSymbol(Color.LTGRAY, 1, SimpleLineSymbol.STYLE.SOLID));
 
 			newdlly.addGraphic(tempGraphic);
 		}
+	}
+
+	/**
+	 ***************************************
+	 * 功 能：事件回调接口
+	 ***************************************
+	 */
+	public interface OnMapListener
+	{
+		/**
+		 *
+		 * 功 能：放大和缩小监听回来记录前进后退
+		 */
+		public void onMoveAndZoom();
 	}
 }

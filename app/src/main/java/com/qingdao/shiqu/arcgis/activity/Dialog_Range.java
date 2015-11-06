@@ -19,10 +19,9 @@ import com.qingdao.shiqu.arcgis.adapter.Dialog_RangeListAdapter;
 import com.qingdao.shiqu.arcgis.utils.OpenFiles;
 
 /**
- * 展示工程附图文件列表
+ * 点击光机范围图层展示工程附图文件列表
  *
  * @author MinG
- *
  */
 public class Dialog_Range extends Activity
 {

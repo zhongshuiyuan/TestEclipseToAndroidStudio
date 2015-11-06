@@ -137,7 +137,7 @@
                             android:layout_marginTop="8dp"
                             android:layout_marginLeft="16dp"
                             android:layout_marginStart="16dp"
-                            android:layout_below="@+id/coordinate"
+                            android:layout_below="@id/coordinate"
                             android:text="比例1:300000"
                             android:textSize="16sp"/>
 
@@ -148,7 +148,7 @@
                             android:layout_marginTop="8dp"
                             android:layout_marginLeft="16dp"
                             android:layout_marginStart="16dp"
-                            android:layout_below="@+id/scale"
+                            android:layout_below="@id/scale"
                             android:text="经度："
                             android:textSize="16sp"/>
 
@@ -159,7 +159,7 @@
                             android:layout_marginTop="8dp"
                             android:layout_marginLeft="16dp"
                             android:layout_marginStart="16dp"
-                            android:layout_below="@+id/main_tv_longitude"
+                            android:layout_below="@id/main_tv_longitude"
                             android:text="纬度："
                             android:textSize="16sp"/>
 

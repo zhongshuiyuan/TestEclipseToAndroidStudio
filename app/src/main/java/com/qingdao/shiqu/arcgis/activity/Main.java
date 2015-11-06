@@ -127,7 +127,7 @@ public class Main extends Activity implements OnMapListener
     android.database.sqlite.SQLiteDatabase mSQLiteDatabase;
 
     /** 地图控件 **/
-    MapView map = null;
+    MapView mMapView = null;
     /** 本地离线切片图层 **/
     ArcGISLocalTiledLayer mLocalTiledLayerMap;
     /** 标注 **/
@@ -320,15 +320,15 @@ public class Main extends Activity implements OnMapListener
         mBtnToc = (ButtonIcon) findViewById(R.id.main_btn_toc);
         mBtnToc.setDrawableIcon(getResources().getDrawable(R.drawable.ic_layers_white_48dp));
 
-        map = (MapView) findViewById(R.id.map);
-        map.getSpatialReference();
-        map.setOnStatusChangedListener(new OnStatusChangedListener() {
+        mMapView = (MapView) findViewById(R.id.map);
+        mMapView.getSpatialReference();
+        mMapView.setOnStatusChangedListener(new OnStatusChangedListener() {
             @Override
             public void onStatusChanged(Object o, STATUS status) {
                 if (STATUS.LAYER_LOADED == status) {
                     seeAll();
-                    map.setEsriLogoVisible(false);
-                    SpatialReference spatialReference = map.getSpatialReference();
+                    mMapView.setEsriLogoVisible(false);
+                    SpatialReference spatialReference = mMapView.getSpatialReference();
 
                 }
             }
@@ -412,42 +412,43 @@ public class Main extends Activity implements OnMapListener
         newdlly.setName("新加电缆路由");
 
         // 添加底图
-        map.setMapBackground(0xffffff, 0xffffff, 0, 0);
+        mMapView.setMapBackground(0xffffff, 0xffffff, 0, 0);
         if (mLocalTiledLayerMap != null) {
             mLocalTiledLayerMap.setName("青岛底图");
-            map.addLayer(mLocalTiledLayerMap);
+            mMapView.addLayer(mLocalTiledLayerMap);
         }
         if (mLocalTiledLayerLabel != null) {
             mLocalTiledLayerLabel.setName("路牌号标注");
-            map.addLayer(mLocalTiledLayerLabel);
+            mMapView.addLayer(mLocalTiledLayerLabel);
         }
         if (mLocalTiledLayerGuangJi != null) {
             mLocalTiledLayerGuangJi.setName("光机标注");
-            map.addLayer(mLocalTiledLayerGuangJi);
+            mMapView.addLayer(mLocalTiledLayerGuangJi);
         }
         if (mLocalTiledLayerFenpei != null) {
             mLocalTiledLayerFenpei.setName("分配网");
-            map.addLayer(mLocalTiledLayerFenpei);
+            mMapView.addLayer(mLocalTiledLayerFenpei);
         }
         if (mLocalTiledLayerFenpeiOld != null) {
             mLocalTiledLayerFenpeiOld.setName("旧分配网");
-            map.addLayer(mLocalTiledLayerFenpeiOld);
+            mMapView.addLayer(mLocalTiledLayerFenpeiOld);
         }
         if (mLocalTiledLayerSanWang != null) {
             mLocalTiledLayerSanWang.setName("三网覆盖");
-            map.addLayer(mLocalTiledLayerSanWang);
+            mMapView.addLayer(mLocalTiledLayerSanWang);
         }
 
         // 添加绘画图层
-        touchListener = new MapTouchListener(Main.this, map);
+        touchListener = new MapTouchListener(Main.this, mMapView);
+        touchListener.setTvCoordinate(mTvCoordinate);
         touchListener.setTempDrawingLayer(mTempDrawLayer);
         touchListener.setNewNodeLayer(newNodeLayer);
         touchListener.setNewgdlayer(newGuandaoLayer);
         touchListener.setNewGLLayer(newgllayer);
         touchListener.setNewglly(newglly);
         touchListener.setNewdlly(newdlly);
-        map.setOnTouchListener(touchListener); // 地图手势操作监听事件
-        map.setOnZoomListener(touchListener); // 地图缩放监听事件
+        mMapView.setOnTouchListener(touchListener); // 地图手势操作监听事件
+        mMapView.setOnZoomListener(touchListener); // 地图缩放监听事件
 
         // 下面这两个方法包含了给 TOC 数据源赋值的过程 by QYY
         initGeodatabase();
@@ -455,25 +456,25 @@ public class Main extends Activity implements OnMapListener
 
         if (mLocalTiledLayerGoogle != null) {
             mLocalTiledLayerGoogle.setName("谷歌切片图");
-            map.addLayer(mLocalTiledLayerGoogle);
+            mMapView.addLayer(mLocalTiledLayerGoogle);
             childs.get(0).add(mLocalTiledLayerGoogle);
         }
 
-        map.addLayer(mTempDrawLayer);
-        map.addLayer(newNodeLayer);
-        map.addLayer(newGuandaoLayer);
-        map.addLayer(newgllayer);
-        map.addLayer(newglly);
-        map.addLayer(newdlly);
-        map.addLayer(mLocationGraphicsLayer); // 定位图层
+        mMapView.addLayer(mTempDrawLayer);
+        mMapView.addLayer(newNodeLayer);
+        mMapView.addLayer(newGuandaoLayer);
+        mMapView.addLayer(newgllayer);
+        mMapView.addLayer(newglly);
+        mMapView.addLayer(newdlly);
+        mMapView.addLayer(mLocationGraphicsLayer); // 定位图层
 
-        for(int i=0;i<map.getLayers().length;i++){
-            if(map.getLayer(i).getName().equals("新加管道图层") || map.getLayer(i).getName().equals("新加节点图层")
-                    ||map.getLayer(i).getName().equals("新加光缆路由") ||map.getLayer(i).getName().equals("新加电缆路由") )
-                map.getLayer(i).setMinScale(8000);
-            if(map.getLayer(i).getName().equals("定位图层")){
-                map.getLayer(i).setMinScale(0);
-                map.getLayer(i).setMaxScale(0);
+        for(int i=0;i< mMapView.getLayers().length;i++){
+            if(mMapView.getLayer(i).getName().equals("新加管道图层") || mMapView.getLayer(i).getName().equals("新加节点图层")
+                    || mMapView.getLayer(i).getName().equals("新加光缆路由") || mMapView.getLayer(i).getName().equals("新加电缆路由") )
+                mMapView.getLayer(i).setMinScale(8000);
+            if(mMapView.getLayer(i).getName().equals("定位图层")){
+                mMapView.getLayer(i).setMinScale(0);
+                mMapView.getLayer(i).setMaxScale(0);
             }
         }
 
@@ -488,7 +489,7 @@ public class Main extends Activity implements OnMapListener
     }
 
     private void setupDrawTool() {
-        mDrawTool = new DrawTool(map, touchListener);
+        mDrawTool = new DrawTool(mMapView, touchListener);
         MapViewOnDrawEvenListener onDrawEvenListener = new MapViewOnDrawEvenListener(this) {
             @Override
             public void onDrawEnd(DrawEvent event) {
@@ -547,16 +548,16 @@ public class Main extends Activity implements OnMapListener
                         if (functions.contains("001001")) {
                             Intent intentAuthority = new Intent(Main.this, Dialog_Authority.class);
                             startActivityForResult(intentAuthority, 1);
-                            drawerLayout.closeDrawers();
                             overridePendingTransition(R.anim.zoomin, R.anim.zoomout);
                         } else {
                             Toast.makeText(Main.this, "权限不够，请管理员提高权限！", Toast.LENGTH_SHORT).show();
                         }
-
+                        drawerLayout.closeDrawers();
                         break;
                     case 1: //查看熔接
                         touchListener.setGeoType(Geometry.Type.POLYGON);
                         touchListener.setFeatureLayers(null);
+                        drawerLayout.closeDrawers();
                         break;
                     case 2: // 编辑管井
                         Intent iii = new Intent(Main.this, PopWindowSpinnerActivity.class/*GuanjingActivity.class*/);
@@ -564,13 +565,13 @@ public class Main extends Activity implements OnMapListener
                         drawerLayout.closeDrawers();
                         break;
                     case 3: // 编辑光缆
-                        drawerLayout.closeDrawers();
 					/*Intent iii2 = new Intent(Main.this,GuanglanActivity.class);
 					startActivityForResult(iii2,requestCode);*/
                         GL_TYPE = "default";
                         touchListener.setDrawGL(true);
                         touchListener.setGltype(GL_TYPE);
                         GL_TYPE = "";
+                        drawerLayout.closeDrawers();
                         break;
                     case 4: // 查看管道光缆走向
                         touchListener.setShowglly(true);
@@ -588,11 +589,11 @@ public class Main extends Activity implements OnMapListener
                         break;
                     case 7: // 测试绘制工具
                         // TODO 添加测试代码
-                        drawerLayout.closeDrawers();
                         mDrawType = DrawTool.POLYLINE;
                         mDrawAction = MapViewOnDrawEvenListener.ACTION_ADD_DLLY;
                         mDrawTool.activate(mDrawType);
                         showDrawingToolbar("测试绘制工具");
+                        drawerLayout.closeDrawers();
                         break;
                     default:
                         break;
@@ -668,7 +669,7 @@ public class Main extends Activity implements OnMapListener
     {
         super.onResume();
 
-        map.unpause();
+        mMapView.unpause();
 
         // 实时更新位置
         startUpdatePositionMode();
@@ -792,7 +793,7 @@ public class Main extends Activity implements OnMapListener
     @Override
     protected void onPause() {
         super.onPause();
-        map.pause();
+        mMapView.pause();
         saveTocSetting();
         stopUpdatePositionMode();
     }
@@ -867,10 +868,10 @@ public class Main extends Activity implements OnMapListener
                 guanjing = new FeatureLayer(tables.get(2));
                 guangji = new FeatureLayer(tables.get(4));
                 guanli = new FeatureLayer(tables.get(5));
-                map.addLayer(danyuan);
-                map.addLayer(guangjigui);
-                map.addLayer(guanjing);
-                map.addLayer(guangji);
+                mMapView.addLayer(danyuan);
+                mMapView.addLayer(guangjigui);
+                mMapView.addLayer(guanjing);
+                mMapView.addLayer(guangji);
                 // map.addLayer(guanli);
             }
 
@@ -880,7 +881,7 @@ public class Main extends Activity implements OnMapListener
                 List<GeodatabaseFeatureTable> guandaotables = guandaogeodatabase.getGeodatabaseTables();
                 Segment = new FeatureLayer(guandaotables.get(0));
                 Segment.setName("管道");
-                map.addLayer(Segment);
+                mMapView.addLayer(Segment);
             }
 
             String guanglanPath = FileUtil.getFileAbsolutePath(this, "/map/guanglan.geodatabase");
@@ -897,7 +898,7 @@ public class Main extends Activity implements OnMapListener
                 Geodatabase daolugeodatabase = new Geodatabase(daoluPath);
                 List<GeodatabaseFeatureTable> daolutables = daolugeodatabase.getGeodatabaseTables();
                 daolu = new FeatureLayer(daolutables.get(0));
-                map.addLayer(daolu);
+                mMapView.addLayer(daolu);
             }
 
 
@@ -912,8 +913,8 @@ public class Main extends Activity implements OnMapListener
             }
 
             ArrayList<Layer> old = new ArrayList<>();
-            for(int i=0;i<map.getLayers().length;i++){
-                old.add(map.getLayer(i));
+            for(int i=0;i< mMapView.getLayers().length;i++){
+                old.add(mMapView.getLayer(i));
             }
             childs.add(old);
 
@@ -1008,7 +1009,7 @@ public class Main extends Activity implements OnMapListener
                     ||tempLayer.getName().equals("支线光缆")){
                 tempLayer.setVisible(false);
             }
-            map.addLayer(tempLayer);
+            mMapView.addLayer(tempLayer);
 			/*long testnumb = tempLayer.getFeatureTable().getNumberOfFeatures();
 			Map<String,Object> attributes;
 			for(int x=0;x<testnumb;x++){
@@ -1073,7 +1074,7 @@ public class Main extends Activity implements OnMapListener
     private GraphicsLayer getGraphicsLayer()
     {
         GraphicsLayer layer = new GraphicsLayer();
-        map.addLayer(layer);
+        mMapView.addLayer(layer);
         return layer;
     }
 
@@ -1088,10 +1089,10 @@ public class Main extends Activity implements OnMapListener
         switch (view.getId())
         {
             case R.id.main_btn_zoomin: // 放大地图
-                map.zoomin();
+                mMapView.zoomin();
                 break;
             case R.id.main_btn_zoomout: // 缩小地图
-                map.zoomout();
+                mMapView.zoomout();
                 break;
             case R.id.main_btn_distance_measurement: // 计算长度
                 touchListener.setGeoType(Geometry.Type.POLYLINE);
@@ -1099,7 +1100,7 @@ public class Main extends Activity implements OnMapListener
             case R.id.main_btn_clear: // 清空计算长度画的线和点
                 mTempDrawLayer.removeAll();
                 touchListener.setGeoType(null);
-                map.postInvalidate();
+                mMapView.postInvalidate();
                 break;
             case R.id.main_ll_search:// 搜索功能
                 onSearchClick();
@@ -1112,8 +1113,8 @@ public class Main extends Activity implements OnMapListener
                     index--;
                     Take take = takes.get(index);
                     Point point2 = take.getPoint();
-                    map.setScale(take.getZoom());
-                    map.centerAt(take.getPoint(), true);
+                    mMapView.setScale(take.getZoom());
+                    mMapView.centerAt(take.getPoint(), true);
                 }
                 break;
             case R.id.main_btn_next: // 前进操作
@@ -1124,8 +1125,8 @@ public class Main extends Activity implements OnMapListener
                     index++;
                     Take take = t.get(index);
                     Point point2 = take.getPoint();
-                    map.setScale(take.getZoom());
-                    map.centerAt(take.getPoint(), true);
+                    mMapView.setScale(take.getZoom());
+                    mMapView.centerAt(take.getPoint(), true);
                 }
                 break;
             case R.id.btn_location: // 切换导航模式和普通模式
@@ -1192,15 +1193,15 @@ public class Main extends Activity implements OnMapListener
                         LayerOpter opter = new LayerOpter(this, mTempDrawLayer);
                         //				opter.drawRoad(list);
                         opter.DrawRoad(list);
-                        map.centerAt(list.get(list.size() / 2), true);
-                        map.setScale(1200.0000);
+                        mMapView.centerAt(list.get(list.size() / 2), true);
+                        mMapView.setScale(1200.0000);
                     } else {
                         Point point = Util.convertPoint(value);
                         LayerOpter opter = new LayerOpter(this, mTempDrawLayer);
                         Drawable drawable = Main.this.getResources().getDrawable(R.drawable.sendtocar_balloon);
                         opter.drwaPoint(point, drawable);
-                        map.centerAt(point, true);
-                        map.setScale(1200.0000);
+                        mMapView.centerAt(point, true);
+                        mMapView.setScale(1200.0000);
                     }
 
                 }
@@ -1285,8 +1286,8 @@ public class Main extends Activity implements OnMapListener
         {
 
             Point centerPoint = Util.getCenterPoint(this);
-            Point mapPoint = map.toMapPoint(centerPoint);
-            double scale = map.getScale();
+            Point mapPoint = mMapView.toMapPoint(centerPoint);
+            double scale = mMapView.getScale();
 
             Take take = new Take();
             take.setPoint(mapPoint);
@@ -1378,7 +1379,7 @@ public class Main extends Activity implements OnMapListener
         DataTable dt = QuyExtent();
         db = new SQLiteDatabase(Main.this);
         Envelope  extent = new Envelope();
-        map.getExtent().queryEnvelope(extent);
+        mMapView.getExtent().queryEnvelope(extent);
         xmin = extent.getXMin();
         ymin = extent.getYMin();
         xmax = extent.getXMax();
@@ -1446,7 +1447,7 @@ public class Main extends Activity implements OnMapListener
         if (result.size()>0) {
             Envelope en = new Envelope();
             en.setXMax(xmax);en.setYMax(ymax);en.setXMin(xmin);en.setYMin(ymin);
-            map.setExtent(en);
+            mMapView.setExtent(en);
         } else {
             seeAll();
         }
@@ -1454,12 +1455,12 @@ public class Main extends Activity implements OnMapListener
 
     /** 显示地图全图 **/
     private void seeAll() {
-        map.setScale(175590);
+        mMapView.setScale(175590);
         Point point = new Point();
         point.setX(236038.1424072377);
         point.setY(109233.05352031846);
-        map.centerAt(point, true);
-        map.zoomToScale(point, 175590);
+        mMapView.centerAt(point, true);
+        mMapView.zoomToScale(point, 175590);
 
         forceUpdateCoordinate(236038.1424072377, 109233.05352031846);
         forceUpdateScale(175590);
@@ -1496,8 +1497,8 @@ public class Main extends Activity implements OnMapListener
         LayerOpter opter = new LayerOpter(this, mTempDrawLayer);
         Drawable drawable = Main.this.getResources().getDrawable(R.drawable.sendtocar_balloon);
         opter.drwaPoint(wgspoint, drawable);
-        map.centerAt(wgspoint, true);
-        map.setScale(1200.0000);
+        mMapView.centerAt(wgspoint, true);
+        mMapView.setScale(1200.0000);
     }
 
     /** 加载自定义图层 **/
@@ -1856,8 +1857,8 @@ public class Main extends Activity implements OnMapListener
     /** 更新坐标 **/
     private void updateCoordinate() {
         Point centerPoint = Util.getCenterPoint(this);
-        if (centerPoint != null && map != null) {
-            Point mapPoint = map.toMapPoint(centerPoint);
+        if (centerPoint != null && mMapView != null) {
+            Point mapPoint = mMapView.toMapPoint(centerPoint);
             if (mapPoint != null) {
                 String x = String.valueOf(mapPoint.getX()).substring(0, 8);
                 String y = String.valueOf(mapPoint.getY()).substring(0, 8);
@@ -1868,7 +1869,7 @@ public class Main extends Activity implements OnMapListener
 
     /** 更新比例 **/
     private void updateScale() {
-        double currentScale = map.getScale();
+        double currentScale = mMapView.getScale();
         int scale = (int) currentScale;
         mTvScale.setText("比例 1:" + scale);
     }
@@ -1940,8 +1941,8 @@ public class Main extends Activity implements OnMapListener
             }
 
             if (isMapMoved) {
-                map.centerAt(mCurrentLocationPoint, true);
-                map.setScale(1200.0000);
+                mMapView.centerAt(mCurrentLocationPoint, true);
+                mMapView.setScale(1200.0000);
                 forceUpdateScale(1200);
                 forceUpdateCoordinate(mCurrentLocationPoint.getX(), mCurrentLocationPoint.getY());
             } else {

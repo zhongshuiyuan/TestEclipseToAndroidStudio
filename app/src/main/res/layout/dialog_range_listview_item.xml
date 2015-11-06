@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:eruntech="http://schemas.android.com/res/Eruntech.BirthStone.UI.Controls"
     android:layout_width="fill_parent"
     android:layout_height="match_parent"
     android:gravity="center" >
@@ -10,7 +9,6 @@
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:gravity="center" >
-"
 
         <Eruntech.BirthStone.UI.Controls.TextView
             android:id="@+id/att_name"
