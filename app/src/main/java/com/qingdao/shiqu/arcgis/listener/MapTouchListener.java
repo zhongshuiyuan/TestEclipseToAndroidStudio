@@ -591,7 +591,7 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 			}
 
 			// 单击选中对象查看对象属性
-			boolean isSelectObject = false;
+			boolean isSelectedObject = false;
 			// 展示属性信息，管井，单元
 			if (featureLayers != null)
 			{
@@ -618,14 +618,14 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 								List<Data> list = dbo.searchPointByID(nodeid, selectionArgs);
 								DataShowDialog.showDialog_List(list, "节点属性信息", mContext);
 
-								isSelectObject = true;
+								isSelectedObject = true;
 							}
 						}
 					}
 				} 
 			}
 			// 显示管道属性信息或者开启查看管道熔接信息
-			if (guandao != null && !isSelectObject) {
+			if (guandao != null && !isSelectedObject) {
 				long[] featureIDs ;
 				if(geoType == Geometry.Type.POLYGON)
 					featureIDs = guandao.getFeatureIDs(event.getX(), event.getY(), 50);
@@ -749,11 +749,11 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 						}
 					}
 
-					isSelectObject = true;
+					isSelectedObject = true;
 				}
 			}
 			// 显示光机属性信息，大红圈
-			if (gisgj2 != null && !isSelectObject) {
+			if (gisgj2 != null && !isSelectedObject) {
 				long[] featureIDs ;
 				gisgj2.clearSelection();
 				// 获取该图层中，point点 100 误差范围内的所有id
@@ -791,11 +791,11 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 							DataShowDialog.showDialog_List(gisinfo, "光机属性信息", mContext);
 						}
 					}
-					isSelectObject = true;
+					isSelectedObject = true;
 				}
 			}
 			// 显示楼放属性信息
-			if (loufang != null && !isSelectObject) {
+			if (loufang != null && !isSelectedObject) {
 				long[] featureIDs ;
 				loufang.clearSelection();
 				featureIDs = loufang.getFeatureIDs(event.getX(), event.getY(), 20);
@@ -820,11 +820,11 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 							DataShowDialog.showDialog_List(gisinfo, "楼放属性信息", mContext);
 						}
 					}
-					isSelectObject = true;
+					isSelectedObject = true;
 				}
 			}
 			// 显示道路属性信息
-			if (daolu != null && !isSelectObject) {
+			if (daolu != null && !isSelectedObject) {
 				long[] featureIDs ;
 				daolu.clearSelection();
 				featureIDs = daolu.getFeatureIDs(event.getX(), event.getY(), 20);
@@ -846,11 +846,11 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 							DataShowDialog.showDialog_List(gisinfo, "道路属性信息", mContext);
 						}
 					}
-					isSelectObject = true;
+					isSelectedObject = true;
 				}
 			}
 			// 显示路牌号属性信息
-			if (lupaihao != null && !isSelectObject){
+			if (lupaihao != null && !isSelectedObject){
 				long[] featureIDs ;
 				lupaihao.clearSelection();
 				featureIDs = lupaihao.getFeatureIDs(event.getX(), event.getY(), 20);
@@ -874,11 +874,11 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 							DataShowDialog.showDialog_List(gisinfo, "路牌号属性信息", mContext);
 						}
 					}
-					isSelectObject = true;
+					isSelectedObject = true;
 				}
 			}
 			// 显示分支器属性信息
-			if (fenzhiqi != null && !isSelectObject) {
+			if (fenzhiqi != null && !isSelectedObject) {
 				long[] featureIDs ;
 				fenzhiqi.clearSelection();
 				featureIDs = fenzhiqi.getFeatureIDs(event.getX(), event.getY(), 20);
@@ -906,11 +906,11 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 							DataShowDialog.showDialog_List(gisinfo, "分支器属性信息", mContext);
 						}
 					}
-					isSelectObject = true;
+					isSelectedObject = true;
 				}
 			}
 			// 显示专网光缆属性信息
-			if (zhuanxiangl != null && !isSelectObject) {
+			if (zhuanxiangl != null && !isSelectedObject) {
 				long[] featureIDs ;
 				zhuanxiangl.clearSelection();
 				featureIDs = zhuanxiangl.getFeatureIDs(event.getX(), event.getY(), 20);
@@ -938,11 +938,11 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 							DataShowDialog.showDialog_List(gisinfo, "专网光缆属性信息", mContext);
 						}
 					}
-					isSelectObject = true;
+					isSelectedObject = true;
 				}
 			}
 			//显示支线光缆属性信息
-			if (zhixiangl != null && !isSelectObject) {
+			if (zhixiangl != null && !isSelectedObject) {
 				long[] featureIDs ;
 				zhixiangl.clearSelection();
 				featureIDs = zhixiangl.getFeatureIDs(event.getX(), event.getY(), 20);
@@ -974,11 +974,11 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 							DataShowDialog.showDialog_List(gisinfo, "支线光缆属性信息", mContext);
 						}
 					}
-					isSelectObject = true;
+					isSelectedObject = true;
 				}
 			}
 			// 显示骨干光缆属性信息
-			if (gugangl != null && !isSelectObject) {
+			if (gugangl != null && !isSelectedObject) {
 				long[] featureIDs ;
 				gugangl.clearSelection();
 				featureIDs = gugangl.getFeatureIDs(event.getX(), event.getY(), 20);
@@ -1006,10 +1006,159 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 							DataShowDialog.showDialog_List(gisinfo, "骨干光缆属性信息", mContext);
 						}
 					}
-					isSelectObject = true;
+					isSelectedObject = true;
 				}
 			}
-			if (!isSelectObject) {
+
+			// 选中本地新增（用户绘制）对象进行删除
+			DataTable result = null;
+			Graphic graphicToDelete;
+			// 删除节点
+			if (!isSelectedObject) {
+				graphicToDelete = getGraphicFromLayer(event.getX(), event.getY(), newNodeLayer);
+				if (graphicToDelete != null) {
+					isSelectedObject = true;
+				}
+			}
+			// 删除管道
+			if (!isSelectedObject) {
+				graphicToDelete = getGraphicFromLayer(event.getX(), event.getY(), newgdlayer);
+				if(graphicToDelete != null) {
+					isSelectedObject = true;
+					// Get the graphicToDelete type and do different things by the type
+					Geometry gy = graphicToDelete.getGeometry();
+					Type ty = gy.getType();
+					graphicToDelete.getSymbol();
+					if (ty == Type.POINT) {
+						Point pt = (Point)gy;
+						result = DoAction.getPointInfoByXY(mContext,pt);
+						//				result = DoAction.getPointInfoByUID(mContext, String.valueOf(graphicToDelete.getId()));
+						for(int i=0;i<result.size();i++){
+							DataCollection dc = result.next();
+							//search the gjid in gdtable , if find the gj is not to be delete,should delete the linked gd first!
+							DataTable rst = DoAction.getSegmentInfoByPID(mContext, dc.get("gjid").Value.toString());
+							// show dialog
+							showDelDialog(newNodeLayer,graphicToDelete.getId(),Integer.valueOf(dc.get("gjid").Value.toString()),rst,ty);
+						}
+					} else if (ty == Type.POLYLINE) {
+						Polyline pl = (Polyline) gy;
+						ArrayList<Point> alpl = new ArrayList<Point>();
+						for(int i=0;i<pl.getPointCount();i++){
+							alpl.add(pl.getPoint(i));
+						}
+						result = DoAction.getSegmentInfoByPts(mContext,alpl);
+						//				result = DoAction.getSegmentInfoByUID(mContext, String.valueOf(graphicToDelete.getId()));
+						for(int i=0;i<result.size();i++){
+							DataCollection dc = result.next();
+							DataTable rst = DoAction.ChargeSegIsinGD2GL(mContext,dc.get("gdid").Value.toString());
+							// show dialog
+							showDelDialog(newgdlayer,graphicToDelete.getId(),Integer.valueOf(dc.get("gdid").Value.toString()),rst,ty);
+						}
+					}
+				}
+			}
+			// 删除光缆路由
+			if (!isSelectedObject) {
+				graphicToDelete = getGraphicFromLayer(event.getX(), event.getY(), newglly);
+				if(graphicToDelete != null) {
+					isSelectedObject = true;
+					final Graphic temp = graphicToDelete;
+					AlertDialog alertDialog = new AlertDialog.Builder(mContext)
+							.setIcon(R.drawable.logo)
+							.setTitle("删除光缆路由")
+							.setMessage("你确定要删除该条光缆路由吗？")
+							.setPositiveButton("确定", new DialogInterface.OnClickListener() {
+								@Override
+								public void onClick(DialogInterface dialog, int which) {
+									Geometry geometry = temp.getGeometry();
+									if(geometry.getType() == Type.POLYLINE) {
+										// 从旧数据库移除数据(已弃用)
+										Polyline polyline = (Polyline) geometry;
+										ArrayList<Point> gllist = new ArrayList<>();
+										for(int i=0;i<polyline.getPointCount();i++){
+											gllist.add(polyline.getPoint(i));
+										}
+										//组合节点字符串
+										StringBuffer sb = new StringBuffer();
+										for(int i=0;i<gllist.size();i++){
+											sb.append(gllist.get(i).getX() + "," + gllist.get(i).getY());
+											if(i != gllist.size()-1)
+												sb.append("/");
+										}
+										DoAction.removeGLLY(mContext, sb.toString());
+										// 从数据库移除数据
+										byte[] geometryByte = GeometryEngine.geometryToEsriShape(geometry);
+										Integer hashcode = geometry.hashCode();
+										String whereClause = "hashcode=?";
+										String[] whereArgs = {hashcode.toString()};
+										mSQLiteDatabase.delete("glly", whereClause, whereArgs);
+										// 从图层中移除符号
+										newglly.removeGraphic(temp.getUid());
+									}
+								}
+							})
+							.setNegativeButton("取消", null)
+							.create();
+					Window window = alertDialog.getWindow();
+					WindowManager.LayoutParams lp = window.getAttributes();
+					lp.alpha = 0.9f;
+					window.setAttributes(lp);
+					alertDialog.show();
+				}
+			}
+			// 删除电缆路由
+			if (!isSelectedObject) {
+				graphicToDelete = getGraphicFromLayer(event.getX(), event.getY(), newdlly);
+				if (graphicToDelete != null) {
+					isSelectedObject = true;
+					final Graphic temp = graphicToDelete;
+					AlertDialog alertDialog = new AlertDialog.Builder(mContext)
+							.setIcon(R.drawable.logo)
+							.setTitle("删除电缆路由")
+							.setMessage("你确定要删除该条电缆路由吗？")
+							.setPositiveButton("确定", new DialogInterface.OnClickListener() {
+
+								@Override
+								public void onClick(DialogInterface dialog, int which) {
+									Geometry geometry = temp.getGeometry();
+									if (geometry.getType() == Type.POLYLINE) {
+										// 从旧数据库移除数据(已弃用)
+										Polyline polyline = (Polyline) geometry;
+										ArrayList<Point> gllist = new ArrayList<>();
+										for(int i=0;i<polyline.getPointCount();i++){
+											gllist.add(polyline.getPoint(i));
+										}
+										// 组合节点字符串
+										StringBuffer sb = new StringBuffer();
+										for(int i=0;i<gllist.size();i++){
+											sb.append(gllist.get(i).getX()+","+gllist.get(i).getY());
+											if(i != gllist.size()-1)
+												sb.append("/");
+										}
+										DoAction.removeDLLY(mContext, sb.toString());
+										// 从数据库移除数据
+										byte[] geometryByte = GeometryEngine.geometryToEsriShape(geometry);
+										Integer hashcode = geometry.hashCode();
+										String whereClause = "hashcode=?";
+										String[] whereArgs = {hashcode.toString()};
+										mSQLiteDatabase.delete("dlly", whereClause, whereArgs);
+										// 从图层中移除符号
+										newdlly.removeGraphic(temp.getUid());
+									}
+								}
+							})
+							.setNegativeButton("取消", null)
+							.create();
+					Window window = alertDialog.getWindow();
+					WindowManager.LayoutParams lp = window.getAttributes();
+					// 设置透明度为0.3
+					lp.alpha = 0.9f;
+					window.setAttributes(lp);
+					alertDialog.show();
+				}
+			}
+
+			if (!isSelectedObject) {
 				Log.i(LOG_TAG, "单击地图没有选中对象");
 			}
 
@@ -1119,166 +1268,6 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 			String x = String.valueOf(mapPoint.getX()).substring(0, 8);
 			String y = String.valueOf(mapPoint.getY()).substring(0, 8);
 			mTvCoordinate.setText(x + ", " + y);
-		}
-
-		DataTable result = null;
-		boolean next = true;
-
-		// 删除节点
-		Graphic del = getGraphicFromLayer(event.getX(), event.getY(), newNodeLayer);
-		if (del != null) {
-			next = false;
-		}
-
-		// 删除管道
-		del = getGraphicFromLayer(event.getX(), event.getY(), newgdlayer);
-		if(del != null) {
-			next = false;
-			// Get the graphic type and do different things by the type
-			Geometry gy = del.getGeometry();
-			Type ty = gy.getType();
-			del.getSymbol();
-			if (ty == Type.POINT) {
-				Point pt = (Point)gy;
-				result = DoAction.getPointInfoByXY(mContext,pt);
-				//				result = DoAction.getPointInfoByUID(mContext, String.valueOf(del.getId()));
-				for(int i=0;i<result.size();i++){
-					DataCollection dc = result.next();
-					//search the gjid in gdtable , if find the gj is not to be delete,should delete the linked gd first!
-					DataTable rst = DoAction.getSegmentInfoByPID(mContext, dc.get("gjid").Value.toString());
-					// show dialog
-					showDelDialog(newNodeLayer,del.getId(),Integer.valueOf(dc.get("gjid").Value.toString()),rst,ty);
-				}
-			} else if (ty == Type.POLYLINE) {
-				Polyline pl = (Polyline) gy;
-				ArrayList<Point> alpl = new ArrayList<Point>();
-				for(int i=0;i<pl.getPointCount();i++){
-					alpl.add(pl.getPoint(i));
-				}
-				result = DoAction.getSegmentInfoByPts(mContext,alpl);
-				//				result = DoAction.getSegmentInfoByUID(mContext, String.valueOf(del.getId()));
-				for(int i=0;i<result.size();i++){
-					DataCollection dc = result.next();
-					DataTable rst = DoAction.ChargeSegIsinGD2GL(mContext,dc.get("gdid").Value.toString());
-					// show dialog
-					showDelDialog(newgdlayer,del.getId(),Integer.valueOf(dc.get("gdid").Value.toString()),rst,ty);
-				}
-			}
-		}
-
-		// 删除光缆路由
-		del = getGraphicFromLayer(event.getX(), event.getY(), newglly);
-		if(del != null && next){
-			next = false;
-			final Graphic temp = del;
-			AlertDialog alertDialog = new AlertDialog.Builder(mContext)
-					.setIcon(R.drawable.logo)
-					.setTitle("删除光缆路由")
-					.setMessage("你确定要删除该条光缆路由吗？")
-					.setPositiveButton("确定", new DialogInterface.OnClickListener() {
-						@Override
-						public void onClick(DialogInterface dialog, int which) {
-							Geometry geometry = temp.getGeometry();
-							if(geometry.getType() == Type.POLYLINE) {
-								// 从旧数据库移除数据(已弃用)
-								Polyline polyline = (Polyline) geometry;
-								ArrayList<Point> gllist = new ArrayList<>();
-								for(int i=0;i<polyline.getPointCount();i++){
-									gllist.add(polyline.getPoint(i));
-								}
-								//组合节点字符串
-								StringBuffer sb = new StringBuffer();
-								for(int i=0;i<gllist.size();i++){
-									sb.append(gllist.get(i).getX() + "," + gllist.get(i).getY());
-									if(i != gllist.size()-1)
-										sb.append("/");
-								}
-								DoAction.removeGLLY(mContext, sb.toString());
-								// 从数据库移除数据
-								byte[] geometryByte = GeometryEngine.geometryToEsriShape(geometry);
-								Integer hashcode = geometry.hashCode();
-								String whereClause = "hashcode=?";
-								String[] whereArgs = {hashcode.toString()};
-								mSQLiteDatabase.delete("glly", whereClause, whereArgs);
-								// 从图层中移除符号
-								newglly.removeGraphic(temp.getUid());
-							}
-						}
-					})
-					.setNegativeButton("取消", new DialogInterface.OnClickListener() {
-
-						@Override
-						public void onClick(DialogInterface dialog, int which) {
-							return;
-						}
-					})
-					.create();
-			Window window = alertDialog.getWindow();
-			WindowManager.LayoutParams lp = window.getAttributes();
-			lp.alpha = 0.9f;
-			window.setAttributes(lp);
-			alertDialog.show();
-
-		}
-
-		// 删除电缆路由
-		del = getGraphicFromLayer(event.getX(), event.getY(), newdlly);
-		if (del != null && next) {
-			next = false;
-			final Graphic temp = del;
-			AlertDialog alertDialog = new AlertDialog.Builder(mContext)
-					.setIcon(R.drawable.logo)
-					.setTitle("删除电缆路由")
-					.setMessage("你确定要删除该条电缆路由吗？")
-					.setPositiveButton("确定", new DialogInterface.OnClickListener() {
-
-						@Override
-						public void onClick(DialogInterface dialog, int which) {
-							Geometry geometry = temp.getGeometry();
-							if (geometry.getType() == Type.POLYLINE) {
-								// 从旧数据库移除数据(已弃用)
-								Polyline polyline = (Polyline) geometry;
-								ArrayList<Point> gllist = new ArrayList<>();
-								for(int i=0;i<polyline.getPointCount();i++){
-									gllist.add(polyline.getPoint(i));
-								}
-								// 组合节点字符串
-								StringBuffer sb = new StringBuffer();
-								for(int i=0;i<gllist.size();i++){
-									sb.append(gllist.get(i).getX()+","+gllist.get(i).getY());
-									if(i != gllist.size()-1)
-										sb.append("/");
-								}
-								DoAction.removeDLLY(mContext, sb.toString());
-								// 从数据库移除数据
-								byte[] geometryByte = GeometryEngine.geometryToEsriShape(geometry);
-								Integer hashcode = geometry.hashCode();
-								String whereClause = "hashcode=?";
-								String[] whereArgs = {hashcode.toString()};
-								mSQLiteDatabase.delete("dlly", whereClause, whereArgs);
-								// 从图层中移除符号
-								newdlly.removeGraphic(temp.getUid());
-							}
-						}
-					})
-					.setNegativeButton("取消", new DialogInterface.OnClickListener() {
-
-						@Override
-						public void onClick(DialogInterface dialog, int which) {
-							return;
-						}
-					})
-					.create();
-			Window window = alertDialog.getWindow();
-			WindowManager.LayoutParams lp = window.getAttributes();
-			// 设置透明度为0.3
-			lp.alpha = 0.9f;
-			window.setAttributes(lp);
-			alertDialog.show();
-		}
-
-		if (next) {
-			Log.i(LOG_TAG, "长按地图没有可选中的对象");
 		}
 
 	}
