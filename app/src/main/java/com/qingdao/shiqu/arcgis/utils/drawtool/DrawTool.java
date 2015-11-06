@@ -2,6 +2,9 @@ package com.qingdao.shiqu.arcgis.utils.drawtool;
 
 import android.content.Context;
 import android.graphics.Color;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 
@@ -26,6 +29,8 @@ import com.esri.core.symbol.SimpleMarkerSymbol;
  * Date 2015-11-03
  */
 public class DrawTool extends DrawToolBase {
+
+	private final String LOG_TAG = DrawTool.this.getClass().getSimpleName();
 
 	/** 用于 **/
 	private MapView mMapView;
@@ -63,13 +68,26 @@ public class DrawTool extends DrawToolBase {
 		return mIsActivated;
 	}
 
-	public DrawTool(MapView mapView, MapOnTouchListener defaultMapOnTouchListener) {
+	/**
+	 * 新建画图工具
+	 * @param mapView 画图工具将在该MapView上绘图
+	 * @param defaultMapOnTouchListener mapView默认的MapOnTouchListener，画图结束时将mapView的
+	 * MapOnTouchListener设置回该默认MapOnTouchListener
+	 */
+	public DrawTool(@NonNull MapView mapView, @Nullable MapOnTouchListener defaultMapOnTouchListener) {
+		if (mapView == null) {
+			Log.e(LOG_TAG, "DrawTool的构造函数所需的MapView参数不能为null");
+			return;
+		}
 		mMapView = mapView;
 		mTempDrawLayer = new GraphicsLayer();
 		mMapView.addLayer(mTempDrawLayer);
 		mMapViewDrawListener = new DrawTouchListener(mMapView.getContext(), mMapView);
-		//mMapViewDefaultListener = new MapOnTouchListener(mMapView.getContext(), mMapView);
-		mMapViewDefaultListener = defaultMapOnTouchListener;
+		if (defaultMapOnTouchListener != null) {
+			mMapViewDefaultListener = defaultMapOnTouchListener;
+		} else {
+			mMapViewDefaultListener = new MapOnTouchListener(mMapView.getContext(), mMapView);
+		}
 		mMarkerSymbol = new SimpleMarkerSymbol(Color.BLACK, 16, SimpleMarkerSymbol.STYLE.CIRCLE);
 		mLineSymbol = new SimpleLineSymbol(Color.BLACK, 2);
 		mFillSymbol = new SimpleFillSymbol(Color.BLACK);
@@ -294,6 +312,7 @@ public class DrawTool extends DrawToolBase {
 		public boolean onSingleTap(MotionEvent event) {
 			if (mIsActivated && (mDrawType == POLYGON || mDrawType == POLYLINE)) {
 				Point point = mMapView.toMapPoint(event.getX(), event.getY());
+				Graphic graphic = new Graphic(point, mMarkerSymbol);
 				switch (mDrawType) {
 				case DrawTool.POLYGON:
 					if (mStartPoint == null) {
@@ -312,7 +331,10 @@ public class DrawTool extends DrawToolBase {
 					}
 					mTempDrawLayer.updateGraphic(mGraphicID, mPolyline);
 					break;
+				default:
+					break;
 				}
+				mTempDrawLayer.addGraphic(graphic);
 				return true;
 			}
 			return false;
