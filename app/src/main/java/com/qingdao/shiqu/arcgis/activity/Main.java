@@ -101,6 +101,7 @@ import com.qingdao.shiqu.arcgis.mode.SimpleSymbolTemplate;
 import com.qingdao.shiqu.arcgis.mode.Take;
 import com.qingdao.shiqu.arcgis.sqlite.DatabaseOpenHelper;
 import com.qingdao.shiqu.arcgis.sqlite.DoAction;
+import com.qingdao.shiqu.arcgis.sqlite.SQLiteAction;
 import com.qingdao.shiqu.arcgis.utils.DBOpterate;
 import com.qingdao.shiqu.arcgis.utils.FileUtil;
 import com.qingdao.shiqu.arcgis.utils.LocalDataModify;
@@ -1690,7 +1691,7 @@ public class Main extends Activity implements OnMapListener
             newglly.addGraphic(tempGraphic);
         }
         // 从新数据库读取新数据
-        Cursor c = mSQLiteDatabase.query("glly", null, null, null, null, null, null);
+        Cursor c = SQLiteAction.queryGlly(mSQLiteDatabase);
         if(c.moveToFirst()){
             for(int i = 0; i < c.getCount(); ++i) {
                 c.moveToPosition(i);
@@ -1734,7 +1735,7 @@ public class Main extends Activity implements OnMapListener
         }
 
         // 从新数据库读取新数据
-        Cursor c = mSQLiteDatabase.query("dlly", null, null, null, null, null, null);
+        Cursor c = SQLiteAction.queryDlly(mSQLiteDatabase);
         if(c.moveToFirst()){
             for(int i = 0; i < c.getCount(); ++i) {
                 c.moveToPosition(i);
