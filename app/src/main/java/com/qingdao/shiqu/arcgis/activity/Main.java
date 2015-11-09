@@ -184,6 +184,9 @@ public class Main extends Activity implements OnMapListener
     /** 定位标志图层 **/
     GraphicsLayer mLocationGraphicsLayer;
 
+    /** 新建标注图层 **/
+    GraphicsLayer mNewMarkLayer;
+    Geometry mNewMark;
     /** 新建节点图层 **/
     GraphicsLayer newNodeLayer;
     /** 新建管道图层 **/
@@ -447,6 +450,8 @@ public class Main extends Activity implements OnMapListener
 //        mLocalTiledLayerFenpeiOld = new ArcGISLocalTiledLayer("file:///" + "sdcard/PDAlayers/jfpwlay");
         mLocationGraphicsLayer = new GraphicsLayer();
         mLocationGraphicsLayer.setName("定位图层");
+        mNewMarkLayer = new GraphicsLayer();
+        mNewMarkLayer.setName("新加标注图层");
         newNodeLayer = new GraphicsLayer();
         newNodeLayer.setName("新加节点图层");
         newGuandaoLayer = new GraphicsLayer();
@@ -518,6 +523,7 @@ public class Main extends Activity implements OnMapListener
         mMapView.addLayer(newgllayer);
         mMapView.addLayer(newglly);
         mMapView.addLayer(newdlly);
+        mMapView.addLayer(mNewMarkLayer);
         mMapView.addLayer(mTempMarkingLayer);
         mMapView.addLayer(mLocationGraphicsLayer); // 定位图层
 
@@ -1361,7 +1367,8 @@ public class Main extends Activity implements OnMapListener
 
     /** 在地图上长按标注该位置 **/
     @Override
-    public void onLocationMarked() {
+    public void onLocationMarked(Geometry markedLocation) {
+        mNewMark = markedLocation;
         startMarkingMode(true);
     }
 
@@ -1600,6 +1607,7 @@ public class Main extends Activity implements OnMapListener
         //		loadGL();
         loadGLLY();
         loadDLLY();
+        loadMark();
     }
 
     public void loadSegment() {
@@ -1749,6 +1757,28 @@ public class Main extends Activity implements OnMapListener
     }
 
     /**
+     * 加载自定义标注数据到地图
+     */
+    private void loadMark() {
+        // 从新数据库读取新数据
+        Cursor c = SQLiteAction.queryMark(mSQLiteDatabase);
+        if(c.moveToFirst()){
+            Graphic tempGraphic;
+            for(int i = 0; i < c.getCount(); ++i) {
+                c.moveToPosition(i);
+                byte[] geometryByte = c.getBlob(c.getColumnIndex("geometry"));
+                String hashcode = c.getString(c.getColumnIndex("hashcode"));
+                String title = c.getString(c.getColumnIndex("title"));
+                Geometry geometry = GeometryEngine.geometryFromEsriShape(geometryByte, Geometry.Type.POINT);
+                tempGraphic = new Graphic(geometry, SimpleSymbolTemplate.getMarkPicture(this));
+                mNewMarkLayer.addGraphic(tempGraphic);
+                tempGraphic = new Graphic(geometry, SimpleSymbolTemplate.getMarkText(title));
+                mNewMarkLayer.addGraphic(tempGraphic);
+            }
+        }
+    }
+
+    /**
      * 开启标注模式
      * @param isEditingMark 编辑标注点还是浏览标注点信息
      */
@@ -1790,6 +1820,14 @@ public class Main extends Activity implements OnMapListener
 
     private void stopMarkingMode() {
         mActivityState = ACTIVITY_STATE_NORMAL;
+
+        Graphic graphic = new Graphic(mNewMark, SimpleSymbolTemplate.getMarkPicture(this));
+        mNewMarkLayer.addGraphic(graphic);
+        graphic = new Graphic(mNewMark, SimpleSymbolTemplate.getMarkText(mEtMarkingTitle.getText().toString()));
+        mNewMarkLayer.addGraphic(graphic);
+
+        SQLiteAction.storeMarkToDatabase(mSQLiteDatabase, mNewMark);
+        mNewMark = null;
 
         updateUi();
     }

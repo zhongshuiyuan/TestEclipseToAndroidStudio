@@ -1281,7 +1281,7 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 		mTempMarkingLayer.removeAll();
 		mMapView.centerAt(mapPoint, true);
 		click.onMoveAndZoom();
-		click.onLocationMarked();
+		click.onLocationMarked(mapPoint);
 		Drawable drawable = mContext.getResources().getDrawable(R.drawable.ic_pin);
 		PictureMarkerSymbol pictureMarkerSymbol = new PictureMarkerSymbol(drawable);
 		Graphic graphic = new Graphic(mapPoint, pictureMarkerSymbol);
@@ -1558,6 +1558,6 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 		 */
 		void onMoveAndZoom();
 		/** 在地图上进行标注时 **/
-		void onLocationMarked();
+		void onLocationMarked(Geometry markedLocation);
 	}
 }
