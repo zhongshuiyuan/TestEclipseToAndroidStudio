@@ -75,385 +75,534 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <FrameLayout
-            android:id="@+id/lin"
+
+        <com.esri.android.map.MapView
+            android:id="@+id/map"
             android:layout_width="fill_parent"
-            android:layout_height="fill_parent"
-            android:orientation="vertical" >
+            android:layout_height="fill_parent" />
 
-            <com.esri.android.map.MapView
-                android:id="@+id/map"
-                android:layout_width="fill_parent"
-                android:layout_height="fill_parent" />
 
+        <RelativeLayout
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent">
+
+            <TextView
+                android:id="@+id/tv_num_satellites"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="卫星数"
+                android:textColor="#ff0000"
+                android:visibility="gone" />
+
+            <!-- 坐标，比例，经纬度容器 -->
             <RelativeLayout
-                android:layout_width="fill_parent"
-                android:layout_height="fill_parent">
+                android:layout_width="180dp"
+                android:layout_height="147dp"
+                android:layout_alignParentTop="true"
+                android:layout_alignParentLeft="true"
+                android:layout_alignParentStart="true"
+                android:layout_marginTop="8dp"
+                android:layout_marginLeft="8dp"
+                android:layout_marginStart="8dp">
 
-                <TextView
-                    android:id="@+id/tv_num_satellites"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="卫星数"
-                    android:textColor="#ff0000"
-                    android:visibility="gone" />
-
-                <!-- 坐标，比例，经纬度容器 -->
                 <RelativeLayout
-                    android:layout_width="180dp"
-                    android:layout_height="147dp"
-                    android:layout_alignParentTop="true"
-                    android:layout_alignParentLeft="true"
-                    android:layout_alignParentStart="true"
-                    android:layout_marginTop="8dp"
-                    android:layout_marginLeft="8dp"
-                    android:layout_marginStart="8dp">
+                    android:id="@+id/main_rl_information"
+                    android:layout_width="176dp"
+                    android:layout_height="144dp"
+                    android:layout_marginLeft="2dp"
+                    android:layout_marginStart="2dp"
+                    android:layout_marginTop="1dp"
+                    android:background="@color/white">
 
-                    <RelativeLayout
-                        android:id="@+id/main_rl_information"
-                        android:layout_width="176dp"
-                        android:layout_height="144dp"
-                        android:layout_marginLeft="2dp"
-                        android:layout_marginStart="2dp"
-                        android:layout_marginTop="1dp"
-                        android:background="@color/white">
-
-                        <!-- 坐标 -->
-                        <TextView
-                            android:id="@+id/coordinate"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginLeft="16dp"
-                            android:layout_marginStart="16dp"
-                            android:layout_marginTop="16dp"
-                            android:text="123456.8, 123456.8"
-                            android:textSize="16sp"/>
-
-                        <!-- 缩放比例 -->
-                        <TextView
-                            android:id="@+id/scale"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="8dp"
-                            android:layout_marginLeft="16dp"
-                            android:layout_marginStart="16dp"
-                            android:layout_below="@id/coordinate"
-                            android:text="比例1:300000"
-                            android:textSize="16sp"/>
-
-                        <TextView
-                            android:id="@+id/main_tv_longitude"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="8dp"
-                            android:layout_marginLeft="16dp"
-                            android:layout_marginStart="16dp"
-                            android:layout_below="@id/scale"
-                            android:text="经度："
-                            android:textSize="16sp"/>
-
-                        <TextView
-                            android:id="@+id/main_tv_latitude"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="8dp"
-                            android:layout_marginLeft="16dp"
-                            android:layout_marginStart="16dp"
-                            android:layout_below="@id/main_tv_longitude"
-                            android:text="纬度："
-                            android:textSize="16sp"/>
-
-                    </RelativeLayout>
-
-                    <!-- 阴影 -->
-                    <!-- 上 -->
-                    <View
-                        android:layout_width="fill_parent"
-                        android:layout_height="1dp"
-                        android:background="@color/app_design_shadow" />
-                    <!-- 右 -->
-                    <View
-                        android:layout_width="2dp"
-                        android:layout_height="144dp"
-                        android:layout_marginLeft="178dp"
-                        android:layout_marginStart="178dp"
-                        android:background="@color/app_design_shadow" />
-                    <!-- 下 -->
-                    <View
-                        android:layout_width="fill_parent"
-                        android:layout_height="2dp"
-                        android:layout_marginTop="144dp"
-                        android:background="@color/app_design_shadow" />
-                    <!-- 左 -->
-                    <View
-                        android:layout_width="2dp"
-                        android:layout_height="144dp"
-                        android:background="@color/app_design_shadow" />
-
-                </RelativeLayout>
-
-                <!-- 绘图提示 -->
-                <RelativeLayout
-                    android:id="@+id/main_rl_drawing_toolbar"
-                    android:visibility="gone"
-                    android:layout_width="180dp"
-                    android:layout_height="360dp"
-                    android:layout_alignParentTop="true"
-                    android:layout_alignParentRight="true"
-                    android:layout_alignParentEnd="true"
-                    android:layout_marginTop="8dp"
-                    android:layout_marginRight="8dp"
-                    android:layout_marginEnd="8dp">
-
-                    <RelativeLayout
-                        android:layout_width="176dp"
-                        android:layout_height="174dp"
-                        android:layout_marginLeft="2dp"
-                        android:layout_marginStart="2dp"
-                        android:layout_marginTop="1dp"
-                        android:background="@color/white">
-
-                        <!-- 提示文字 -->
-                        <TextView
-                            android:id="@+id/main_tv_drawing_title"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginLeft="16dp"
-                            android:layout_marginStart="16dp"
-                            android:layout_marginRight="16dp"
-                            android:layout_marginEnd="16dp"
-                            android:layout_marginTop="16dp"
-                            android:text="绘制提示标题"
-                            android:textSize="16sp"/>
-
-                        <TextView
-                            android:id="@+id/main_tv_drawing_tips"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_below="@id/main_tv_drawing_title"
-                            android:layout_marginLeft="16dp"
-                            android:layout_marginStart="16dp"
-                            android:layout_marginRight="16dp"
-                            android:layout_marginEnd="16dp"
-                            android:layout_marginTop="8dp"
-                            android:text="单击绘制下一点\n双击完成绘制"
-                            android:textSize="16sp"/>
-
-                        <LinearLayout
-                            android:layout_width="fill_parent"
-                            android:layout_height="wrap_content"
-                            android:orientation="horizontal"
-                            android:layout_below="@id/main_tv_drawing_tips"
-                            android:layout_marginLeft="16dp"
-                            android:layout_marginStart="16dp"
-                            android:layout_marginTop="8dp">
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:textSize="16sp"
-                                android:text="自由线条"/>
-
-                            <CheckBox
-                                android:id="@+id/main_cb_drawing_toolbar_isfreehand"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginLeft="16dp"
-                                android:layout_marginStart="16dp"
-                                android:onClick="click"/>
-
-                        </LinearLayout>
-
-                    </RelativeLayout>
-
-                    <!-- 阴影 -->
-                    <!-- 上 -->
-                    <View
-                        android:layout_width="fill_parent"
-                        android:layout_height="1dp"
-                        android:background="@color/app_design_shadow" />
-                    <!-- 右 -->
-                    <View
-                        android:layout_width="2dp"
-                        android:layout_height="175dp"
-                        android:layout_marginLeft="178dp"
-                        android:layout_marginStart="178dp"
-                        android:background="@color/app_design_shadow" />
-                    <!-- 下 -->
-                    <View
-                        android:layout_width="fill_parent"
-                        android:layout_height="2dp"
-                        android:layout_marginTop="174dp"
-                        android:background="@color/app_design_shadow" />
-                    <!-- 左 -->
-                    <View
-                        android:layout_width="2dp"
-                        android:layout_height="175dp"
-                        android:background="@color/app_design_shadow" />
-
-                    <!-- 按钮 -->
-                    <com.gc.materialdesign.views.ButtonFloat
-                        android:id="@+id/main_btn_drawing_toolbar_startorfinish"
+                    <!-- 坐标 -->
+                    <TextView
+                        android:id="@+id/coordinate"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_alignParentLeft="true"
-                        android:layout_alignParentStart="true"
-                        android:layout_marginTop="146dp"
                         android:layout_marginLeft="16dp"
                         android:layout_marginStart="16dp"
-                        android:onClick="click"
-                        android:background="@color/app_design_background"
-                        app:iconDrawable="@drawable/ic_pause"
-                        app:animate="false"/>
+                        android:layout_marginTop="16dp"
+                        android:text="123456.8, 123456.8"
+                        android:textSize="16sp"/>
 
-                    <com.gc.materialdesign.views.ButtonFloat
-                        android:id="@+id/main_btn_close_drawing_toolbar"
+                    <!-- 缩放比例 -->
+                    <TextView
+                        android:id="@+id/scale"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_alignParentRight="true"
-                        android:layout_alignParentEnd="true"
-                        android:layout_marginTop="170dp"
-                        android:layout_marginRight="16dp"
-                        android:layout_marginEnd="16dp"
-                        android:onClick="click"
-                        android:background="@color/app_design_background"
-                        app:iconDrawable="@drawable/ic_clear_white_48dp"
-                        app:animate="true"/>
+                        android:layout_marginTop="8dp"
+                        android:layout_marginLeft="16dp"
+                        android:layout_marginStart="16dp"
+                        android:layout_below="@id/coordinate"
+                        android:text="比例1:300000"
+                        android:textSize="16sp"/>
+
+                    <TextView
+                        android:id="@+id/main_tv_longitude"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:layout_marginLeft="16dp"
+                        android:layout_marginStart="16dp"
+                        android:layout_below="@id/scale"
+                        android:text="经度："
+                        android:textSize="16sp"/>
+
+                    <TextView
+                        android:id="@+id/main_tv_latitude"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:layout_marginLeft="16dp"
+                        android:layout_marginStart="16dp"
+                        android:layout_below="@id/main_tv_longitude"
+                        android:text="纬度："
+                        android:textSize="16sp"/>
 
                 </RelativeLayout>
 
-                <!-- 定位按钮 -->
-                <com.gc.materialdesign.views.ButtonFloat
-                    android:id="@+id/btn_location"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_alignParentLeft="true"
-                    android:layout_alignParentStart="true"
-                    android:layout_alignParentBottom="true"
-                    android:layout_marginLeft="16dp"
-                    android:layout_marginStart="16dp"
-                    android:layout_marginBottom="16dp"
-                    android:onClick="click"
-                    android:background="@color/app_design_background"
-                    app:animate="false" />
-
-                <!-- 缩放地图按钮 -->
-                <com.gc.materialdesign.views.ButtonFloatSmall
-                    android:id="@+id/main_btn_zoomin"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_alignParentLeft="true"
-                    android:layout_alignParentStart="true"
-                    android:layout_marginLeft="24dp"
-                    android:layout_marginStart="24dp"
-                    android:layout_above="@+id/main_btn_zoomout"
-                    android:layout_marginBottom="8dp"
-                    android:onClick="click"
-                    app:iconDrawable="@drawable/ic_add_white_48dp"
-                    app:animate="false"/>
-
-                <com.gc.materialdesign.views.ButtonFloatSmall
-                    android:id="@+id/main_btn_zoomout"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_alignParentLeft="true"
-                    android:layout_alignParentStart="true"
-                    android:layout_marginLeft="24dp"
-                    android:layout_marginStart="24dp"
-                    android:layout_above="@+id/btn_location"
-                    android:layout_marginBottom="16dp"
-                    android:onClick="click"
-                    app:iconDrawable="@drawable/ic_remove_white_48dp"
-                    app:animate="false"/>
-
-                <!-- 按钮菜单 -->
-                <com.getbase.floatingactionbutton.FloatingActionsMenu
-                    android:id="@+id/main_multiple_actions"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_alignParentBottom="true"
-                    android:layout_alignParentRight="true"
-                    android:layout_alignParentEnd="true"
-                    android:layout_marginBottom="4.5dp"
-                    android:layout_marginRight="7dp"
-                    android:layout_marginEnd="7dp"
-                    android:clickable="false"
-                    app:fab_addButtonColorNormal="@color/transparence"
-                    app:fab_addButtonColorPressed="@color/transparence"
-                    app:fab_addButtonPlusIconColor="@color/transparence"
-                    app:fab_labelStyle="@style/menu_labels_style">
-                    <!--app:fab_addButtonSize="mini"-->
-                    <!--app:fab_expandDirection="up"-->
-
-                    <com.getbase.floatingactionbutton.FloatingActionButton
-                        android:id="@+id/main_btn_distance_measurement"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:onClick="click"
-                        app:fab_icon="@drawable/ic_ruler_white"
-                        app:fab_title="测距"
-                        app:fab_colorNormal="@color/app_design_background"
-                        app:fab_colorPressed="@color/app_design_ripple"/>
-
-                    <com.getbase.floatingactionbutton.FloatingActionButton
-                        android:id="@+id/main_btn_clear"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:onClick="click"
-                        app:fab_icon="@drawable/ic_delete_white_48dp"
-                        app:fab_title="清空"
-                        app:fab_colorNormal="@color/app_design_background"
-                        app:fab_colorPressed="@color/app_design_ripple"/>
-
-                    <com.getbase.floatingactionbutton.FloatingActionButton
-                        android:id="@+id/main_btn_previous"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:onClick="click"
-                        app:fab_icon="@drawable/ic_undo_white_48dp"
-                        app:fab_title="后退"
-                        app:fab_colorNormal="@color/app_design_background"
-                        app:fab_colorPressed="@color/app_design_ripple"/>
-
-                    <com.getbase.floatingactionbutton.FloatingActionButton
-                        android:id="@+id/main_btn_next"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:onClick="click"
-                        app:fab_icon="@drawable/ic_redo_white_48dp"
-                        app:fab_title="前进"
-                        app:fab_colorNormal="@color/app_design_background"
-                        app:fab_colorPressed="@color/app_design_ripple"/>
-
-                    <com.getbase.floatingactionbutton.FloatingActionButton
-                        android:id="@+id/main_btn_fullextent"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:onClick="click"
-                        app:fab_icon="@drawable/ic_earth_white"
-                        app:fab_title="全图"
-                        app:fab_colorNormal="@color/app_design_background"
-                        app:fab_colorPressed="@color/app_design_ripple"/>
-
-                </com.getbase.floatingactionbutton.FloatingActionsMenu>
-                <com.gc.materialdesign.views.ButtonFloat
-                    android:id="@+id/main_btn_action_menu"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_alignParentRight="true"
-                    android:layout_alignParentEnd="true"
-                    android:layout_alignParentBottom="true"
-                    android:layout_marginRight="16dp"
-                    android:layout_marginEnd="16dp"
-                    android:layout_marginBottom="16dp"
-                    android:onClick="click"
-                    android:background="@color/app_design_background"
-                    app:iconDrawable="@drawable/ic_map"
-                    app:animate="false" />
-
+                <!-- 阴影 -->
+                <!-- 上 -->
+                <View
+                    android:layout_width="fill_parent"
+                    android:layout_height="1dp"
+                    android:background="@color/app_design_shadow" />
+                <!-- 右 -->
+                <View
+                    android:layout_width="2dp"
+                    android:layout_height="144dp"
+                    android:layout_marginLeft="178dp"
+                    android:layout_marginStart="178dp"
+                    android:background="@color/app_design_shadow" />
+                <!-- 下 -->
+                <View
+                    android:layout_width="fill_parent"
+                    android:layout_height="2dp"
+                    android:layout_marginTop="144dp"
+                    android:background="@color/app_design_shadow" />
+                <!-- 左 -->
+                <View
+                    android:layout_width="2dp"
+                    android:layout_height="144dp"
+                    android:background="@color/app_design_shadow" />
 
             </RelativeLayout>
-        </FrameLayout>
+
+            <!-- 绘图提示 -->
+            <RelativeLayout
+                android:id="@+id/main_rl_drawing_toolbar"
+                android:visibility="gone"
+                android:layout_width="180dp"
+                android:layout_height="360dp"
+                android:layout_alignParentTop="true"
+                android:layout_alignParentRight="true"
+                android:layout_alignParentEnd="true"
+                android:layout_marginTop="8dp"
+                android:layout_marginRight="8dp"
+                android:layout_marginEnd="8dp">
+
+                <RelativeLayout
+                    android:layout_width="176dp"
+                    android:layout_height="174dp"
+                    android:layout_marginLeft="2dp"
+                    android:layout_marginStart="2dp"
+                    android:layout_marginTop="1dp"
+                    android:background="@color/white">
+
+                    <!-- 提示文字 -->
+                    <TextView
+                        android:id="@+id/main_tv_drawing_title"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginLeft="16dp"
+                        android:layout_marginStart="16dp"
+                        android:layout_marginRight="16dp"
+                        android:layout_marginEnd="16dp"
+                        android:layout_marginTop="16dp"
+                        android:text="绘制提示标题"
+                        android:textSize="16sp"/>
+
+                    <TextView
+                        android:id="@+id/main_tv_drawing_tips"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_below="@id/main_tv_drawing_title"
+                        android:layout_marginLeft="16dp"
+                        android:layout_marginStart="16dp"
+                        android:layout_marginRight="16dp"
+                        android:layout_marginEnd="16dp"
+                        android:layout_marginTop="8dp"
+                        android:text="单击绘制下一点\n双击完成绘制"
+                        android:textSize="16sp"/>
+
+                    <LinearLayout
+                        android:layout_width="fill_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_below="@id/main_tv_drawing_tips"
+                        android:layout_marginLeft="16dp"
+                        android:layout_marginStart="16dp"
+                        android:layout_marginTop="8dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textSize="16sp"
+                            android:text="自由线条"/>
+
+                        <CheckBox
+                            android:id="@+id/main_cb_drawing_toolbar_isfreehand"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginLeft="16dp"
+                            android:layout_marginStart="16dp"
+                            android:onClick="click"/>
+
+                    </LinearLayout>
+
+                </RelativeLayout>
+
+                <!-- 阴影 -->
+                <!-- 上 -->
+                <View
+                    android:layout_width="fill_parent"
+                    android:layout_height="1dp"
+                    android:background="@color/app_design_shadow" />
+                <!-- 右 -->
+                <View
+                    android:layout_width="2dp"
+                    android:layout_height="175dp"
+                    android:layout_marginLeft="178dp"
+                    android:layout_marginStart="178dp"
+                    android:background="@color/app_design_shadow" />
+                <!-- 下 -->
+                <View
+                    android:layout_width="fill_parent"
+                    android:layout_height="2dp"
+                    android:layout_marginTop="174dp"
+                    android:background="@color/app_design_shadow" />
+                <!-- 左 -->
+                <View
+                    android:layout_width="2dp"
+                    android:layout_height="175dp"
+                    android:background="@color/app_design_shadow" />
+
+                <!-- 按钮 -->
+                <com.gc.materialdesign.views.ButtonFloat
+                    android:id="@+id/main_btn_drawing_toolbar_startorfinish"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentLeft="true"
+                    android:layout_alignParentStart="true"
+                    android:layout_marginTop="146dp"
+                    android:layout_marginLeft="16dp"
+                    android:layout_marginStart="16dp"
+                    android:onClick="click"
+                    android:background="@color/app_design_background"
+                    app:iconDrawable="@drawable/ic_pause"
+                    app:animate="false"/>
+
+                <com.gc.materialdesign.views.ButtonFloat
+                    android:id="@+id/main_btn_close_drawing_toolbar"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentRight="true"
+                    android:layout_alignParentEnd="true"
+                    android:layout_marginTop="170dp"
+                    android:layout_marginRight="16dp"
+                    android:layout_marginEnd="16dp"
+                    android:onClick="click"
+                    android:background="@color/app_design_background"
+                    app:iconDrawable="@drawable/ic_clear_white_48dp"
+                    app:animate="true"/>
+
+            </RelativeLayout>
+
+            <!-- 定位按钮 -->
+            <com.gc.materialdesign.views.ButtonFloat
+                android:id="@+id/btn_location"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentLeft="true"
+                android:layout_alignParentStart="true"
+                android:layout_alignParentBottom="true"
+                android:layout_marginLeft="16dp"
+                android:layout_marginStart="16dp"
+                android:layout_marginBottom="16dp"
+                android:onClick="click"
+                android:background="@color/app_design_background"
+                app:animate="false" />
+
+            <!-- 缩放地图按钮 -->
+            <com.gc.materialdesign.views.ButtonFloatSmall
+                android:id="@+id/main_btn_zoomin"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentLeft="true"
+                android:layout_alignParentStart="true"
+                android:layout_marginLeft="24dp"
+                android:layout_marginStart="24dp"
+                android:layout_above="@+id/main_btn_zoomout"
+                android:layout_marginBottom="8dp"
+                android:onClick="click"
+                app:iconDrawable="@drawable/ic_add_white_48dp"
+                app:animate="false"/>
+
+            <com.gc.materialdesign.views.ButtonFloatSmall
+                android:id="@+id/main_btn_zoomout"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentLeft="true"
+                android:layout_alignParentStart="true"
+                android:layout_marginLeft="24dp"
+                android:layout_marginStart="24dp"
+                android:layout_above="@+id/btn_location"
+                android:layout_marginBottom="16dp"
+                android:onClick="click"
+                app:iconDrawable="@drawable/ic_remove_white_48dp"
+                app:animate="false"/>
+
+            <!-- 按钮菜单 -->
+            <com.getbase.floatingactionbutton.FloatingActionsMenu
+                android:id="@+id/main_multiple_actions"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentBottom="true"
+                android:layout_alignParentRight="true"
+                android:layout_alignParentEnd="true"
+                android:layout_marginBottom="4.5dp"
+                android:layout_marginRight="7dp"
+                android:layout_marginEnd="7dp"
+                android:clickable="false"
+                app:fab_addButtonColorNormal="@color/transparence"
+                app:fab_addButtonColorPressed="@color/transparence"
+                app:fab_addButtonPlusIconColor="@color/transparence"
+                app:fab_labelStyle="@style/menu_labels_style">
+                <!--app:fab_addButtonSize="mini"-->
+                <!--app:fab_expandDirection="up"-->
+
+                <com.getbase.floatingactionbutton.FloatingActionButton
+                    android:id="@+id/main_btn_distance_measurement"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:onClick="click"
+                    app:fab_icon="@drawable/ic_ruler_white"
+                    app:fab_title="测距"
+                    app:fab_colorNormal="@color/app_design_background"
+                    app:fab_colorPressed="@color/app_design_ripple"/>
+
+                <com.getbase.floatingactionbutton.FloatingActionButton
+                    android:id="@+id/main_btn_clear"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:onClick="click"
+                    app:fab_icon="@drawable/ic_delete_white_48dp"
+                    app:fab_title="清空"
+                    app:fab_colorNormal="@color/app_design_background"
+                    app:fab_colorPressed="@color/app_design_ripple"/>
+
+                <com.getbase.floatingactionbutton.FloatingActionButton
+                    android:id="@+id/main_btn_previous"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:onClick="click"
+                    app:fab_icon="@drawable/ic_undo_white_48dp"
+                    app:fab_title="后退"
+                    app:fab_colorNormal="@color/app_design_background"
+                    app:fab_colorPressed="@color/app_design_ripple"/>
+
+                <com.getbase.floatingactionbutton.FloatingActionButton
+                    android:id="@+id/main_btn_next"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:onClick="click"
+                    app:fab_icon="@drawable/ic_redo_white_48dp"
+                    app:fab_title="前进"
+                    app:fab_colorNormal="@color/app_design_background"
+                    app:fab_colorPressed="@color/app_design_ripple"/>
+
+                <com.getbase.floatingactionbutton.FloatingActionButton
+                    android:id="@+id/main_btn_fullextent"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:onClick="click"
+                    app:fab_icon="@drawable/ic_earth_white"
+                    app:fab_title="全图"
+                    app:fab_colorNormal="@color/app_design_background"
+                    app:fab_colorPressed="@color/app_design_ripple"/>
+
+            </com.getbase.floatingactionbutton.FloatingActionsMenu>
+            <com.gc.materialdesign.views.ButtonFloat
+                android:id="@+id/main_btn_action_menu"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentRight="true"
+                android:layout_alignParentEnd="true"
+                android:layout_alignParentBottom="true"
+                android:layout_marginRight="16dp"
+                android:layout_marginEnd="16dp"
+                android:layout_marginBottom="16dp"
+                android:onClick="click"
+                android:background="@color/app_design_background"
+                app:iconDrawable="@drawable/ic_map"
+                app:animate="false" />
+
+            <!-- 地图标注动作条 -->
+            <RelativeLayout
+                android:id="@+id/main_rl_marking_toolbar"
+                android:layout_alignParentBottom="true"
+                android:layout_width="fill_parent"
+                android:layout_height="244dp">
+
+                <RelativeLayout
+                    android:layout_width="fill_parent"
+                    android:layout_height="216dp"
+                    android:layout_alignParentBottom="true"
+                    android:background="@color/white">
+
+                    <FrameLayout
+                        android:id="@+id/main_fl_marking_title"
+                        android:layout_width="360dp"
+                        android:layout_height="48dp"
+                        android:layout_marginBottom="16dp"
+                        android:layout_above="@+id/main_fl_marking_content"
+                        android:orientation="horizontal">
+                        <TextView
+                            android:id="@+id/main_tv_marking_title"
+                            android:layout_width="fill_parent"
+                            android:layout_height="fill_parent"
+                            android:layout_marginLeft="16dp"
+                            android:layout_marginStart="16dp"
+                            android:layout_marginRight="16dp"
+                            android:layout_marginEnd="16dp"
+                            android:gravity="center_vertical"
+                            android:text="标题：这是当前的标题"
+                            android:textSize="@dimen/text_size_title"/>
+                        <EditText
+                            android:id="@+id/main_et_marking_title"
+                            android:layout_width="fill_parent"
+                            android:layout_height="fill_parent"
+                            android:layout_marginLeft="16dp"
+                            android:layout_marginStart="16dp"
+                            android:layout_marginRight="16dp"
+                            android:layout_marginEnd="16dp"
+                            android:hint="请输入标题"
+                            android:visibility="gone"/>
+                    </FrameLayout>
+
+                    <FrameLayout
+                        android:id="@+id/main_fl_marking_content"
+                        android:layout_width="360dp"
+                        android:layout_height="96dp"
+                        android:layout_alignParentLeft="true"
+                        android:layout_alignParentStart="true"
+                        android:layout_alignParentBottom="true"
+                        android:layout_marginBottom="16dp"
+                        android:orientation="horizontal">
+                        <TextView
+                            android:id="@+id/main_tv_marking_content"
+                            android:layout_width="fill_parent"
+                            android:layout_height="fill_parent"
+                            android:layout_marginLeft="16dp"
+                            android:layout_marginStart="16dp"
+                            android:layout_marginRight="16dp"
+                            android:layout_marginEnd="16dp"
+                            android:gravity="center_vertical"
+                            android:scrollbars="vertical"
+                            android:text="内容:美国上个月底派遣“拉森号”导弹驱逐舰到中国南海岛礁附近巡航，引起中方强烈抗议，并发出警告，要求停止这类“挑衅行为”。但美方近日声称，其航母当时执行巡逻任务尽量保持克制和低调，避免任何可能被视为挑衅的行为，以防给中国南海局势火上浇油。"
+                            android:textSize="@dimen/text_size_body"/>
+                        <EditText
+                            android:id="@+id/main_et_marking_content"
+                            android:layout_width="fill_parent"
+                            android:layout_height="fill_parent"
+                            android:layout_marginLeft="16dp"
+                            android:layout_marginStart="16dp"
+                            android:layout_marginRight="16dp"
+                            android:layout_marginEnd="16dp"
+                            android:hint="请输入内容"
+                            android:visibility="gone"/>
+                    </FrameLayout>
+
+                    <FrameLayout
+                        android:layout_width="fill_parent"
+                        android:layout_height="fill_parent"
+                        android:layout_toRightOf="@id/main_fl_marking_title"
+                        android:layout_alignParentRight="true"
+                        android:layout_alignParentEnd="true"
+                        android:layout_alignParentBottom="true"
+                        android:layout_marginLeft="16dp"
+                        android:layout_marginStart="16dp"
+                        android:layout_marginRight="16dp"
+                        android:layout_marginEnd="16dp"
+                        android:layout_marginBottom="16dp"
+                        android:layout_marginTop="44dp">
+
+                        <TextView
+                            android:layout_width="fill_parent"
+                            android:layout_height="fill_parent"
+                            android:gravity="center"
+                            android:background="@color/app_design_shadow"
+                            android:text="暂无现场图"
+                            android:textSize="@dimen/text_size_body"/>
+                        <ImageView
+                            android:id="@+id/main_iv_marking_image"
+                            android:layout_width="fill_parent"
+                            android:layout_height="fill_parent"
+                            android:contentDescription="现场图"/>
+
+                    </FrameLayout>
+
+                </RelativeLayout>
+
+                <!-- 阴影 -->
+                <!-- 上 -->
+                <View
+                    android:layout_width="fill_parent"
+                    android:layout_height="1dp"
+                    android:layout_marginTop="28dp"
+                    android:background="@color/app_design_shadow" />
+
+                <!-- 按钮 -->
+                <com.gc.materialdesign.views.ButtonFloat
+                    android:id="@+id/main_btn_marking_edit_or_save"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"
+                    android:layout_marginLeft="16dp"
+                    android:layout_alignParentLeft="true"
+                    android:layout_alignParentStart="true"
+                    android:background="@color/app_design_background"
+                    android:onClick="click"
+                    app:iconDrawable="@drawable/ic_edit"
+                    app:animate="false"/>
+
+                <com.gc.materialdesign.views.ButtonFloat
+                    android:id="@+id/main_btn_marking_take_photo"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerHorizontal="true"
+                    android:background="@color/app_design_background"
+                    android:onClick="click"
+                    app:iconDrawable="@drawable/ic_camera"
+                    app:animate="false"/>
+
+                <com.gc.materialdesign.views.ButtonFloat
+                    android:id="@+id/main_btn_marking_pick_image"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginRight="16dp"
+                    android:layout_marginEnd="16dp"
+                    android:layout_alignParentRight="true"
+                    android:layout_alignParentEnd="true"
+                    android:background="@color/app_design_background"
+                    android:onClick="click"
+                    app:iconDrawable="@drawable/ic_image"
+                    app:animate="false"/>
+
+            </RelativeLayout>
+
+
+        </RelativeLayout>
 
         <!-- 左抽屉 -->
         <RelativeLayout
