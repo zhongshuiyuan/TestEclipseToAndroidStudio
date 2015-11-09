@@ -159,6 +159,13 @@ public class Main extends Activity implements OnMapListener
     /** 标注模式 **/
     private final int ACTIVITY_STATE_MARKING = 2;
 
+    /** 标注工具栏模式 **/
+    private int mMarkingToolbarState;
+    /** 正常（浏览）模式 **/
+    private final int MARKING_TOOLBAR_STATE_NORMAL = 0;
+    /** 编辑模式 **/
+    private final int MARKING_TOOLBAR_STATE_EDIT = 1;
+
     /** 地图模式 **/
     private int mMapState;
     /** 普通模式 **/
@@ -236,6 +243,7 @@ public class Main extends Activity implements OnMapListener
     private ButtonFloat mBtnMarkingEditOrSave;
     private ButtonFloat mBtnMarkingTakePhoto;
     private ButtonFloat mBtnMarkingPiakImage;
+    private ButtonFloat mBtnMarkingClose;
 
     private DrawerLayout drawerLayout;
     private RelativeLayout leftLayout;
@@ -338,8 +346,9 @@ public class Main extends Activity implements OnMapListener
     {
         sharedPreferences = this.getPreferences(Context.MODE_PRIVATE);
 
-        mMapState = MAP_STATE_NORMAL;
         mActivityState = ACTIVITY_STATE_NORMAL;
+        mMapState = MAP_STATE_NORMAL;
+        mMarkingToolbarState = MARKING_TOOLBAR_STATE_NORMAL;
 
         //顶部动作条
         mActionView = (ActionView) findViewById(R.id.main_av_menu);
@@ -386,6 +395,7 @@ public class Main extends Activity implements OnMapListener
         mBtnMarkingEditOrSave = (ButtonFloat) findViewById(R.id.main_btn_marking_edit_or_save);
         mBtnMarkingTakePhoto = (ButtonFloat) findViewById(R.id.main_btn_marking_take_photo);
         mBtnMarkingPiakImage = (ButtonFloat) findViewById(R.id.main_btn_marking_pick_image);
+        mBtnMarkingClose = (ButtonFloat) findViewById(R.id.main_btn_marking_close);
 
         mBtnLocation = (ButtonFloat) findViewById(R.id.btn_location);
         mBtnLocation.setDrawableIcon(getResources().getDrawable(R.drawable.ic_my_location_white_48dp));
@@ -1198,6 +1208,9 @@ public class Main extends Activity implements OnMapListener
             case R.id.main_btn_marking_pick_image: // 从图库选择图片来设置标注现场图
                 onBtnPickImageClick();
                 break;
+            case R.id.main_btn_marking_close: // 关闭标注工具栏
+                stopMarkingMode();
+                break;
             default:
                 break;
         }
@@ -1329,9 +1342,8 @@ public class Main extends Activity implements OnMapListener
 
         updateUi();
 
-        try
-        {
-
+        // 保存地图操作
+        try {
             Point centerPoint = Util.getCenterPoint(this);
             Point mapPoint = mMapView.toMapPoint(centerPoint);
             double scale = mMapView.getScale();
@@ -1341,9 +1353,7 @@ public class Main extends Activity implements OnMapListener
             take.setZoom(scale);
             Session.getTakes().add(take);
             index = Session.getTakes().size() - 1;
-        }
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
@@ -1351,7 +1361,7 @@ public class Main extends Activity implements OnMapListener
     /** 在地图上长按标注该位置 **/
     @Override
     public void onLocationMarked() {
-
+        startMarkingMode(true);
     }
 
     public boolean onKeyDown(int keyCode, KeyEvent event)
@@ -1737,6 +1747,52 @@ public class Main extends Activity implements OnMapListener
         }
     }
 
+    /**
+     * 开启标注模式
+     * @param isEditingMark 编辑标注点还是浏览标注点信息
+     */
+    private void startMarkingMode(boolean isEditingMark) {
+        mActivityState = ACTIVITY_STATE_MARKING;
+
+        if (isEditingMark) {
+            mMarkingToolbarState = MARKING_TOOLBAR_STATE_EDIT;
+            setMarkingToolbarToEditingState();
+        } else {
+            mMarkingToolbarState = MARKING_TOOLBAR_STATE_NORMAL;
+            setMarkingToolbarToNormalState();
+        }
+
+        updateUi();
+    }
+
+    private void setMarkingToolbarToNormalState() {
+        mBtnMarkingEditOrSave.setDrawableIcon(getResources().getDrawable(R.drawable.ic_edit));
+        mBtnMarkingEditOrSave.setBackgroundColor(getResources().getColor(R.color.app_design_background));
+        mTvMarkingTitle.setVisibility(View.VISIBLE);
+        mTvMarkingTitle.setText(mEtMarkingTitle.getText());
+        mEtMarkingTitle.setVisibility(View.GONE);
+        mTvMarkingContent.setVisibility(View.VISIBLE);
+        mTvMarkingContent.setText(mEtMarkingContent.getText());
+        mEtMarkingContent.setVisibility(View.GONE);
+    }
+
+    private void setMarkingToolbarToEditingState() {
+        mBtnMarkingEditOrSave.setDrawableIcon(getResources().getDrawable(R.drawable.ic_content_save));
+        mBtnMarkingEditOrSave.setBackgroundColor(getResources().getColor(R.color.dark_green));
+        mEtMarkingTitle.setVisibility(View.VISIBLE);
+        mEtMarkingTitle.setText(mTvMarkingTitle.getText());
+        mTvMarkingTitle.setVisibility(View.GONE);
+        mEtMarkingContent.setVisibility(View.VISIBLE);
+        mEtMarkingContent.setText(mTvMarkingContent.getText());
+        mTvMarkingContent.setVisibility(View.GONE);
+    }
+
+    private void stopMarkingMode() {
+        mActivityState = ACTIVITY_STATE_NORMAL;
+
+        updateUi();
+    }
+
     /** 选中使用自由线条绘图 **/
     private void onCbIsFreehandDrawingClick() {
         if (mCbIsFreehandDrawing.isChecked()) {
@@ -1832,32 +1888,19 @@ public class Main extends Activity implements OnMapListener
 
     /** 按下停止绘图 **/
     private void onBtnCloseDrawingToolbarClick() {
-        mBtnStartOrFinishDrawing.setDrawableIcon(getResources().getDrawable(R.drawable.ic_pause));
-        mBtnStartOrFinishDrawing.setBackgroundColor(getResources().getColor(R.color.app_design_background));
-
         stopDrawingMode();
     }
 
+
+
     private void onBtnEditOrSaveMarkingClick() {
-        if (mTvMarkingTitle.getVisibility() == View.VISIBLE) {
-            mBtnMarkingEditOrSave.setDrawableIcon(getResources().getDrawable(R.drawable.ic_content_save));
-            mBtnMarkingEditOrSave.setBackgroundColor(getResources().getColor(R.color.dark_green));
-            mEtMarkingTitle.setVisibility(View.VISIBLE);
-            mEtMarkingTitle.setText(mTvMarkingTitle.getText());
-            mTvMarkingTitle.setVisibility(View.GONE);
-            mEtMarkingContent.setVisibility(View.VISIBLE);
-            mEtMarkingContent.setText(mTvMarkingContent.getText());
-            mTvMarkingContent.setVisibility(View.GONE);
-        } else {
-            mBtnMarkingEditOrSave.setDrawableIcon(getResources().getDrawable(R.drawable.ic_edit));
-            mBtnMarkingEditOrSave.setBackgroundColor(getResources().getColor(R.color.app_design_background));
-            mTvMarkingTitle.setVisibility(View.VISIBLE);
-            mTvMarkingTitle.setText(mEtMarkingTitle.getText());
-            mEtMarkingTitle.setVisibility(View.GONE);
-            mTvMarkingContent.setVisibility(View.VISIBLE);
-            mTvMarkingContent.setText(mEtMarkingContent.getText());
-            mEtMarkingContent.setVisibility(View.GONE);
+        if (mMarkingToolbarState == MARKING_TOOLBAR_STATE_NORMAL) {
+            mMarkingToolbarState = MARKING_TOOLBAR_STATE_EDIT;
+        } else if (mMarkingToolbarState == MARKING_TOOLBAR_STATE_EDIT) {
+            mMarkingToolbarState = MARKING_TOOLBAR_STATE_NORMAL;
         }
+
+        updateUi();
     }
 
     private void onBtnTakePhotoClick() {
@@ -1906,56 +1949,42 @@ public class Main extends Activity implements OnMapListener
         }
     }
 
-    /** 当Activity状态改变时 **/
-    private void onActivityStateChanged() {
-        switch (mActivityState) {
-            case ACTIVITY_STATE_NORMAL:
-                break;
-            case ACTIVITY_STATE_DRAWING:
-                break;
-            case ACTIVITY_STATE_MARKING:
-                break;
-            default:
-                break;
-        }
-    }
-
-    /** 当地图状态改变时 **/
-    private void onMapStateChanged() {
-        switch (mMapState) {
-            case MAP_STATE_NORMAL:
-                mBtnLocation.setDrawableIcon(getResources().getDrawable(R.drawable.ic_my_location_white_48dp));
-                break;
-            case MAP_STATE_NAVIGATION:
-                mBtnLocation.setDrawableIcon(getResources().getDrawable(R.drawable.ic_navigation_white_48dp));
-                break;
-            default:
-                // do nothing.
-        }
-    }
-
     /** 开启导航（实时跟踪位置）模式 **/
     private void startNavigationMode() {
         mMapState = MAP_STATE_NAVIGATION;
-        onMapStateChanged();
+        updateUi();
     }
 
     /** 关闭导航（实时跟踪位置）模式 **/
     private void stopNavigationMode() {
         mMapState = MAP_STATE_NORMAL;
-        onMapStateChanged();
+        updateUi();
     }
 
     /** 更新Activity的UI **/
     private void updateUi() {
+        updateLocationBar();
+        updateDrawingToolbar();
+        updateMarkingToolbar();
+        updateButtons();
+    }
+
+    private void updateButtons() {
+        // 导航按钮
+        if (mMapState == MAP_STATE_NORMAL) {
+            mBtnLocation.setDrawableIcon(getResources().getDrawable(R.drawable.ic_my_location_white_48dp));
+        } else if (mMapState == MAP_STATE_NAVIGATION) {
+            mBtnLocation.setDrawableIcon(getResources().getDrawable(R.drawable.ic_navigation_white_48dp));
+        }
+    }
+
+    private void updateLocationBar() {
         if (mMapState != MAP_STATE_NAVIGATION) {
             updateCoordinate();
             updateScale();
         }
         updateLongitude();
         updateLatitude();
-        updateDrawingToolbar();
-        updateMarkingToolbar();
     }
 
     private void updateDrawingToolbar() {
@@ -1968,14 +1997,21 @@ public class Main extends Activity implements OnMapListener
             }
         } else {
             mDrawingToolbar.setVisibility(View.GONE);
+            mTempDrawingLayer.removeAll();
         }
     }
 
     private void updateMarkingToolbar() {
         if (mActivityState == ACTIVITY_STATE_MARKING) {
             mRlMarkingToolbar.setVisibility(View.VISIBLE);
+            if (mMarkingToolbarState == MARKING_TOOLBAR_STATE_NORMAL) {
+                setMarkingToolbarToNormalState();
+            } else if (mMarkingToolbarState == MARKING_TOOLBAR_STATE_EDIT) {
+                setMarkingToolbarToEditingState();
+            }
         } else {
             mRlMarkingToolbar.setVisibility(View.GONE);
+            mTempMarkingLayer.removeAll();
         }
     }
 
@@ -2044,9 +2080,9 @@ public class Main extends Activity implements OnMapListener
     /**
      * 在地图上更新显示当前位置
      * @param location 当前位置
-     * @param isMapMoved 如果为true，则移动地图，以当前位置为中心；如果为false，则只更新显示当前位置
+     * @param isMovingMap 如果为true，则移动地图，以当前位置为中心；如果为false，则只更新显示当前位置
      */
-    private void updateLocation(Location location, boolean isMapMoved) {
+    private void updateLocation(Location location, boolean isMovingMap) {
         if (location != null)
         {
             mCurrentLocationPoint = new Point(location.getLongitude(), location.getLatitude());
@@ -2065,7 +2101,7 @@ public class Main extends Activity implements OnMapListener
                 mLocationGraphicsLayer.updateGraphic(mLocationGraphicId, graphic);
             }
 
-            if (isMapMoved) {
+            if (isMovingMap) {
                 mMapView.centerAt(mCurrentLocationPoint, true);
                 mMapView.setScale(1200.0000);
                 forceUpdateScale(1200);
@@ -2125,9 +2161,9 @@ public class Main extends Activity implements OnMapListener
         public void onLocationChanged(Location location) {
             mLastLocationFromGps = location;
             updateUi();
-            boolean isMapMoved;
-            isMapMoved = mMapState == MAP_STATE_NAVIGATION ? true : false;
-            updateLocation(location, isMapMoved);
+            boolean isMovingMap;
+            isMovingMap = mMapState == MAP_STATE_NAVIGATION ? true : false;
+            updateLocation(location, isMovingMap);
 
             Log.v(TAG, "时间：" + location.getTime());
             Log.v(TAG, "经度：" + location.getLongitude());
@@ -2135,7 +2171,6 @@ public class Main extends Activity implements OnMapListener
             Log.v(TAG, "海拔：" + location.getAltitude());
             Log.v(TAG, "精度：" + location.getAccuracy());
             Log.v(TAG, "速度" + location.getSpeed());
-
         }
 
         /** GPS状态变化时触发 **/

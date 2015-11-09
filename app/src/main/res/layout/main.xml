@@ -103,7 +103,8 @@
                 android:layout_alignParentStart="true"
                 android:layout_marginTop="8dp"
                 android:layout_marginLeft="8dp"
-                android:layout_marginStart="8dp">
+                android:layout_marginStart="8dp"
+                android:onClick="click">
 
                 <RelativeLayout
                     android:id="@+id/main_rl_information"
@@ -199,7 +200,8 @@
                 android:layout_alignParentEnd="true"
                 android:layout_marginTop="8dp"
                 android:layout_marginRight="8dp"
-                android:layout_marginEnd="8dp">
+                android:layout_marginEnd="8dp"
+                android:onClick="click">
 
                 <RelativeLayout
                     android:layout_width="176dp"
@@ -452,7 +454,8 @@
                 android:id="@+id/main_rl_marking_toolbar"
                 android:layout_alignParentBottom="true"
                 android:layout_width="fill_parent"
-                android:layout_height="244dp">
+                android:layout_height="244dp"
+                android:onClick="click">
 
                 <RelativeLayout
                     android:layout_width="fill_parent"
@@ -580,7 +583,10 @@
                     android:id="@+id/main_btn_marking_take_photo"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_centerHorizontal="true"
+                    android:layout_marginStart="160dp"
+                    android:layout_marginLeft="160dp"
+                    android:layout_alignParentLeft="true"
+                    android:layout_alignParentStart="true"
                     android:background="@color/app_design_background"
                     android:onClick="click"
                     app:iconDrawable="@drawable/ic_camera"
@@ -590,13 +596,26 @@
                     android:id="@+id/main_btn_marking_pick_image"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_marginStart="304dp"
+                    android:layout_marginLeft="304dp"
+                    android:layout_alignParentLeft="true"
+                    android:layout_alignParentStart="true"
+                    android:background="@color/app_design_background"
+                    android:onClick="click"
+                    app:iconDrawable="@drawable/ic_image"
+                    app:animate="false"/>
+
+                <com.gc.materialdesign.views.ButtonFloat
+                    android:id="@+id/main_btn_marking_close"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
                     android:layout_marginRight="16dp"
                     android:layout_marginEnd="16dp"
                     android:layout_alignParentRight="true"
                     android:layout_alignParentEnd="true"
                     android:background="@color/app_design_background"
                     android:onClick="click"
-                    app:iconDrawable="@drawable/ic_image"
+                    app:iconDrawable="@drawable/ic_clear_white_48dp"
                     app:animate="false"/>
 
             </RelativeLayout>
