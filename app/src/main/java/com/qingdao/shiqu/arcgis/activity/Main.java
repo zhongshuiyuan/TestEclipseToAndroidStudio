@@ -174,8 +174,10 @@ public class Main extends Activity implements OnMapListener
     GraphicsLayer newglly;
     /** 新建电缆路由图层 **/
     GraphicsLayer newdlly;
+    /** 用于绘制的临时图层 **/
+    GraphicsLayer mTempDrawingLayer;
     /** 用于标注的临时图层 **/
-    GraphicsLayer mTempDrawLayer;
+    GraphicsLayer mTempMarkingLayer;
     /** 绘图工具 **/
     DrawTool mDrawTool;
     /** 绘制类型 **/
@@ -404,8 +406,10 @@ public class Main extends Activity implements OnMapListener
         newGuandaoLayer.setName("新加管道图层");
         newgllayer = new GraphicsLayer();
         newgllayer.setName("新加光缆图层");
-        mTempDrawLayer = new GraphicsLayer();
-        mTempDrawLayer.setName("临时绘制图层");
+        mTempDrawingLayer = new GraphicsLayer();
+        mTempDrawingLayer.setName("临时绘制图层");
+        mTempMarkingLayer = new GraphicsLayer();
+        mTempMarkingLayer.setName("临时标注图层");
         newglly = new GraphicsLayer();
         newglly.setName("新加光缆路由");
         newdlly = new GraphicsLayer();
@@ -441,7 +445,8 @@ public class Main extends Activity implements OnMapListener
         // 添加绘画图层
         touchListener = new MapTouchListener(Main.this, mMapView);
         touchListener.setTvCoordinate(mTvCoordinate);
-        touchListener.setTempDrawingLayer(mTempDrawLayer);
+        touchListener.setTempDrawingLayer(mTempDrawingLayer);
+        touchListener.setTempMarkingLayer(mTempMarkingLayer);
         touchListener.setNewNodeLayer(newNodeLayer);
         touchListener.setNewgdlayer(newGuandaoLayer);
         touchListener.setNewGLLayer(newgllayer);
@@ -460,12 +465,13 @@ public class Main extends Activity implements OnMapListener
             childs.get(0).add(mLocalTiledLayerGoogle);
         }
 
-        mMapView.addLayer(mTempDrawLayer);
+        mMapView.addLayer(mTempDrawingLayer);
         mMapView.addLayer(newNodeLayer);
         mMapView.addLayer(newGuandaoLayer);
         mMapView.addLayer(newgllayer);
         mMapView.addLayer(newglly);
         mMapView.addLayer(newdlly);
+        mMapView.addLayer(mTempMarkingLayer);
         mMapView.addLayer(mLocationGraphicsLayer); // 定位图层
 
         for(int i=0;i< mMapView.getLayers().length;i++){
@@ -1098,7 +1104,7 @@ public class Main extends Activity implements OnMapListener
                 touchListener.setGeoType(Geometry.Type.POLYLINE);
                 break;
             case R.id.main_btn_clear: // 清空计算长度画的线和点
-                mTempDrawLayer.removeAll();
+                mTempDrawingLayer.removeAll();
                 touchListener.setGeoType(null);
                 mMapView.postInvalidate();
                 break;
@@ -1190,14 +1196,14 @@ public class Main extends Activity implements OnMapListener
                 } else {
                     if ("道路".equals(type)) {
                         List<Point> list = Util.convertLines(value);
-                        LayerOpter opter = new LayerOpter(this, mTempDrawLayer);
+                        LayerOpter opter = new LayerOpter(this, mTempDrawingLayer);
                         //				opter.drawRoad(list);
                         opter.DrawRoad(list);
                         mMapView.centerAt(list.get(list.size() / 2), true);
                         mMapView.setScale(1200.0000);
                     } else {
                         Point point = Util.convertPoint(value);
-                        LayerOpter opter = new LayerOpter(this, mTempDrawLayer);
+                        LayerOpter opter = new LayerOpter(this, mTempDrawingLayer);
                         Drawable drawable = Main.this.getResources().getDrawable(R.drawable.sendtocar_balloon);
                         opter.drwaPoint(point, drawable);
                         mMapView.centerAt(point, true);
@@ -1299,6 +1305,12 @@ public class Main extends Activity implements OnMapListener
         {
             e.printStackTrace();
         }
+    }
+
+    /** 在地图上长按标注该位置 **/
+    @Override
+    public void onLocationMarked() {
+
     }
 
     public boolean onKeyDown(int keyCode, KeyEvent event)
@@ -1484,7 +1496,7 @@ public class Main extends Activity implements OnMapListener
     }
 
     private void markLocation(Location location) {
-        mTempDrawLayer.removeAll();
+        mTempDrawingLayer.removeAll();
         double locx = location.getLongitude();
         double locy = location.getLatitude();
         Point wgspoint = new Point(locx, locy);
@@ -1492,9 +1504,9 @@ public class Main extends Activity implements OnMapListener
 
 		//图层的创建
 		Graphic graphic = new Graphic(mapPoint,locationSymbol);
-		mTempDrawLayer.addGraphic(graphic);
+		mTempDrawingLayer.addGraphic(graphic);
 		map.centerAt(mapPoint, true);*/
-        LayerOpter opter = new LayerOpter(this, mTempDrawLayer);
+        LayerOpter opter = new LayerOpter(this, mTempDrawingLayer);
         Drawable drawable = Main.this.getResources().getDrawable(R.drawable.sendtocar_balloon);
         opter.drwaPoint(wgspoint, drawable);
         mMapView.centerAt(wgspoint, true);

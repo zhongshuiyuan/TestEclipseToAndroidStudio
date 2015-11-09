@@ -89,9 +89,11 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 	SimpleMarkerSymbol markerSymbol;
 	SimpleFillSymbol fillSymbol;
 	Point fristPoint;
-	/** 用于绘制和标注的临时图层 **/
+	/** 用于绘制的临时图层 **/
 	GraphicsLayer mTempDrawingLayer;
 	Geometry.Type geoType;
+	/** 用于标注的临时图层 **/
+	GraphicsLayer mTempMarkingLayer;
 	OnMapListener click;
 	List<FeatureLayer> featureLayers;
 	FeatureLayer guandao ;
@@ -343,6 +345,10 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 		}
 	}
 
+	public void setTempMarkingLayer(GraphicsLayer tempMarkingLayer) {
+		mTempMarkingLayer = tempMarkingLayer;
+	}
+
 	/****************** OnZoomListener回调事件 ***************/
 	@Override
 	public void postAction(float arg0, float arg1, double arg2)
@@ -363,6 +369,7 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 	@Override
 	public boolean onSingleTap(MotionEvent event)
 	{
+		mTempMarkingLayer.removeAll();
 		Drawable img = null;
 		isnew = true;
 
@@ -1262,14 +1269,23 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 		super.onLongPress(event);
 
 		// 在坐标TextView显示当前按压位置的坐标
-		Point onSingleTapPoint = new Point(event.getX(), event.getY());
-		Point mapPoint = mMapView.toMapPoint(onSingleTapPoint);
+		Point onLongPressPoint = new Point(event.getX(), event.getY());
+		Point mapPoint = mMapView.toMapPoint(onLongPressPoint);
 		if (mapPoint != null) {
 			String x = String.valueOf(mapPoint.getX()).substring(0, 8);
 			String y = String.valueOf(mapPoint.getY()).substring(0, 8);
 			mTvCoordinate.setText(x + ", " + y);
 		}
 
+		// 在当前按压位置显示标记图钉
+		mTempMarkingLayer.removeAll();
+		mMapView.centerAt(mapPoint, true);
+		click.onMoveAndZoom();
+		click.onLocationMarked();
+		Drawable drawable = mContext.getResources().getDrawable(R.drawable.ic_pin);
+		PictureMarkerSymbol pictureMarkerSymbol = new PictureMarkerSymbol(drawable);
+		Graphic graphic = new Graphic(mapPoint, pictureMarkerSymbol);
+		mTempMarkingLayer.addGraphic(graphic);
 	}
 
 	/**
@@ -1540,6 +1556,8 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 		 *
 		 * 功 能：放大和缩小监听回来记录前进后退
 		 */
-		public void onMoveAndZoom();
+		void onMoveAndZoom();
+		/** 在地图上进行标注时 **/
+		void onLocationMarked();
 	}
 }
