@@ -479,7 +479,6 @@
                             android:layout_marginRight="16dp"
                             android:layout_marginEnd="16dp"
                             android:gravity="center_vertical"
-                            android:text="标题：这是当前的标题"
                             android:textSize="@dimen/text_size_title"/>
                         <EditText
                             android:id="@+id/main_et_marking_title"
@@ -490,6 +489,7 @@
                             android:layout_marginRight="16dp"
                             android:layout_marginEnd="16dp"
                             android:hint="请输入标题"
+                            android:singleLine="true"
                             android:visibility="gone"/>
                     </FrameLayout>
 
@@ -512,7 +512,6 @@
                             android:layout_marginEnd="16dp"
                             android:gravity="center_vertical"
                             android:scrollbars="vertical"
-                            android:text="内容:美国上个月底派遣“拉森号”导弹驱逐舰到中国南海岛礁附近巡航，引起中方强烈抗议，并发出警告，要求停止这类“挑衅行为”。但美方近日声称，其航母当时执行巡逻任务尽量保持克制和低调，避免任何可能被视为挑衅的行为，以防给中国南海局势火上浇油。"
                             android:textSize="@dimen/text_size_body"/>
                         <EditText
                             android:id="@+id/main_et_marking_content"
@@ -523,6 +522,7 @@
                             android:layout_marginRight="16dp"
                             android:layout_marginEnd="16dp"
                             android:hint="请输入内容"
+                            android:singleLine="true"
                             android:visibility="gone"/>
                     </FrameLayout>
 

@@ -88,7 +88,23 @@ public class SQLiteAction {
         cv.put("geometry", geometryByte);
         cv.put("title", title);
         cv.put("content", content);
-        database.insert("mark", null, cv);
+
+        boolean isNewData = true;
+        String[] selectionArgs = {id.toString()};
+        Cursor c = database.query("mark", null, "id=?", selectionArgs, null, null, null, null);
+        if (c != null) {
+            if (c.getCount() > 0) {
+                isNewData = false;
+            }
+        }
+
+        if (isNewData) {
+            database.insert("mark", null, cv);
+        } else {
+            String whereClause = "id=?";
+            String[] whereArgs = {id.toString()};
+            database.update("mark", cv, whereClause, whereArgs);
+        }
     }
 
     /**

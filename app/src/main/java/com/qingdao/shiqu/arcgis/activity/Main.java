@@ -1565,16 +1565,19 @@ public class Main extends Activity implements OnMapListener
 
     private void hideKeyboard() {
         InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
-        if (imm.isActive()) {
-            imm.toggleSoftInput(InputMethodManager.SHOW_IMPLICIT, InputMethodManager.HIDE_NOT_ALWAYS);
-        }
+//        if (imm.isActive()) {
+//            imm.toggleSoftInput(InputMethodManager.SHOW_IMPLICIT, InputMethodManager.HIDE_NOT_ALWAYS);
+//        }
+        mEtMarkingTitle.requestFocus();
+        imm.hideSoftInputFromWindow(mEtMarkingTitle.getWindowToken(), 0);
     }
 
     private void showKeyboard() {
         InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
-        if (imm.isActive()) {
-            imm.toggleSoftInput(InputMethodManager.HIDE_NOT_ALWAYS, InputMethodManager.SHOW_IMPLICIT);
-        }
+//        if (imm.isActive()) {
+//            imm.toggleSoftInput(InputMethodManager.HIDE_NOT_ALWAYS, InputMethodManager.SHOW_IMPLICIT);
+//        }
+        imm.showSoftInput(mEtMarkingTitle, InputMethodManager.SHOW_FORCED);
     }
 
     private void markLocation(Location location) {
@@ -1849,8 +1852,18 @@ public class Main extends Activity implements OnMapListener
         mTvMarkingContent.setVisibility(View.GONE);
     }
 
+    /** 清除标注工具栏的内容 **/
+    private void resetMarkingToolbar() {
+        mEtMarkingTitle.setText("");
+        mTvMarkingTitle.setText("");
+        mEtMarkingContent.setText("");
+        mTvMarkingContent.setText("");
+    }
+
     private void stopMarkingMode() {
         mActivityState = ACTIVITY_STATE_NORMAL;
+
+        mNewMark = null;
 
         updateUi();
     }
@@ -1956,9 +1969,8 @@ public class Main extends Activity implements OnMapListener
 
 
     private void onBtnEditOrSaveMarkingClick() {
-        if (mMarkingToolbarState == MARKING_TOOLBAR_STATE_NORMAL) {
+         if (mMarkingToolbarState == MARKING_TOOLBAR_STATE_NORMAL) {
             mMarkingToolbarState = MARKING_TOOLBAR_STATE_EDIT;
-            showKeyboard();
         } else if (mMarkingToolbarState == MARKING_TOOLBAR_STATE_EDIT) {
             mMarkingToolbarState = MARKING_TOOLBAR_STATE_NORMAL;
 
@@ -1971,16 +1983,15 @@ public class Main extends Activity implements OnMapListener
                     mNewMark,
                     mEtMarkingTitle.getText().toString(),
                     mEtMarkingContent.getText().toString());
-
-            mNewMark = null;
-            hideKeyboard();
         }
 
         updateUi();
 
-        // TODO Delete
+        // 管理键盘
         if (mMarkingToolbarState == MARKING_TOOLBAR_STATE_NORMAL) {
-
+            hideKeyboard();
+        } else if (mMarkingToolbarState == MARKING_TOOLBAR_STATE_EDIT) {
+            showKeyboard();
         }
 
     }
@@ -2090,7 +2101,7 @@ public class Main extends Activity implements OnMapListener
             }
         } else {
             mDrawingToolbar.setVisibility(View.GONE);
-            mTempDrawingLayer.removeAll();
+            //mTempDrawingLayer.removeAll();// 通过用户点击清空按钮来清空该图层
         }
     }
 
@@ -2106,6 +2117,7 @@ public class Main extends Activity implements OnMapListener
             }
         } else {
             mRlMarkingToolbar.setVisibility(View.GONE);
+            resetMarkingToolbar();
             mTempMarkingLayer.removeAll();
         }
     }

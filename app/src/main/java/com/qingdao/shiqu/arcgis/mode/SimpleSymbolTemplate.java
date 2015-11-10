@@ -18,7 +18,7 @@ public class SimpleSymbolTemplate {
     }
     /** 标注（文字） **/
     public static TextSymbol getMarkText(String text) {
-        TextSymbol textSymbol = new TextSymbol(15, text, Color.BLACK);
+        TextSymbol textSymbol = new TextSymbol(20, text, Color.BLACK);
         textSymbol.setFontFamily("DroidSansFallback.ttf");
         textSymbol.setOffsetX(-10);
         textSymbol.setOffsetY(-40);
