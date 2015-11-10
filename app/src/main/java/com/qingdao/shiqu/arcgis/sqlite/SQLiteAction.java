@@ -36,11 +36,11 @@ public class SQLiteAction {
      * @param geometry 光缆路由的Geometry
      */
     public static void storeGllyToDatabase(SQLiteDatabase database, Geometry geometry) {
-        Integer hashcode = geometry.hashCode();
+        Integer id = geometry.hashCode();
         byte[] geometryByte = GeometryEngine.geometryToEsriShape(geometry);
         ContentValues cv = new ContentValues();
         cv.put("geometry", geometryByte);
-        cv.put("hashcode", hashcode.toString());
+        cv.put("id", id.toString());
         database.insert("glly", null, cv);
     }
 
@@ -58,11 +58,11 @@ public class SQLiteAction {
      * @param geometry 光缆路由的Geometry
      */
     public static void storeDllyToDatabase(SQLiteDatabase database, Geometry geometry) {
-        Integer hashcode = geometry.hashCode();
+        Integer id = geometry.hashCode();
         byte[] geometryByte = GeometryEngine.geometryToEsriShape(geometry);
         ContentValues cv = new ContentValues();
         cv.put("geometry", geometryByte);
-        cv.put("hashcode", hashcode.toString());
+        cv.put("id", id.toString());
         database.insert("dlly", null, cv);
     }
 
@@ -75,15 +75,20 @@ public class SQLiteAction {
         return query(database, "dlly", null, null, null, null, null, null, null);
     }
 
-    // TODO 保存和查询标注数据
-
     /**
      * 保存标注到数据库
      * @param database 数据库
      * @param geometry 标注的Geometry
      */
-    public static void storeMarkToDatabase(SQLiteDatabase database, Geometry geometry) {
-
+    public static void storeMarkToDatabase(SQLiteDatabase database, Geometry geometry, String title, String content) {
+        Integer id = geometry.hashCode();
+        byte[] geometryByte = GeometryEngine.geometryToEsriShape(geometry);
+        ContentValues cv = new ContentValues();
+        cv.put("id", id.toString());
+        cv.put("geometry", geometryByte);
+        cv.put("title", title);
+        cv.put("content", content);
+        database.insert("mark", null, cv);
     }
 
     /**
@@ -92,7 +97,6 @@ public class SQLiteAction {
      * @return 查询结果
      */
     public static Cursor queryMark(SQLiteDatabase database) {
-        return null;
-        //return query(database, "mark", null, null, null, null, null, null, null);
+        return query(database, "mark", null, null, null, null, null, null, null);
     }
 }

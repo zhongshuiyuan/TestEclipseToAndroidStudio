@@ -23,17 +23,25 @@ public abstract class MapViewOnDrawEvenListener implements DrawEventListener {
     // const
     /** 绘制动作类型 **/
     private int mAction;
-    public static final int ACTION_NULL = 0;
+    public static final int ACTION_NULL = -1;
     /** 新增光缆路由 **/
     public static final int ACTION_ADD_GLLY = 1;
     /** 新增电缆路由 **/
     public static final int ACTION_ADD_DLLY = 2;
+    /** 临时绘制 **/
+    public static final int ACTION_ADD_TEMP = 0;
 
     // private field
     private Context mContext;
     private android.database.sqlite.SQLiteDatabase mSQLiteDatabase;
 
     // property (including setter and getter)
+    /** 临时绘制图层 **/
+    private GraphicsLayer mTempLayer;
+    /** 设置临时绘制图层 **/
+    public void setTempLayer(GraphicsLayer tempLayer) {
+        mTempLayer = tempLayer;
+    }
     /** 光缆路由图层 **/
     private GraphicsLayer mGllyLayer;
     /** 设置光缆路由图层 **/
@@ -65,6 +73,9 @@ public abstract class MapViewOnDrawEvenListener implements DrawEventListener {
             case ACTION_ADD_DLLY:
                 onAddDllyEnd(event);
                 break;
+            case ACTION_ADD_TEMP:
+                onAddTempEnd(event);
+                break;
             case ACTION_NULL:
                 break;
             default:
@@ -94,5 +105,13 @@ public abstract class MapViewOnDrawEvenListener implements DrawEventListener {
         mDllyLayer.addGraphic(graphic);
 
         SQLiteAction.storeDllyToDatabase(mSQLiteDatabase, geometry);
+    }
+
+    /**
+     * 临时绘制完毕，将绘制的内容添加到临时绘制图层上
+     * @param event 绘图事件
+     */
+    private void onAddTempEnd(DrawEvent event) {
+        mTempLayer.addGraphic(event.getDrawGraphic());
     }
 }

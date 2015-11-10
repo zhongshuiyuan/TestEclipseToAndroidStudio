@@ -12,7 +12,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 public class DatabaseOpenHelper extends SQLiteOpenHelper {
 
     public static final String DB_NAME = "customData.db"; //数据库名称
-    private static final int version = 1; //数据库版本
+    public static final int version = 1; //数据库版本
 
     private static final String SQL_DELETE_ENTRIES = "DROP TABLE IF EXISTS " + "glly";
 
@@ -22,13 +22,18 @@ public class DatabaseOpenHelper extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-        //String sql = "create table geometry(polyline blob not null);";
         // 创建光缆路由表
-        String creatGlly = "create table glly(geometry blob not null, hashcode TEXT not null);";
+        String creatGlly = "create table glly(id TEXT not null, geometry blob not null);";
         db.execSQL(creatGlly);
         // 创建电缆路由表
-        String creatDlly = "create table dlly(geometry blob not null, hashcode TEXT not null);";
+        String creatDlly = "create table dlly(id TEXT not null, geometry blob not null);";
         db.execSQL(creatDlly);
+        // 创建标注内容表
+        String creatMark = "create table mark(id TEXT not null, geometry blob not null, title TEXT, content TEXT, imageIds TEXT);";
+        db.execSQL(creatMark);
+        // 创建图片表
+        String creatImage = "create table image(id TEXT not null, image blob not null);";
+        db.execSQL(creatImage);
     }
 
     @Override

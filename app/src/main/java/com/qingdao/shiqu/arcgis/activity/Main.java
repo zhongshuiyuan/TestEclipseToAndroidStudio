@@ -307,8 +307,6 @@ public class Main extends Activity implements OnMapListener
 
         seeAll();
 
-        startUpdatePositionMode();
-
         showNewVersionChanglog();
 
         super.onCreate(savedInstanceState);
@@ -569,6 +567,7 @@ public class Main extends Activity implements OnMapListener
                 onDrawEnd(event, mDrawAction);
             }
         };
+        onDrawEvenListener.setTempLayer(mTempDrawingLayer);
         onDrawEvenListener.setGllyLayer(newglly);
         onDrawEvenListener.setDllyLayer(newdlly);
         mDrawTool.setOnDrawEvenListener(onDrawEvenListener);
@@ -662,7 +661,7 @@ public class Main extends Activity implements OnMapListener
                         break;
                     case 7: // 测试绘制工具
                         // TODO 添加测试代码
-                        startDrawingMode("测试绘制工具", DrawTool.POLYLINE, MapViewOnDrawEvenListener.ACTION_ADD_DLLY);
+                        startDrawingMode("测试绘制工具", DrawTool.POLYLINE, MapViewOnDrawEvenListener.ACTION_ADD_TEMP);
                         drawerLayout.closeDrawers();
                         break;
                     default:
@@ -1571,6 +1570,13 @@ public class Main extends Activity implements OnMapListener
         }
     }
 
+    private void showKeyboard() {
+        InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
+        if (imm.isActive()) {
+            imm.toggleSoftInput(InputMethodManager.HIDE_NOT_ALWAYS, InputMethodManager.SHOW_IMPLICIT);
+        }
+    }
+
     private void markLocation(Location location) {
         mTempDrawingLayer.removeAll();
         double locx = location.getLongitude();
@@ -1718,14 +1724,16 @@ public class Main extends Activity implements OnMapListener
         }
         // 从新数据库读取新数据
         Cursor c = SQLiteAction.queryGlly(mSQLiteDatabase);
-        if(c.moveToFirst()){
-            for(int i = 0; i < c.getCount(); ++i) {
-                c.moveToPosition(i);
-                byte[] geometryByte = c.getBlob(c.getColumnIndex("geometry"));
-                String hashcode = c.getString(c.getColumnIndex("hashcode"));
-                Geometry geometry = GeometryEngine.geometryFromEsriShape(geometryByte, Geometry.Type.POLYLINE);
-                tempGraphic = new Graphic(geometry, SimpleSymbolTemplate.GLLY);
-                newglly.addGraphic(tempGraphic);
+        if (c != null) {
+            if(c.moveToFirst()){
+                for(int i = 0; i < c.getCount(); ++i) {
+                    c.moveToPosition(i);
+                    byte[] geometryByte = c.getBlob(c.getColumnIndex("geometry"));
+                    String id = c.getString(c.getColumnIndex("id"));
+                    Geometry geometry = GeometryEngine.geometryFromEsriShape(geometryByte, Geometry.Type.POLYLINE);
+                    tempGraphic = new Graphic(geometry, SimpleSymbolTemplate.GLLY);
+                    newglly.addGraphic(tempGraphic);
+                }
             }
         }
     }
@@ -1762,14 +1770,16 @@ public class Main extends Activity implements OnMapListener
 
         // 从新数据库读取新数据
         Cursor c = SQLiteAction.queryDlly(mSQLiteDatabase);
-        if(c.moveToFirst()){
-            for(int i = 0; i < c.getCount(); ++i) {
-                c.moveToPosition(i);
-                byte[] geometryByte = c.getBlob(c.getColumnIndex("geometry"));
-                String hashcode = c.getString(c.getColumnIndex("hashcode"));
-                Geometry geometry = GeometryEngine.geometryFromEsriShape(geometryByte, Geometry.Type.POLYLINE);
-                tempGraphic = new Graphic(geometry, SimpleSymbolTemplate.DLLY);
-                newdlly.addGraphic(tempGraphic);
+        if (c != null) {
+            if(c.moveToFirst()){
+                for(int i = 0; i < c.getCount(); ++i) {
+                    c.moveToPosition(i);
+                    byte[] geometryByte = c.getBlob(c.getColumnIndex("geometry"));
+                    String id = c.getString(c.getColumnIndex("id"));
+                    Geometry geometry = GeometryEngine.geometryFromEsriShape(geometryByte, Geometry.Type.POLYLINE);
+                    tempGraphic = new Graphic(geometry, SimpleSymbolTemplate.DLLY);
+                    newdlly.addGraphic(tempGraphic);
+                }
             }
         }
     }
@@ -1786,8 +1796,9 @@ public class Main extends Activity implements OnMapListener
                 for(int i = 0; i < c.getCount(); ++i) {
                     c.moveToPosition(i);
                     byte[] geometryByte = c.getBlob(c.getColumnIndex("geometry"));
-                    String hashcode = c.getString(c.getColumnIndex("hashcode"));
+                    String id = c.getString(c.getColumnIndex("id"));
                     String title = c.getString(c.getColumnIndex("title"));
+                    String content = c.getString(c.getColumnIndex("content"));
                     Geometry geometry = GeometryEngine.geometryFromEsriShape(geometryByte, Geometry.Type.POINT);
                     tempGraphic = new Graphic(geometry, SimpleSymbolTemplate.getMarkPicture(this));
                     mNewMarkLayer.addGraphic(tempGraphic);
@@ -1947,6 +1958,7 @@ public class Main extends Activity implements OnMapListener
     private void onBtnEditOrSaveMarkingClick() {
         if (mMarkingToolbarState == MARKING_TOOLBAR_STATE_NORMAL) {
             mMarkingToolbarState = MARKING_TOOLBAR_STATE_EDIT;
+            showKeyboard();
         } else if (mMarkingToolbarState == MARKING_TOOLBAR_STATE_EDIT) {
             mMarkingToolbarState = MARKING_TOOLBAR_STATE_NORMAL;
 
@@ -1955,13 +1967,22 @@ public class Main extends Activity implements OnMapListener
             graphic = new Graphic(mNewMark, SimpleSymbolTemplate.getMarkText(mEtMarkingTitle.getText().toString()));
             mNewMarkLayer.addGraphic(graphic);
 
-            SQLiteAction.storeMarkToDatabase(mSQLiteDatabase, mNewMark);
+            SQLiteAction.storeMarkToDatabase(mSQLiteDatabase,
+                    mNewMark,
+                    mEtMarkingTitle.getText().toString(),
+                    mEtMarkingContent.getText().toString());
 
             mNewMark = null;
             hideKeyboard();
         }
 
         updateUi();
+
+        // TODO Delete
+        if (mMarkingToolbarState == MARKING_TOOLBAR_STATE_NORMAL) {
+
+        }
+
     }
 
     private void onBtnTakePhotoClick() {
@@ -2206,7 +2227,7 @@ public class Main extends Activity implements OnMapListener
         String bestProvider = locationManager.getBestProvider(getCriteria(), true);
         //获取位置信息
         //如果不设置查询要求，getLastKnownLocation方法传人的参数为LocationManager.GPS_PROVIDER
-        Location location = locationManager.getLastKnownLocation(bestProvider);
+        Location location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
         if (location != null) {
             mLastLocationFromGps = location;
             updateLocation(location, false);

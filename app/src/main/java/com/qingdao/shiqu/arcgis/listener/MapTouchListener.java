@@ -1095,9 +1095,9 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 										DoAction.removeGLLY(mContext, sb.toString());
 										// 从数据库移除数据
 										byte[] geometryByte = GeometryEngine.geometryToEsriShape(geometry);
-										Integer hashcode = geometry.hashCode();
-										String whereClause = "hashcode=?";
-										String[] whereArgs = {hashcode.toString()};
+										Integer id = geometry.hashCode();
+										String whereClause = "id=?";
+										String[] whereArgs = {id.toString()};
 										mSQLiteDatabase.delete("glly", whereClause, whereArgs);
 										// 从图层中移除符号
 										newglly.removeGraphic(temp.getUid());
@@ -1145,9 +1145,9 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 										DoAction.removeDLLY(mContext, sb.toString());
 										// 从数据库移除数据
 										byte[] geometryByte = GeometryEngine.geometryToEsriShape(geometry);
-										Integer hashcode = geometry.hashCode();
-										String whereClause = "hashcode=?";
-										String[] whereArgs = {hashcode.toString()};
+										Integer id = geometry.hashCode();
+										String whereClause = "id=?";
+										String[] whereArgs = {id.toString()};
 										mSQLiteDatabase.delete("dlly", whereClause, whereArgs);
 										// 从图层中移除符号
 										newdlly.removeGraphic(temp.getUid());
