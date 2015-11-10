@@ -174,6 +174,13 @@ public class Main extends Activity implements OnMapListener
     /** 实时定位模式 **/
     private final int MAP_STATE_NAVIGATION = 1;
 
+    /** 软键盘 **/
+    private int mKeyboardState;
+    /** 隐藏状态 **/
+    private final int KEYBOARD_STATE_NULL = 0;
+    /** 启用状态 **/
+    private final int KEYBOARD_STATE_ACTIVATE = 1;
+
     /** 是否开启了实时更新位置模式（只更新位置图标，不会移动屏幕位置） **/
     private boolean mIsUpdatePositionStarted;
     /** 实时更新位置模式专用线程 **/
@@ -353,6 +360,7 @@ public class Main extends Activity implements OnMapListener
         mActivityState = ACTIVITY_STATE_NORMAL;
         mMapState = MAP_STATE_NORMAL;
         mMarkingToolbarState = MARKING_TOOLBAR_STATE_NORMAL;
+        mKeyboardState = KEYBOARD_STATE_NULL;
 
         //顶部动作条
         mActionView = (ActionView) findViewById(R.id.main_av_menu);
@@ -450,22 +458,28 @@ public class Main extends Activity implements OnMapListener
 //        mLocalTiledLayerFenpeiOld = new ArcGISLocalTiledLayer("file:///" + "sdcard/PDAlayers/jfpwlay");
         mLocationGraphicsLayer = new GraphicsLayer();
         mLocationGraphicsLayer.setName("定位图层");
-        mNewMarkLayer = new GraphicsLayer();
-        mNewMarkLayer.setName("新加标注图层");
-        newNodeLayer = new GraphicsLayer();
-        newNodeLayer.setName("新加节点图层");
-        newGuandaoLayer = new GraphicsLayer();
-        newGuandaoLayer.setName("新加管道图层");
-        newgllayer = new GraphicsLayer();
-        newgllayer.setName("新加光缆图层");
         mTempDrawingLayer = new GraphicsLayer();
         mTempDrawingLayer.setName("临时绘制图层");
         mTempMarkingLayer = new GraphicsLayer();
         mTempMarkingLayer.setName("临时标注图层");
+        mNewMarkLayer = new GraphicsLayer();
+        mNewMarkLayer.setName("新加标注图层");
+        mNewMarkLayer.setMinScale(5000);
+        newNodeLayer = new GraphicsLayer();
+        newNodeLayer.setName("新加节点图层");
+        newNodeLayer.setMinScale(5000);
+        newGuandaoLayer = new GraphicsLayer();
+        newGuandaoLayer.setName("新加管道图层");
+        newGuandaoLayer.setMinScale(5000);
+        newgllayer = new GraphicsLayer();
+        newgllayer.setName("新加光缆图层");
+        newgllayer.setMinScale(5000);
         newglly = new GraphicsLayer();
         newglly.setName("新加光缆路由");
+        newglly.setMinScale(5000);
         newdlly = new GraphicsLayer();
         newdlly.setName("新加电缆路由");
+        newdlly.setMinScale(5000);
 
         // 添加底图
         mMapView.setMapBackground(0xffffff, 0xffffff, 0, 0);
@@ -527,15 +541,15 @@ public class Main extends Activity implements OnMapListener
         mMapView.addLayer(mTempMarkingLayer);
         mMapView.addLayer(mLocationGraphicsLayer); // 定位图层
 
-        for(int i=0;i< mMapView.getLayers().length;i++){
-            if(mMapView.getLayer(i).getName().equals("新加管道图层") || mMapView.getLayer(i).getName().equals("新加节点图层")
-                    || mMapView.getLayer(i).getName().equals("新加光缆路由") || mMapView.getLayer(i).getName().equals("新加电缆路由") )
-                mMapView.getLayer(i).setMinScale(8000);
-            if(mMapView.getLayer(i).getName().equals("定位图层")){
-                mMapView.getLayer(i).setMinScale(0);
-                mMapView.getLayer(i).setMaxScale(0);
-            }
-        }
+//        for(int i=0;i< mMapView.getLayers().length;i++){
+//            if(mMapView.getLayer(i).getName().equals("新加管道图层") || mMapView.getLayer(i).getName().equals("新加节点图层")
+//                    || mMapView.getLayer(i).getName().equals("新加光缆路由") || mMapView.getLayer(i).getName().equals("新加电缆路由") )
+//                mMapView.getLayer(i).setMinScale(8000);
+//            if(mMapView.getLayer(i).getName().equals("定位图层")){
+//                mMapView.getLayer(i).setMinScale(0);
+//                mMapView.getLayer(i).setMaxScale(0);
+//            }
+//        }
 
         DatabaseOpenHelper databaseOpenHelper = new DatabaseOpenHelper(this);
         mSQLiteDatabase = databaseOpenHelper.getWritableDatabase();
@@ -702,10 +716,7 @@ public class Main extends Activity implements OnMapListener
                 // 如果弹出更新日志，则保证隐藏软键盘
                 boolean show = sharedPreferences.getBoolean(getString(R.string.preference_file_key_main_boolean_show_changelog), true);
                 if (show) {
-                    InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
-                    if (imm.isActive()) {
-                        imm.toggleSoftInput(InputMethodManager.SHOW_IMPLICIT, InputMethodManager.HIDE_NOT_ALWAYS);
-                    }
+                    hideKeyboard();
                 }
             }
 
@@ -1553,6 +1564,13 @@ public class Main extends Activity implements OnMapListener
         return table;
     }
 
+    private void hideKeyboard() {
+        InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
+        if (imm.isActive()) {
+            imm.toggleSoftInput(InputMethodManager.SHOW_IMPLICIT, InputMethodManager.HIDE_NOT_ALWAYS);
+        }
+    }
+
     private void markLocation(Location location) {
         mTempDrawingLayer.removeAll();
         double locx = location.getLongitude();
@@ -1762,18 +1780,20 @@ public class Main extends Activity implements OnMapListener
     private void loadMark() {
         // 从新数据库读取新数据
         Cursor c = SQLiteAction.queryMark(mSQLiteDatabase);
-        if(c.moveToFirst()){
-            Graphic tempGraphic;
-            for(int i = 0; i < c.getCount(); ++i) {
-                c.moveToPosition(i);
-                byte[] geometryByte = c.getBlob(c.getColumnIndex("geometry"));
-                String hashcode = c.getString(c.getColumnIndex("hashcode"));
-                String title = c.getString(c.getColumnIndex("title"));
-                Geometry geometry = GeometryEngine.geometryFromEsriShape(geometryByte, Geometry.Type.POINT);
-                tempGraphic = new Graphic(geometry, SimpleSymbolTemplate.getMarkPicture(this));
-                mNewMarkLayer.addGraphic(tempGraphic);
-                tempGraphic = new Graphic(geometry, SimpleSymbolTemplate.getMarkText(title));
-                mNewMarkLayer.addGraphic(tempGraphic);
+        if (c != null) {
+            if(c.moveToFirst()){
+                Graphic tempGraphic;
+                for(int i = 0; i < c.getCount(); ++i) {
+                    c.moveToPosition(i);
+                    byte[] geometryByte = c.getBlob(c.getColumnIndex("geometry"));
+                    String hashcode = c.getString(c.getColumnIndex("hashcode"));
+                    String title = c.getString(c.getColumnIndex("title"));
+                    Geometry geometry = GeometryEngine.geometryFromEsriShape(geometryByte, Geometry.Type.POINT);
+                    tempGraphic = new Graphic(geometry, SimpleSymbolTemplate.getMarkPicture(this));
+                    mNewMarkLayer.addGraphic(tempGraphic);
+                    tempGraphic = new Graphic(geometry, SimpleSymbolTemplate.getMarkText(title));
+                    mNewMarkLayer.addGraphic(tempGraphic);
+                }
             }
         }
     }
@@ -1820,14 +1840,6 @@ public class Main extends Activity implements OnMapListener
 
     private void stopMarkingMode() {
         mActivityState = ACTIVITY_STATE_NORMAL;
-
-        Graphic graphic = new Graphic(mNewMark, SimpleSymbolTemplate.getMarkPicture(this));
-        mNewMarkLayer.addGraphic(graphic);
-        graphic = new Graphic(mNewMark, SimpleSymbolTemplate.getMarkText(mEtMarkingTitle.getText().toString()));
-        mNewMarkLayer.addGraphic(graphic);
-
-        SQLiteAction.storeMarkToDatabase(mSQLiteDatabase, mNewMark);
-        mNewMark = null;
 
         updateUi();
     }
@@ -1937,6 +1949,16 @@ public class Main extends Activity implements OnMapListener
             mMarkingToolbarState = MARKING_TOOLBAR_STATE_EDIT;
         } else if (mMarkingToolbarState == MARKING_TOOLBAR_STATE_EDIT) {
             mMarkingToolbarState = MARKING_TOOLBAR_STATE_NORMAL;
+
+            Graphic graphic = new Graphic(mNewMark, SimpleSymbolTemplate.getMarkPicture(this));
+            mNewMarkLayer.addGraphic(graphic);
+            graphic = new Graphic(mNewMark, SimpleSymbolTemplate.getMarkText(mEtMarkingTitle.getText().toString()));
+            mNewMarkLayer.addGraphic(graphic);
+
+            SQLiteAction.storeMarkToDatabase(mSQLiteDatabase, mNewMark);
+
+            mNewMark = null;
+            hideKeyboard();
         }
 
         updateUi();
@@ -2006,8 +2028,17 @@ public class Main extends Activity implements OnMapListener
         updateDrawingToolbar();
         updateMarkingToolbar();
         updateButtons();
+        updateKeyboard();
     }
 
+    /** 更新输入键盘的UI **/
+    private void updateKeyboard() {
+//        if (mKeyboardState == KEYBOARD_STATE_NULL) {
+//            hideKeyboard();
+//        }
+    }
+
+    /** 更新各个按钮的UI **/
     private void updateButtons() {
         // 导航按钮
         if (mMapState == MAP_STATE_NORMAL) {
@@ -2017,6 +2048,7 @@ public class Main extends Activity implements OnMapListener
         }
     }
 
+    /** 更新位置信息栏的UI **/
     private void updateLocationBar() {
         if (mMapState != MAP_STATE_NAVIGATION) {
             updateCoordinate();
@@ -2026,6 +2058,7 @@ public class Main extends Activity implements OnMapListener
         updateLatitude();
     }
 
+    /** 更新绘图工具栏的UI **/
     private void updateDrawingToolbar() {
         if (mActivityState == ACTIVITY_STATE_DRAWING) {
             mDrawingToolbar.setVisibility(View.VISIBLE);
@@ -2040,11 +2073,13 @@ public class Main extends Activity implements OnMapListener
         }
     }
 
+    /** 更新标注工具栏的UI **/
     private void updateMarkingToolbar() {
         if (mActivityState == ACTIVITY_STATE_MARKING) {
             mRlMarkingToolbar.setVisibility(View.VISIBLE);
             if (mMarkingToolbarState == MARKING_TOOLBAR_STATE_NORMAL) {
                 setMarkingToolbarToNormalState();
+                mTempMarkingLayer.removeAll();
             } else if (mMarkingToolbarState == MARKING_TOOLBAR_STATE_EDIT) {
                 setMarkingToolbarToEditingState();
             }

@@ -18,7 +18,11 @@ public class SimpleSymbolTemplate {
     }
     /** 标注（文字） **/
     public static TextSymbol getMarkText(String text) {
-        return new TextSymbol(10, text, Color.BLACK);
+        TextSymbol textSymbol = new TextSymbol(15, text, Color.BLACK);
+        textSymbol.setFontFamily("DroidSansFallback.ttf");
+        textSymbol.setOffsetX(-10);
+        textSymbol.setOffsetY(-40);
+        return textSymbol;
     }
     /** 光缆路由 **/
     public static final SimpleLineSymbol GLLY = new SimpleLineSymbol(Color.DKGRAY, 1, SimpleLineSymbol.STYLE.SOLID);
