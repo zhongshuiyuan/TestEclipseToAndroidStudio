@@ -115,4 +115,14 @@ public class SQLiteAction {
     public static Cursor queryMark(SQLiteDatabase database) {
         return query(database, "mark", null, null, null, null, null, null, null);
     }
+
+    /**
+     * 通过ID查询标注数据
+     * @param database 数据库
+     * @param ids 所需查询的标注的id
+     * @return 查询结果
+     */
+    public static Cursor queryMarkViaIds(SQLiteDatabase database, String[] ids) {
+        return query(database, "mark", null, "id=?", ids, null, null, null, null);
+    }
 }

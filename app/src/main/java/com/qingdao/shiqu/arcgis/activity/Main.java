@@ -193,7 +193,7 @@ public class Main extends Activity implements OnMapListener
 
     /** 新建标注图层 **/
     GraphicsLayer mNewMarkLayer;
-    Geometry mNewMark;
+    Geometry mCurrentMark;
     /** 新建节点图层 **/
     GraphicsLayer newNodeLayer;
     /** 新建管道图层 **/
@@ -432,7 +432,7 @@ public class Main extends Activity implements OnMapListener
 
             @Override
             public void onMenuCollapsed() {
-                mBtnActionMenu.setDrawableIcon(getResources().getDrawable(R.drawable.ic_add_white_48dp));
+                mBtnActionMenu.setDrawableIcon(getResources().getDrawable(R.drawable.ic_map));
             }
         });
 
@@ -511,6 +511,7 @@ public class Main extends Activity implements OnMapListener
         touchListener.setTvCoordinate(mTvCoordinate);
         touchListener.setTempDrawingLayer(mTempDrawingLayer);
         touchListener.setTempMarkingLayer(mTempMarkingLayer);
+        touchListener.setNewMarkLayer(mNewMarkLayer);
         touchListener.setNewNodeLayer(newNodeLayer);
         touchListener.setNewgdlayer(newGuandaoLayer);
         touchListener.setNewGLLayer(newgllayer);
@@ -1378,8 +1379,15 @@ public class Main extends Activity implements OnMapListener
     /** 在地图上长按标注该位置 **/
     @Override
     public void onLocationMarked(Geometry markedLocation) {
-        mNewMark = markedLocation;
+        mCurrentMark = markedLocation;
         startMarkingMode(true);
+    }
+
+    /** 在地图上选中标注时 **/
+    @Override
+    public void onMarkSelected(Geometry mark) {
+        mCurrentMark = mark;
+        startMarkingMode(false);
     }
 
     public boolean onKeyDown(int keyCode, KeyEvent event)
@@ -1821,35 +1829,64 @@ public class Main extends Activity implements OnMapListener
 
         if (isEditingMark) {
             mMarkingToolbarState = MARKING_TOOLBAR_STATE_EDIT;
-            setMarkingToolbarToEditingState();
+            setMarkingToolbarToEditingState(true);
         } else {
             mMarkingToolbarState = MARKING_TOOLBAR_STATE_NORMAL;
-            setMarkingToolbarToNormalState();
+            setMarkingToolbarToNormalState(true);
+            fillDataToMarkingToolbar(mCurrentMark);
         }
 
         updateUi();
     }
 
-    private void setMarkingToolbarToNormalState() {
+    /** 从数据库查询该标注的数据并显示到标注工具栏 **/
+    private void fillDataToMarkingToolbar(Geometry geometry) {
+        Integer id = geometry.hashCode();
+        String[] ids = {id.toString()};
+        Cursor c = SQLiteAction.queryMarkViaIds(mSQLiteDatabase, ids);
+        if (c != null) {
+            if (c.moveToFirst()) {
+                int recordCount = c.getCount();
+                if (recordCount != 1) {
+                    if (recordCount == 0) {
+                        Log.w(TAG, "没有查询到已有的标注信息");
+                    } else if (recordCount > 1) {
+                        Log.w(TAG, "有" + recordCount + "个标注对象具有相同的id");
+                    }
+                } else {
+                    String title = c.getString(c.getColumnIndex("title"));
+                    String content = c.getString(c.getColumnIndex("content"));
+                    mTvMarkingTitle.setText(title);
+                    mTvMarkingContent.setText(content);
+                }
+            }
+        }
+    }
+
+    private void setMarkingToolbarToNormalState(boolean copyContent) {
         mBtnMarkingEditOrSave.setDrawableIcon(getResources().getDrawable(R.drawable.ic_edit));
         mBtnMarkingEditOrSave.setBackgroundColor(getResources().getColor(R.color.app_design_background));
         mTvMarkingTitle.setVisibility(View.VISIBLE);
-        mTvMarkingTitle.setText(mEtMarkingTitle.getText());
         mEtMarkingTitle.setVisibility(View.GONE);
         mTvMarkingContent.setVisibility(View.VISIBLE);
-        mTvMarkingContent.setText(mEtMarkingContent.getText());
         mEtMarkingContent.setVisibility(View.GONE);
+        if (copyContent) {
+            mTvMarkingTitle.setText(mEtMarkingTitle.getText());
+            mTvMarkingContent.setText(mEtMarkingContent.getText());
+        }
     }
 
-    private void setMarkingToolbarToEditingState() {
+    private void setMarkingToolbarToEditingState(boolean copyContent) {
         mBtnMarkingEditOrSave.setDrawableIcon(getResources().getDrawable(R.drawable.ic_content_save));
         mBtnMarkingEditOrSave.setBackgroundColor(getResources().getColor(R.color.dark_green));
         mEtMarkingTitle.setVisibility(View.VISIBLE);
-        mEtMarkingTitle.setText(mTvMarkingTitle.getText());
         mTvMarkingTitle.setVisibility(View.GONE);
         mEtMarkingContent.setVisibility(View.VISIBLE);
-        mEtMarkingContent.setText(mTvMarkingContent.getText());
         mTvMarkingContent.setVisibility(View.GONE);
+        if (copyContent) {
+            mEtMarkingTitle.setText(mTvMarkingTitle.getText());
+            mEtMarkingContent.setText(mTvMarkingContent.getText());
+        }
     }
 
     /** 清除标注工具栏的内容 **/
@@ -1863,7 +1900,8 @@ public class Main extends Activity implements OnMapListener
     private void stopMarkingMode() {
         mActivityState = ACTIVITY_STATE_NORMAL;
 
-        mNewMark = null;
+        mCurrentMark = null;
+        hideKeyboard();
 
         updateUi();
     }
@@ -1969,20 +2007,21 @@ public class Main extends Activity implements OnMapListener
 
 
     private void onBtnEditOrSaveMarkingClick() {
-         if (mMarkingToolbarState == MARKING_TOOLBAR_STATE_NORMAL) {
+        if (mMarkingToolbarState == MARKING_TOOLBAR_STATE_NORMAL) {
             mMarkingToolbarState = MARKING_TOOLBAR_STATE_EDIT;
         } else if (mMarkingToolbarState == MARKING_TOOLBAR_STATE_EDIT) {
             mMarkingToolbarState = MARKING_TOOLBAR_STATE_NORMAL;
 
-            Graphic graphic = new Graphic(mNewMark, SimpleSymbolTemplate.getMarkPicture(this));
+            Graphic graphic = new Graphic(mCurrentMark, SimpleSymbolTemplate.getMarkPicture(this));
             mNewMarkLayer.addGraphic(graphic);
-            graphic = new Graphic(mNewMark, SimpleSymbolTemplate.getMarkText(mEtMarkingTitle.getText().toString()));
+            graphic = new Graphic(mCurrentMark, SimpleSymbolTemplate.getMarkText(mEtMarkingTitle.getText().toString()));
             mNewMarkLayer.addGraphic(graphic);
 
             SQLiteAction.storeMarkToDatabase(mSQLiteDatabase,
-                    mNewMark,
+                    mCurrentMark,
                     mEtMarkingTitle.getText().toString(),
                     mEtMarkingContent.getText().toString());
+            setMarkingToolbarToNormalState(true);
         }
 
         updateUi();
@@ -2110,10 +2149,10 @@ public class Main extends Activity implements OnMapListener
         if (mActivityState == ACTIVITY_STATE_MARKING) {
             mRlMarkingToolbar.setVisibility(View.VISIBLE);
             if (mMarkingToolbarState == MARKING_TOOLBAR_STATE_NORMAL) {
-                setMarkingToolbarToNormalState();
+                setMarkingToolbarToNormalState(false);
                 mTempMarkingLayer.removeAll();
             } else if (mMarkingToolbarState == MARKING_TOOLBAR_STATE_EDIT) {
-                setMarkingToolbarToEditingState();
+                setMarkingToolbarToEditingState(false);
             }
         } else {
             mRlMarkingToolbar.setVisibility(View.GONE);

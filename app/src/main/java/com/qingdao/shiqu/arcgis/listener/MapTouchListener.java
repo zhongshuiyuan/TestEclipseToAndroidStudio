@@ -128,8 +128,12 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 	FeatureLayer zhuanxiangl,zhixiangl,gugangl;
 
 	//Qinyy 新增
-	private int mMapTouchListenerState;
 	private android.database.sqlite.SQLiteDatabase mSQLiteDatabase;
+	/** 用户标注图层 **/
+	GraphicsLayer mNewMarkLayer;
+	public void setNewMarkLayer(GraphicsLayer newMarkLayer) {
+		mNewMarkLayer = newMarkLayer;
+	}
 	//Qinyy 新增完毕
 
 	TextView mTvCoordinate;
@@ -1016,36 +1020,45 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 					isSelectedObject = true;
 				}
 			}
+			// 显示标注
+			Graphic selectedGraphic;
+			if (!isSelectedObject) {
+				selectedGraphic = getGraphicFromLayer(event.getX(), event.getY(), mNewMarkLayer);
+				if (selectedGraphic != null) {
+					isSelectedObject = true;
+					click.onMarkSelected(selectedGraphic.getGeometry());
+				}
+			}
+
 
 			// 选中本地新增（用户绘制）对象进行删除
 			DataTable result = null;
-			Graphic graphicToDelete;
 			// 删除节点
 			if (!isSelectedObject) {
-				graphicToDelete = getGraphicFromLayer(event.getX(), event.getY(), newNodeLayer);
-				if (graphicToDelete != null) {
+				selectedGraphic = getGraphicFromLayer(event.getX(), event.getY(), newNodeLayer);
+				if (selectedGraphic != null) {
 					isSelectedObject = true;
 				}
 			}
 			// 删除管道
 			if (!isSelectedObject) {
-				graphicToDelete = getGraphicFromLayer(event.getX(), event.getY(), newgdlayer);
-				if(graphicToDelete != null) {
+				selectedGraphic = getGraphicFromLayer(event.getX(), event.getY(), newgdlayer);
+				if(selectedGraphic != null) {
 					isSelectedObject = true;
-					// Get the graphicToDelete type and do different things by the type
-					Geometry gy = graphicToDelete.getGeometry();
+					// Get the selectedGraphic type and do different things by the type
+					Geometry gy = selectedGraphic.getGeometry();
 					Type ty = gy.getType();
-					graphicToDelete.getSymbol();
+					selectedGraphic.getSymbol();
 					if (ty == Type.POINT) {
 						Point pt = (Point)gy;
 						result = DoAction.getPointInfoByXY(mContext,pt);
-						//				result = DoAction.getPointInfoByUID(mContext, String.valueOf(graphicToDelete.getId()));
+						//				result = DoAction.getPointInfoByUID(mContext, String.valueOf(selectedGraphic.getId()));
 						for(int i=0;i<result.size();i++){
 							DataCollection dc = result.next();
 							//search the gjid in gdtable , if find the gj is not to be delete,should delete the linked gd first!
 							DataTable rst = DoAction.getSegmentInfoByPID(mContext, dc.get("gjid").Value.toString());
 							// show dialog
-							showDelDialog(newNodeLayer,graphicToDelete.getId(),Integer.valueOf(dc.get("gjid").Value.toString()),rst,ty);
+							showDelDialog(newNodeLayer,selectedGraphic.getId(),Integer.valueOf(dc.get("gjid").Value.toString()),rst,ty);
 						}
 					} else if (ty == Type.POLYLINE) {
 						Polyline pl = (Polyline) gy;
@@ -1054,22 +1067,22 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 							alpl.add(pl.getPoint(i));
 						}
 						result = DoAction.getSegmentInfoByPts(mContext,alpl);
-						//				result = DoAction.getSegmentInfoByUID(mContext, String.valueOf(graphicToDelete.getId()));
+						//				result = DoAction.getSegmentInfoByUID(mContext, String.valueOf(selectedGraphic.getId()));
 						for(int i=0;i<result.size();i++){
 							DataCollection dc = result.next();
 							DataTable rst = DoAction.ChargeSegIsinGD2GL(mContext,dc.get("gdid").Value.toString());
 							// show dialog
-							showDelDialog(newgdlayer,graphicToDelete.getId(),Integer.valueOf(dc.get("gdid").Value.toString()),rst,ty);
+							showDelDialog(newgdlayer,selectedGraphic.getId(),Integer.valueOf(dc.get("gdid").Value.toString()),rst,ty);
 						}
 					}
 				}
 			}
 			// 删除光缆路由
 			if (!isSelectedObject) {
-				graphicToDelete = getGraphicFromLayer(event.getX(), event.getY(), newglly);
-				if(graphicToDelete != null) {
+				selectedGraphic = getGraphicFromLayer(event.getX(), event.getY(), newglly);
+				if(selectedGraphic != null) {
 					isSelectedObject = true;
-					final Graphic temp = graphicToDelete;
+					final Graphic temp = selectedGraphic;
 					AlertDialog alertDialog = new AlertDialog.Builder(mContext)
 							.setIcon(R.drawable.logo)
 							.setTitle("删除光缆路由")
@@ -1115,10 +1128,10 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 			}
 			// 删除电缆路由
 			if (!isSelectedObject) {
-				graphicToDelete = getGraphicFromLayer(event.getX(), event.getY(), newdlly);
-				if (graphicToDelete != null) {
+				selectedGraphic = getGraphicFromLayer(event.getX(), event.getY(), newdlly);
+				if (selectedGraphic != null) {
 					isSelectedObject = true;
-					final Graphic temp = graphicToDelete;
+					final Graphic temp = selectedGraphic;
 					AlertDialog alertDialog = new AlertDialog.Builder(mContext)
 							.setIcon(R.drawable.logo)
 							.setTitle("删除电缆路由")
@@ -1559,5 +1572,7 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 		void onMoveAndZoom();
 		/** 在地图上进行标注时 **/
 		void onLocationMarked(Geometry markedLocation);
+		/** 选中地图上的标注时 **/
+		void onMarkSelected(Geometry mark);
 	}
 }
