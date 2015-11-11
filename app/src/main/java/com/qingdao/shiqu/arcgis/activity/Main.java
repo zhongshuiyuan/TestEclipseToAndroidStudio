@@ -32,6 +32,8 @@ import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
@@ -2165,6 +2167,10 @@ public class Main extends Activity implements OnMapListener
     /** 更新标注工具栏的UI **/
     private void updateMarkingToolbar() {
         if (mActivityState == ACTIVITY_STATE_MARKING) {
+            if (mRlMarkingToolbar.getVisibility() == View.GONE) {
+                Animation animation = AnimationUtils.loadAnimation(this, R.anim.marking_toolbar_show);
+                mRlMarkingToolbar.startAnimation(animation);
+            }
             mRlMarkingToolbar.setVisibility(View.VISIBLE);
             if (mMarkingToolbarState == MARKING_TOOLBAR_STATE_NORMAL) {
                 setMarkingToolbarToNormalState();
@@ -2173,6 +2179,10 @@ public class Main extends Activity implements OnMapListener
                 setMarkingToolbarToEditingState();
             }
         } else {
+            if (mRlMarkingToolbar.getVisibility() == View.VISIBLE) {
+                Animation animation = AnimationUtils.loadAnimation(this, R.anim.marking_toolbar_hide);
+                mRlMarkingToolbar.startAnimation(animation);
+            }
             mRlMarkingToolbar.setVisibility(View.GONE);
             resetMarkingToolbar();
             mTempMarkingLayer.removeAll();
