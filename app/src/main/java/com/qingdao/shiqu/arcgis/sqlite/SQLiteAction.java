@@ -35,7 +35,7 @@ public class SQLiteAction {
      * @param database 本地数据库
      * @param geometry 光缆路由的Geometry
      */
-    public static void storeGllyToDatabase(SQLiteDatabase database, Geometry geometry) {
+    public static void storeGlly(SQLiteDatabase database, Geometry geometry) {
         Integer id = geometry.hashCode();
         byte[] geometryByte = GeometryEngine.geometryToEsriShape(geometry);
         ContentValues cv = new ContentValues();
@@ -57,7 +57,7 @@ public class SQLiteAction {
      * 保存光缆路由到数据库
      * @param geometry 光缆路由的Geometry
      */
-    public static void storeDllyToDatabase(SQLiteDatabase database, Geometry geometry) {
+    public static void storeDlly(SQLiteDatabase database, Geometry geometry) {
         Integer id = geometry.hashCode();
         byte[] geometryByte = GeometryEngine.geometryToEsriShape(geometry);
         ContentValues cv = new ContentValues();
@@ -80,7 +80,7 @@ public class SQLiteAction {
      * @param database 数据库
      * @param geometry 标注的Geometry
      */
-    public static void storeMarkToDatabase(SQLiteDatabase database, Geometry geometry, String title, String content) {
+    public static void storeMark(SQLiteDatabase database, Geometry geometry, String title, String content) {
         Integer id = geometry.hashCode();
         byte[] geometryByte = GeometryEngine.geometryToEsriShape(geometry);
         ContentValues cv = new ContentValues();
@@ -105,6 +105,13 @@ public class SQLiteAction {
             String[] whereArgs = {id.toString()};
             database.update("mark", cv, whereClause, whereArgs);
         }
+    }
+
+    public static void delectMark(SQLiteDatabase database, Geometry geometry) {
+        Integer id = geometry.hashCode();
+        String whereClause = "id=?";
+        String[] whereArgs = {id.toString()};
+        database.delete("mark", whereClause, whereArgs);
     }
 
     /**

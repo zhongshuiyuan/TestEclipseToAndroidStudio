@@ -92,7 +92,7 @@ public abstract class MapViewOnDrawEvenListener implements DrawEventListener {
         Graphic graphic = new Graphic(geometry, SimpleSymbolTemplate.GLLY);
         mGllyLayer.addGraphic(graphic);
 
-        SQLiteAction.storeGllyToDatabase(mSQLiteDatabase, geometry);
+        SQLiteAction.storeGlly(mSQLiteDatabase, geometry);
     }
 
     /**
@@ -104,7 +104,7 @@ public abstract class MapViewOnDrawEvenListener implements DrawEventListener {
         Graphic graphic = new Graphic(geometry, SimpleSymbolTemplate.DLLY);
         mDllyLayer.addGraphic(graphic);
 
-        SQLiteAction.storeDllyToDatabase(mSQLiteDatabase, geometry);
+        SQLiteAction.storeDlly(mSQLiteDatabase, geometry);
     }
 
     /**

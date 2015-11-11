@@ -257,7 +257,7 @@ public class Main extends Activity implements OnMapListener
     private ButtonFloat mBtnMarkingEditOrSave;
     private ButtonFloat mBtnMarkingTakePhoto;
     private ButtonFloat mBtnMarkingPiakImage;
-    private ButtonFloat mBtnMarkingClose;
+    private ButtonFloat mBtnMarkingDelete;
 
     private DrawerLayout drawerLayout;
     private RelativeLayout leftLayout;
@@ -408,7 +408,7 @@ public class Main extends Activity implements OnMapListener
         mBtnMarkingEditOrSave = (ButtonFloat) findViewById(R.id.main_btn_marking_edit_or_save);
         mBtnMarkingTakePhoto = (ButtonFloat) findViewById(R.id.main_btn_marking_take_photo);
         mBtnMarkingPiakImage = (ButtonFloat) findViewById(R.id.main_btn_marking_pick_image);
-        mBtnMarkingClose = (ButtonFloat) findViewById(R.id.main_btn_marking_close);
+        mBtnMarkingDelete = (ButtonFloat) findViewById(R.id.main_btn_marking_delete);
 
         mBtnLocation = (ButtonFloat) findViewById(R.id.btn_location);
         mBtnLocation.setDrawableIcon(getResources().getDrawable(R.drawable.ic_my_location_white_48dp));
@@ -1223,7 +1223,7 @@ public class Main extends Activity implements OnMapListener
                 onBtnCloseDrawingToolbarClick();
                 break;
             case R.id.main_btn_marking_edit_or_save: // 编辑或保存标注信息
-                onBtnEditOrSaveMarkingClick();
+                onBtnEditOrSaveMarkClick();
                 break;
             case R.id.main_btn_marking_take_photo: // 通过拍照设置标注现场图
                 onBtnTakePhotoClick();
@@ -1231,8 +1231,8 @@ public class Main extends Activity implements OnMapListener
             case R.id.main_btn_marking_pick_image: // 从图库选择图片来设置标注现场图
                 onBtnPickImageClick();
                 break;
-            case R.id.main_btn_marking_close: // 关闭标注工具栏
-                stopMarkingMode();
+            case R.id.main_btn_marking_delete: // 关闭标注工具栏
+                onBtnDeleteMarkClick();
                 break;
             default:
                 break;
@@ -1881,6 +1881,7 @@ public class Main extends Activity implements OnMapListener
     private void setMarkingToolbarToNormalState() {
         mBtnMarkingEditOrSave.setDrawableIcon(getResources().getDrawable(R.drawable.ic_edit));
         mBtnMarkingEditOrSave.setBackgroundColor(getResources().getColor(R.color.app_design_background));
+        mBtnMarkingDelete.setVisibility(View.GONE);
         mTvMarkingTitle.setVisibility(View.VISIBLE);
         mEtMarkingTitle.setVisibility(View.GONE);
         mTvMarkingContent.setVisibility(View.VISIBLE);
@@ -1892,6 +1893,7 @@ public class Main extends Activity implements OnMapListener
     private void setMarkingToolbarToEditingState() {
         mBtnMarkingEditOrSave.setDrawableIcon(getResources().getDrawable(R.drawable.ic_content_save));
         mBtnMarkingEditOrSave.setBackgroundColor(getResources().getColor(R.color.dark_green));
+        mBtnMarkingDelete.setVisibility(View.VISIBLE);
         mEtMarkingTitle.setVisibility(View.VISIBLE);
         mTvMarkingTitle.setVisibility(View.GONE);
         mEtMarkingContent.setVisibility(View.VISIBLE);
@@ -2020,7 +2022,7 @@ public class Main extends Activity implements OnMapListener
     }
 
     /** 当标注工具栏编辑（保存）按钮被按下时 **/
-    private void onBtnEditOrSaveMarkingClick() {
+    private void onBtnEditOrSaveMarkClick() {
         if (mMarkingToolbarState == MARKING_TOOLBAR_STATE_NORMAL) {
             mMarkingToolbarState = MARKING_TOOLBAR_STATE_EDIT;
         } else if (mMarkingToolbarState == MARKING_TOOLBAR_STATE_EDIT) {
@@ -2029,7 +2031,7 @@ public class Main extends Activity implements OnMapListener
             mCurrentMark.setTitle(mEtMarkingTitle.getText().toString());
             mCurrentMark.setContent(mEtMarkingContent.getText().toString());
 
-            SQLiteAction.storeMarkToDatabase(mSQLiteDatabase,
+            SQLiteAction.storeMark(mSQLiteDatabase,
                     mCurrentMark.getGeometry(),
                     mEtMarkingTitle.getText().toString(),
                     mEtMarkingContent.getText().toString());
@@ -2061,6 +2063,50 @@ public class Main extends Activity implements OnMapListener
             showKeyboard();
         }
 
+    }
+
+    /** 按下删除标注按钮 **/
+    private void onBtnDeleteMarkClick() {
+        boolean isDeleteMark = false;
+        Integer id = mCurrentMark.getGeometry().hashCode();
+        String[] ids = {id.toString()};
+        Cursor c = SQLiteAction.queryMarkViaIds(mSQLiteDatabase, ids);
+        if (c != null) {
+            if (c.moveToFirst()) {
+                if (c.getCount() == 1) {
+                    isDeleteMark = true;
+                    final MaterialDialog deleteDialog = new MaterialDialog(this);
+                    String title = "删除自定义标注";
+                    String message = "确定要删除所选自定义标注吗？\n"
+                            + "标注名称：" + mCurrentMark.getTitle();
+                    deleteDialog.setTitle(title)
+                            .setMessage(message)
+                            .setPositiveButton("确定", new View.OnClickListener() {
+                                @Override
+                                public void onClick(View v) {
+                                    SQLiteAction.delectMark(mSQLiteDatabase, mCurrentMark.getGeometry());
+                                    stopMarkingMode();
+                                    mNewMarkLayer.removeAll();
+                                    loadMark();
+                                    deleteDialog.dismiss();
+                                }
+                            })
+                            .setNegativeButton("取消", new View.OnClickListener() {
+                                @Override
+                                public void onClick(View v) {
+                                    deleteDialog.dismiss();
+                                }
+                            });
+
+                    deleteDialog.show();
+                    hideKeyboard();
+                }
+            }
+        }
+
+        if (!isDeleteMark) {
+            stopMarkingMode();
+        }
     }
 
     private void onBtnTakePhotoClick() {
