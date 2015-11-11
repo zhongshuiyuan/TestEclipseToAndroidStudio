@@ -604,6 +604,28 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 
 			// 单击选中对象查看对象属性
 			boolean isSelectedObject = false;
+			// 显示标注
+			Graphic selectedGraphic;
+			if (!isSelectedObject) {
+				selectedGraphic = getGraphicFromLayer(event.getX(), event.getY(), mNewMarkLayer);
+				if (selectedGraphic != null) {
+					isSelectedObject = true;
+					// 在坐标TextView显示当前按压位置的坐标
+					Point mapPoint = mMapView.toMapPoint(onSingleTapPoint);
+					if (mapPoint != null) {
+						String x = String.valueOf(mapPoint.getX()).substring(0, 8);
+						String y = String.valueOf(mapPoint.getY()).substring(0, 8);
+						mTvCoordinate.setText(x + ", " + y);
+					}
+					mMapView.centerAt(mapPoint, true);
+					click.onMoveAndZoom();
+					click.onMarkSelected(selectedGraphic);
+				}
+			}
+			if (!isSelectedObject) {
+				click.onMarkUnselected();
+			}
+
 			// 展示属性信息，管井，单元
 			if (featureLayers != null)
 			{
@@ -1021,25 +1043,6 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 					isSelectedObject = true;
 				}
 			}
-			// 显示标注
-			Graphic selectedGraphic;
-			if (!isSelectedObject) {
-				selectedGraphic = getGraphicFromLayer(event.getX(), event.getY(), mNewMarkLayer);
-				if (selectedGraphic != null) {
-					isSelectedObject = true;
-					// 在坐标TextView显示当前按压位置的坐标
-					Point mapPoint = mMapView.toMapPoint(onSingleTapPoint);
-					if (mapPoint != null) {
-						String x = String.valueOf(mapPoint.getX()).substring(0, 8);
-						String y = String.valueOf(mapPoint.getY()).substring(0, 8);
-						mTvCoordinate.setText(x + ", " + y);
-					}
-					mMapView.centerAt(mapPoint, true);
-					click.onMoveAndZoom();
-					click.onMarkSelected(selectedGraphic);
-				}
-			}
-
 
 			// 选中本地新增（用户绘制）对象进行删除
 			DataTable result = null;
@@ -1584,5 +1587,7 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 		void onLocationMarked(Geometry markedLocation);
 		/** 选中地图上的标注时 **/
 		void onMarkSelected(Graphic mark);
+		/** 单击没有选中标注时 **/
+		void onMarkUnselected();
 	}
 }
