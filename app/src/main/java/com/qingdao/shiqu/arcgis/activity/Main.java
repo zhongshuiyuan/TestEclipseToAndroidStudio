@@ -1398,6 +1398,14 @@ public class Main extends Activity implements OnMapListener
         startMarkingMode(false);
     }
 
+    /** 在地图上没有选中任何东西时 **/
+    @Override
+    public void onMarkUnselected() {
+        if (mActivityState == ACTIVITY_STATE_MARKING) {
+            stopMarkingMode();
+        }
+    }
+
     public boolean onKeyDown(int keyCode, KeyEvent event)
     {
         if (keyCode == KeyEvent.KEYCODE_BACK)
@@ -1903,6 +1911,7 @@ public class Main extends Activity implements OnMapListener
         mTvMarkingContent.setText("");
     }
 
+    /** 停止标注模式并更新UI **/
     private void stopMarkingMode() {
         mActivityState = ACTIVITY_STATE_NORMAL;
 
@@ -2010,8 +2019,7 @@ public class Main extends Activity implements OnMapListener
         stopDrawingMode();
     }
 
-
-
+    /** 当标注工具栏编辑（保存）按钮被按下时 **/
     private void onBtnEditOrSaveMarkingClick() {
         if (mMarkingToolbarState == MARKING_TOOLBAR_STATE_NORMAL) {
             mMarkingToolbarState = MARKING_TOOLBAR_STATE_EDIT;
@@ -2119,14 +2127,6 @@ public class Main extends Activity implements OnMapListener
         updateDrawingToolbar();
         updateMarkingToolbar();
         updateButtons();
-        updateKeyboard();
-    }
-
-    /** 更新输入键盘的UI **/
-    private void updateKeyboard() {
-//        if (mKeyboardState == KEYBOARD_STATE_NULL) {
-//            hideKeyboard();
-//        }
     }
 
     /** 更新各个按钮的UI **/
@@ -2152,6 +2152,10 @@ public class Main extends Activity implements OnMapListener
     /** 更新绘图工具栏的UI **/
     private void updateDrawingToolbar() {
         if (mActivityState == ACTIVITY_STATE_DRAWING) {
+            if (mDrawingToolbar.getVisibility() == View.GONE) {
+                Animation animation = AnimationUtils.loadAnimation(this, R.anim.drawing_toolbar_show);
+                mDrawingToolbar.startAnimation(animation);
+            }
             mDrawingToolbar.setVisibility(View.VISIBLE);
             if (mDrawTool.isActivated()) {
                 setBtnStartOrFinishDrawingToFinishState();
@@ -2159,6 +2163,10 @@ public class Main extends Activity implements OnMapListener
                 setBtnStartOrFinishDrawingToStartState();
             }
         } else {
+            if (mDrawingToolbar.getVisibility() == View.VISIBLE) {
+                Animation animation = AnimationUtils.loadAnimation(this, R.anim.drawing_toolbar_hide);
+                mDrawingToolbar.startAnimation(animation);
+            }
             mDrawingToolbar.setVisibility(View.GONE);
             //mTempDrawingLayer.removeAll();// 通过用户点击清空按钮来清空该图层
         }
