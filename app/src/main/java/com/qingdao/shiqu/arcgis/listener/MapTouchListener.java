@@ -373,6 +373,7 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 	@Override
 	public boolean onSingleTap(MotionEvent event)
 	{
+		Point onSingleTapPoint = new Point(event.getX(), event.getY());
 		mTempMarkingLayer.removeAll();
 		Drawable img = null;
 		isnew = true;
@@ -1026,7 +1027,16 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 				selectedGraphic = getGraphicFromLayer(event.getX(), event.getY(), mNewMarkLayer);
 				if (selectedGraphic != null) {
 					isSelectedObject = true;
-					click.onMarkSelected(selectedGraphic.getGeometry());
+					// 在坐标TextView显示当前按压位置的坐标
+					Point mapPoint = mMapView.toMapPoint(onSingleTapPoint);
+					if (mapPoint != null) {
+						String x = String.valueOf(mapPoint.getX()).substring(0, 8);
+						String y = String.valueOf(mapPoint.getY()).substring(0, 8);
+						mTvCoordinate.setText(x + ", " + y);
+					}
+					mMapView.centerAt(mapPoint, true);
+					click.onMoveAndZoom();
+					click.onMarkSelected(selectedGraphic);
 				}
 			}
 
@@ -1573,6 +1583,6 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 		/** 在地图上进行标注时 **/
 		void onLocationMarked(Geometry markedLocation);
 		/** 选中地图上的标注时 **/
-		void onMarkSelected(Geometry mark);
+		void onMarkSelected(Graphic mark);
 	}
 }
