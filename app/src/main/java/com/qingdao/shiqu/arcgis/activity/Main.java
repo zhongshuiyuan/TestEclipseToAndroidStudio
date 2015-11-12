@@ -77,6 +77,7 @@ import com.qingdao.shiqu.arcgis.layer.LayerOpter;
 import com.qingdao.shiqu.arcgis.listener.MapTouchListener;
 import com.qingdao.shiqu.arcgis.listener.MapTouchListener.OnMapListener;
 import com.qingdao.shiqu.arcgis.listener.MapViewOnDrawEvenListener;
+import com.qingdao.shiqu.arcgis.listener.OnAnimationEndListener;
 import com.qingdao.shiqu.arcgis.mode.ContentModel;
 import com.qingdao.shiqu.arcgis.mode.MarkObject;
 import com.qingdao.shiqu.arcgis.mode.SimpleSymbolTemplate;
@@ -2200,6 +2201,12 @@ public class Main extends Activity implements OnMapListener
         if (mActivityState == ACTIVITY_STATE_DRAWING) {
             if (mDrawingToolbar.getVisibility() == View.GONE) {
                 Animation animation = AnimationUtils.loadAnimation(this, R.anim.drawing_toolbar_show);
+                animation.setAnimationListener(new OnAnimationEndListener() {
+                    @Override
+                    public void onAnimationEnd(Animation animation) {
+                        mDrawingToolbar.setVisibility(View.VISIBLE);
+                    }
+                });
                 mDrawingToolbar.startAnimation(animation);
             }
             mDrawingToolbar.setVisibility(View.VISIBLE);
@@ -2211,6 +2218,12 @@ public class Main extends Activity implements OnMapListener
         } else {
             if (mDrawingToolbar.getVisibility() == View.VISIBLE) {
                 Animation animation = AnimationUtils.loadAnimation(this, R.anim.drawing_toolbar_hide);
+                animation.setAnimationListener(new OnAnimationEndListener() {
+                    @Override
+                    public void onAnimationEnd(Animation animation) {
+                        mDrawingToolbar.setVisibility(View.GONE);
+                    }
+                });
                 mDrawingToolbar.startAnimation(animation);
             }
             mDrawingToolbar.setVisibility(View.GONE);
@@ -2223,6 +2236,12 @@ public class Main extends Activity implements OnMapListener
         if (mActivityState == ACTIVITY_STATE_MARKING) {
             if (mRlMarkingToolbar.getVisibility() == View.GONE) {
                 Animation animation = AnimationUtils.loadAnimation(this, R.anim.marking_toolbar_show);
+                animation.setAnimationListener(new OnAnimationEndListener() {
+                    @Override
+                    public void onAnimationEnd(Animation animation) {
+                        mRlMarkingToolbar.setVisibility(View.VISIBLE);
+                    }
+                });
                 mRlMarkingToolbar.startAnimation(animation);
             }
             mRlMarkingToolbar.setVisibility(View.VISIBLE);
@@ -2235,6 +2254,12 @@ public class Main extends Activity implements OnMapListener
         } else {
             if (mRlMarkingToolbar.getVisibility() == View.VISIBLE) {
                 Animation animation = AnimationUtils.loadAnimation(this, R.anim.marking_toolbar_hide);
+                animation.setAnimationListener(new OnAnimationEndListener() {
+                    @Override
+                    public void onAnimationEnd(Animation animation) {
+                        mRlMarkingToolbar.setVisibility(View.GONE);
+                    }
+                });
                 mRlMarkingToolbar.startAnimation(animation);
             }
             mRlMarkingToolbar.setVisibility(View.GONE);
