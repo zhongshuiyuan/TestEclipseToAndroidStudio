@@ -70,6 +70,7 @@ import com.getbase.floatingactionbutton.FloatingActionsMenu;
 import com.qingdao.shiqu.arcgis.R;
 import com.qingdao.shiqu.arcgis.adapter.ContentAdapter;
 import com.qingdao.shiqu.arcgis.adapter.TocExpandableListAdapter;
+import com.qingdao.shiqu.arcgis.control.MaterialDialog;
 import com.qingdao.shiqu.arcgis.dialog.Dialog;
 import com.qingdao.shiqu.arcgis.helper.FunctionHelper;
 import com.qingdao.shiqu.arcgis.layer.LayerOpter;
@@ -112,7 +113,6 @@ import Eruntech.BirthStone.Core.Sqlite.SQLiteDatabase;
 import at.markushi.ui.ActionView;
 import at.markushi.ui.action.BackAction;
 import at.markushi.ui.action.DrawerAction;
-import me.drakeet.materialdialog.MaterialDialog;
 
 /**
  * @author Administrator
