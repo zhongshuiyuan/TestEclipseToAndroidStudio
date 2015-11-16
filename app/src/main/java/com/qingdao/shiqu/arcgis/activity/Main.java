@@ -24,9 +24,11 @@ import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.location.LocationProvider;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.provider.MediaStore;
 import android.support.v4.widget.DrawerLayout;
 import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
@@ -93,6 +95,7 @@ import com.qingdao.shiqu.arcgis.utils.Session;
 import com.qingdao.shiqu.arcgis.utils.Util;
 import com.qingdao.shiqu.arcgis.utils.drawtool.DrawEvent;
 import com.qingdao.shiqu.arcgis.utils.drawtool.DrawTool;
+import com.qingdao.shiqu.arcgis.utils.drawtool.ImageUtil;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -126,7 +129,13 @@ public class Main extends Activity implements OnMapListener
 
     /** Log Tag **/
     private final String TAG = Main.this.getClass().getSimpleName();
+    // request code
     private int requestCode = 100;
+    /** 拍照 **/
+    static final int REQUEST_IMAGE_CAPTURE = 106;
+    static final int REQUEST_PICK_IMAGE_NORMAL = 107;
+    static final int REQUEST_PICK_IMAGE_KITKAT = 108;
+    private final boolean mIsKitKat = Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT;
     int index = 1;
     double xmin,xmax,ymin,ymax;
     SQLiteDatabase db = null;
@@ -289,6 +298,10 @@ public class Main extends Activity implements OnMapListener
     Drawable mLocationDrawable;
     /** 是否为第一次将graphic显示到地图上 **/
     boolean isFirst = true;
+    /** 显示在标注工具栏的Bitmap **/
+    private Bitmap mMarkingToolbarImage;
+    /** 显示在标注工具栏的Bitmap的路径 **/
+    private String mMarkingToolbarImagePath;
 
     PictureMarkerSymbol pictureMarkerSymbol;
 
@@ -1252,18 +1265,10 @@ public class Main extends Activity implements OnMapListener
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data)
     {
-		/*if(!data.getStringExtra("jtype").equals("")){
-			switch (resultCode)
-			{
-			case RESULT_OK:
-				String jtype = data.getStringExtra("jtype");
-				touchListener.setJtype(jtype);
-				break;
-			}
-		}else{*/
-        switch (resultCode)
-        {
-            case RESULT_OK:
+        if (resultCode == RESULT_CANCELED) {
+            Log.w(TAG, requestCode + "请求失败");
+        } else if (resultCode == RESULT_OK) {
+            if (requestCode == this.requestCode) {// 搜索回调，进行画线或者画点操作，不知道谁写的逻辑，都并在一起了
                 String value = data.getStringExtra("value");
                 String type = data.getStringExtra("type");
                 String jtype = data.getStringExtra("jtype");
@@ -1296,11 +1301,38 @@ public class Main extends Activity implements OnMapListener
                     }
 
                 }
-                break;
-            case RESULT_CANCELED:
-                Log.w(TAG, requestCode + "请求失败");
-                break;
+            } else if (requestCode == REQUEST_IMAGE_CAPTURE) {// 照相回调
+                Bundle extras = data.getExtras();
+                if (mMarkingToolbarImage != null) {
+                    mMarkingToolbarImage.recycle();
+                }
+                mMarkingToolbarImage = (Bitmap) extras.get("data");
+                mIvMarkingImage.setImageBitmap(mMarkingToolbarImage);
+            } else if (requestCode == REQUEST_PICK_IMAGE_NORMAL) {
+                String fileName = ImageUtil.getDataColumn(this, data.getData(), null, null);
+                if (mMarkingToolbarImage != null) {
+                    mMarkingToolbarImage.recycle();
+                }
+                mMarkingToolbarImage = ImageUtil.getBitmap(fileName);
+                mIvMarkingImage.setImageBitmap(mMarkingToolbarImage);
+            } else if (requestCode == REQUEST_PICK_IMAGE_KITKAT) {
+                String fileName = ImageUtil.getPath(this, data.getData());
+                if (mMarkingToolbarImage != null) {
+                    mMarkingToolbarImage.recycle();
+                }
+                mMarkingToolbarImage = ImageUtil.getBitmap(fileName);
+                mIvMarkingImage.setImageBitmap(mMarkingToolbarImage);
+            }
         }
+		/*if(!data.getStringExtra("jtype").equals("")){
+			switch (resultCode)
+			{
+			case RESULT_OK:
+				String jtype = data.getStringExtra("jtype");
+				touchListener.setJtype(jtype);
+				break;
+			}
+		}else{*/
     }
 
     /**
@@ -2117,11 +2149,23 @@ public class Main extends Activity implements OnMapListener
     }
 
     private void onBtnTakePhotoClick() {
-
+        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
+            startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
+        }
     }
 
     private void onBtnPickImageClick() {
-
+        if (mIsKitKat) {
+            //Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+            Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+            intent.setType("image/*");
+            startActivityForResult(intent, REQUEST_PICK_IMAGE_KITKAT);
+        } else {
+            Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+            intent.setType("image/*");
+            startActivityForResult(intent, REQUEST_PICK_IMAGE_NORMAL);
+        }
     }
 
     /** 按下动作条的图层按钮 **/
@@ -2374,7 +2418,6 @@ public class Main extends Activity implements OnMapListener
 
     /** 实时更新位置模式 **/
     private void stopUpdatePositionMode() {
-        mIsUpdatePositionStarted = false;
         locationManager.removeGpsStatusListener(mGpsStatusListener);
         locationManager.removeUpdates(mLocationListener);
     }
