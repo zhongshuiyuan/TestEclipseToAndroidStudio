@@ -155,28 +155,43 @@ public class Main extends Activity implements OnMapListener
     /** 第一次加载地图时需要全图显示 **/
     private boolean mIsFullExtentNeeded = true;
 
-    /** Activity模式 **/
-    private int mActivityState;
-    /** 普通模式 **/
-    private final int ACTIVITY_STATE_NORMAL = 0;
-    /** 绘图模式 **/
-    private final int ACTIVITY_STATE_DRAWING = 1;
-    /** 标注模式 **/
-    private final int ACTIVITY_STATE_MARKING = 2;
+    /** 定位模式 **/
+    private LocationMode mLocationMode;
+    private enum LocationMode {
+        /** 普通模式 **/
+        NORMAL,
+        /** 跟随模式 **/
+        FOLLOWING
+    }
 
-    /** 标注工具栏模式 **/
-    private int mMarkingToolbarState;
-    /** 正常（浏览）模式 **/
-    private final int MARKING_TOOLBAR_STATE_NORMAL = 0;
-    /** 编辑模式 **/
-    private final int MARKING_TOOLBAR_STATE_EDIT = 1;
+    // 定位模式和地图模式相互独立，但请保证只在MapState.NORMAL下启用LocationMode.FOLLOWING
 
     /** 地图模式 **/
-    private int mMapState;
-    /** 普通模式 **/
-    private final int MAP_STATE_NORMAL = 0;
-    /** 实时定位模式 **/
-    private final int MAP_STATE_NAVIGATION = 1;
+    private MapState mMapState;
+    private enum MapState {
+        /** 普通模式 **/
+        NORMAL,
+        /** 绘图模式 **/
+        DRAWING,
+        /** 标注模式 **/
+        MARKING
+    }
+
+    /** 标注工具栏模式 **/
+    private MarkingMode mMarkingToolbarState;
+    private enum MarkingMode {
+        /** 正常（浏览）模式 **/
+        NULL,
+        /** 编辑模式 **/
+        EDIT
+    }
+
+    /** 绘图工具 **/
+    DrawTool mDrawTool;//通过mDrawTool.isActivated()来判断画图模式是处于绘制模式还是暂停模式
+    /** 绘制类型 **/
+    private int mDrawType;
+    /** 绘制事件类型 **/
+    private int mDrawAction;
 
     /** 软键盘 **/
     private int mKeyboardState;
@@ -185,8 +200,6 @@ public class Main extends Activity implements OnMapListener
     /** 启用状态 **/
     private final int KEYBOARD_STATE_ACTIVATE = 1;
 
-    /** 是否开启了实时更新位置模式（只更新位置图标，不会移动屏幕位置） **/
-    private boolean mIsUpdatePositionStarted;
     /** 实时更新位置模式专用线程 **/
     private Thread mUpdatePositionThread;
     /** 最近通过GPS定位获取的位置 **/
@@ -212,12 +225,6 @@ public class Main extends Activity implements OnMapListener
     GraphicsLayer mTempDrawingLayer;
     /** 用于标注的临时图层 **/
     GraphicsLayer mTempMarkingLayer;
-    /** 绘图工具 **/
-    DrawTool mDrawTool;
-    /** 绘制类型 **/
-    private int mDrawType;
-    /** 绘制事件类型 **/
-    private int mDrawAction;
 
     /** 方向传感器初始化 **/
     SensorManager sensorManager;
@@ -359,10 +366,9 @@ public class Main extends Activity implements OnMapListener
     {
         sharedPreferences = this.getPreferences(Context.MODE_PRIVATE);
 
-        mActivityState = ACTIVITY_STATE_NORMAL;
-        mMapState = MAP_STATE_NORMAL;
-        mMarkingToolbarState = MARKING_TOOLBAR_STATE_NORMAL;
-        mKeyboardState = KEYBOARD_STATE_NULL;
+        mMapState = MapState.NORMAL;
+        mLocationMode = LocationMode.NORMAL;
+        mMarkingToolbarState = MarkingMode.NULL;
 
         //顶部动作条
         mActionView = (ActionView) findViewById(R.id.main_av_menu);
@@ -1402,7 +1408,7 @@ public class Main extends Activity implements OnMapListener
     /** 在地图上没有选中任何东西时 **/
     @Override
     public void onMarkUnselected() {
-        if (mActivityState == ACTIVITY_STATE_MARKING) {
+        if (mMapState == MapState.MARKING) {
             stopMarkingMode();
         }
     }
@@ -1842,12 +1848,12 @@ public class Main extends Activity implements OnMapListener
      * @param isEditingMark 编辑标注点还是浏览标注点信息
      */
     private void startMarkingMode(boolean isEditingMark) {
-        mActivityState = ACTIVITY_STATE_MARKING;
+        mMapState = MapState.MARKING;
 
         if (isEditingMark) {
-            mMarkingToolbarState = MARKING_TOOLBAR_STATE_EDIT;
+            mMarkingToolbarState = MarkingMode.EDIT;
         } else {
-            mMarkingToolbarState = MARKING_TOOLBAR_STATE_NORMAL;
+            mMarkingToolbarState = MarkingMode.NULL;
             fillDataToMarkingToolbar(mCurrentMark);
         }
 
@@ -1916,7 +1922,7 @@ public class Main extends Activity implements OnMapListener
 
     /** 停止标注模式并更新UI **/
     private void stopMarkingMode() {
-        mActivityState = ACTIVITY_STATE_NORMAL;
+        mMapState = MapState.NORMAL;
 
         mCurrentMark.reset();
         hideKeyboard();
@@ -1969,7 +1975,7 @@ public class Main extends Activity implements OnMapListener
         setBtnStartOrFinishDrawingToFinishState();
         mTvDrawingTitle.setText(title);
         mCbIsFreehandDrawing.setChecked(false);
-        mActivityState = ACTIVITY_STATE_DRAWING;
+        mMapState = MapState.DRAWING;
         updateUi();
     }
 
@@ -1981,7 +1987,7 @@ public class Main extends Activity implements OnMapListener
         mDrawType = DrawTool.NULL;
         mDrawAction = MapViewOnDrawEvenListener.ACTION_NULL;
 
-        mActivityState = ACTIVITY_STATE_NORMAL;
+        mMapState = MapState.NORMAL;
         updateUi();
     }
 
@@ -2024,10 +2030,10 @@ public class Main extends Activity implements OnMapListener
 
     /** 当标注工具栏编辑（保存）按钮被按下时 **/
     private void onBtnEditOrSaveMarkClick() {
-        if (mMarkingToolbarState == MARKING_TOOLBAR_STATE_NORMAL) {
-            mMarkingToolbarState = MARKING_TOOLBAR_STATE_EDIT;
-        } else if (mMarkingToolbarState == MARKING_TOOLBAR_STATE_EDIT) {
-            mMarkingToolbarState = MARKING_TOOLBAR_STATE_NORMAL;
+        if (mMarkingToolbarState == MarkingMode.NULL) {
+            mMarkingToolbarState = MarkingMode.EDIT;
+        } else if (mMarkingToolbarState == MarkingMode.EDIT) {
+            mMarkingToolbarState = MarkingMode.NULL;
 
             mCurrentMark.setTitle(mEtMarkingTitle.getText().toString());
             mCurrentMark.setContent(mEtMarkingContent.getText().toString());
@@ -2058,9 +2064,9 @@ public class Main extends Activity implements OnMapListener
         updateUi();
 
         // 管理键盘
-        if (mMarkingToolbarState == MARKING_TOOLBAR_STATE_NORMAL) {
+        if (mMarkingToolbarState == MarkingMode.NULL) {
             hideKeyboard();
-        } else if (mMarkingToolbarState == MARKING_TOOLBAR_STATE_EDIT) {
+        } else if (mMarkingToolbarState == MarkingMode.EDIT) {
             showKeyboard();
         }
 
@@ -2148,23 +2154,23 @@ public class Main extends Activity implements OnMapListener
 
     /** 按下定位按钮 **/
     private void onBtnNavigationClick() {
-        if (mMapState == MAP_STATE_NORMAL) {
+        if (mLocationMode == LocationMode.NORMAL) {
             updateLocation(mLastLocationFromGps, true);
             startNavigationMode();
-        } else if (mMapState == MAP_STATE_NAVIGATION) {
+        } else if (mLocationMode == LocationMode.FOLLOWING) {
             stopNavigationMode();
         }
     }
 
     /** 开启导航（实时跟踪位置）模式 **/
     private void startNavigationMode() {
-        mMapState = MAP_STATE_NAVIGATION;
+        mLocationMode = LocationMode.FOLLOWING;
         updateUi();
     }
 
     /** 关闭导航（实时跟踪位置）模式 **/
     private void stopNavigationMode() {
-        mMapState = MAP_STATE_NORMAL;
+        mLocationMode = LocationMode.NORMAL;
         updateUi();
     }
 
@@ -2179,16 +2185,16 @@ public class Main extends Activity implements OnMapListener
     /** 更新各个按钮的UI **/
     private void updateButtons() {
         // 导航按钮
-        if (mMapState == MAP_STATE_NORMAL) {
+        if (mLocationMode == LocationMode.NORMAL) {
             mBtnLocation.setDrawableIcon(getResources().getDrawable(R.drawable.ic_my_location_white_48dp));
-        } else if (mMapState == MAP_STATE_NAVIGATION) {
+        } else if (mLocationMode == LocationMode.FOLLOWING) {
             mBtnLocation.setDrawableIcon(getResources().getDrawable(R.drawable.ic_navigation_white_48dp));
         }
     }
 
     /** 更新位置信息栏的UI **/
     private void updateLocationBar() {
-        if (mMapState != MAP_STATE_NAVIGATION) {
+        if (mLocationMode != LocationMode.FOLLOWING) {
             updateCoordinate();
             updateScale();
         }
@@ -2198,7 +2204,7 @@ public class Main extends Activity implements OnMapListener
 
     /** 更新绘图工具栏的UI **/
     private void updateDrawingToolbar() {
-        if (mActivityState == ACTIVITY_STATE_DRAWING) {
+        if (mMapState == MapState.DRAWING) {
             if (mDrawingToolbar.getVisibility() == View.GONE) {
                 Animation animation = AnimationUtils.loadAnimation(this, R.anim.drawing_toolbar_show);
                 animation.setAnimationListener(new OnAnimationEndListener() {
@@ -2233,7 +2239,7 @@ public class Main extends Activity implements OnMapListener
 
     /** 更新标注工具栏的UI **/
     private void updateMarkingToolbar() {
-        if (mActivityState == ACTIVITY_STATE_MARKING) {
+        if (mMapState == MapState.MARKING) {
             if (mRlMarkingToolbar.getVisibility() == View.GONE) {
                 Animation animation = AnimationUtils.loadAnimation(this, R.anim.marking_toolbar_show);
                 animation.setAnimationListener(new OnAnimationEndListener() {
@@ -2245,10 +2251,10 @@ public class Main extends Activity implements OnMapListener
                 mRlMarkingToolbar.startAnimation(animation);
             }
             mRlMarkingToolbar.setVisibility(View.VISIBLE);
-            if (mMarkingToolbarState == MARKING_TOOLBAR_STATE_NORMAL) {
+            if (mMarkingToolbarState == MarkingMode.NULL) {
                 setMarkingToolbarToNormalState();
                 mTempMarkingLayer.removeAll();
-            } else if (mMarkingToolbarState == MARKING_TOOLBAR_STATE_EDIT) {
+            } else if (mMarkingToolbarState == MarkingMode.EDIT) {
                 setMarkingToolbarToEditingState();
             }
         } else {
@@ -2415,7 +2421,7 @@ public class Main extends Activity implements OnMapListener
             mLastLocationFromGps = location;
             updateUi();
             boolean isMovingMap;
-            isMovingMap = mMapState == MAP_STATE_NAVIGATION ? true : false;
+            isMovingMap = mLocationMode == LocationMode.FOLLOWING ? true : false;
             updateLocation(location, isMovingMap);
 
             Log.v(TAG, "时间：" + location.getTime());
