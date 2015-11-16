@@ -551,6 +551,7 @@
                             android:id="@+id/main_iv_marking_image"
                             android:layout_width="fill_parent"
                             android:layout_height="fill_parent"
+                            android:onClick="click"
                             android:contentDescription="现场图"/>
 
                     </FrameLayout>

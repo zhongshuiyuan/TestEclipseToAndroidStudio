@@ -24,6 +24,8 @@ import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.location.LocationProvider;
+import android.media.Image;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -100,6 +102,7 @@ import com.qingdao.shiqu.arcgis.utils.drawtool.ImageUtil;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -132,7 +135,7 @@ public class Main extends Activity implements OnMapListener
     // request code
     private int requestCode = 100;
     /** 拍照 **/
-    static final int REQUEST_IMAGE_CAPTURE = 106;
+    static final int REQUEST_TAKE_PHOTO = 106;
     static final int REQUEST_PICK_IMAGE_NORMAL = 107;
     static final int REQUEST_PICK_IMAGE_KITKAT = 108;
     private final boolean mIsKitKat = Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT;
@@ -302,6 +305,8 @@ public class Main extends Activity implements OnMapListener
     private Bitmap mMarkingToolbarImage;
     /** 显示在标注工具栏的Bitmap的路径 **/
     private String mMarkingToolbarImagePath;
+    /** **/
+    private java.io.File mMarkingToolbarImageFile;
 
     PictureMarkerSymbol pictureMarkerSymbol;
 
@@ -1251,6 +1256,8 @@ public class Main extends Activity implements OnMapListener
             case R.id.main_btn_marking_pick_image: // 从图库选择图片来设置标注现场图
                 onBtnPickImageClick();
                 break;
+            case R.id.main_iv_marking_image:
+                break;
             case R.id.main_btn_marking_delete: // 关闭标注工具栏
                 onBtnDeleteMarkClick();
                 break;
@@ -1301,13 +1308,18 @@ public class Main extends Activity implements OnMapListener
                     }
 
                 }
-            } else if (requestCode == REQUEST_IMAGE_CAPTURE) {// 照相回调
-                Bundle extras = data.getExtras();
-                if (mMarkingToolbarImage != null) {
-                    mMarkingToolbarImage.recycle();
+            } else if (requestCode == REQUEST_TAKE_PHOTO) {// 照相回调
+                if (mMarkingToolbarImageFile != null) {
+                    String fileName = mMarkingToolbarImageFile.getAbsolutePath();
+                    if (mMarkingToolbarImage != null) {
+                        mMarkingToolbarImage.recycle();
+                    }
+                    mMarkingToolbarImage = ImageUtil.getBitmap(fileName);
+                    mIvMarkingImage.setImageBitmap(mMarkingToolbarImage);
+                    fileName = "file:" + mMarkingToolbarImageFile.getAbsolutePath();
+                    ImageUtil.galleryAddPic(this, fileName);
+                    mMarkingToolbarImageFile = null;
                 }
-                mMarkingToolbarImage = (Bitmap) extras.get("data");
-                mIvMarkingImage.setImageBitmap(mMarkingToolbarImage);
             } else if (requestCode == REQUEST_PICK_IMAGE_NORMAL) {
                 String fileName = ImageUtil.getDataColumn(this, data.getData(), null, null);
                 if (mMarkingToolbarImage != null) {
@@ -2150,8 +2162,19 @@ public class Main extends Activity implements OnMapListener
 
     private void onBtnTakePhotoClick() {
         Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
-            startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
+        if (isHadresolveActivity(takePictureIntent)) {
+            java.io.File photoFile = null;
+            try {
+                photoFile = ImageUtil.createImageFile();
+            } catch (IOException ex) {
+                Log.e(TAG, "拍照时创建新文件失败");
+            }
+
+            if (photoFile != null) {
+                mMarkingToolbarImageFile = photoFile;
+                takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(photoFile));
+                startActivityForResult(takePictureIntent, REQUEST_TAKE_PHOTO);
+            }
         }
     }
 
@@ -2165,6 +2188,19 @@ public class Main extends Activity implements OnMapListener
             Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
             intent.setType("image/*");
             startActivityForResult(intent, REQUEST_PICK_IMAGE_NORMAL);
+        }
+    }
+
+    /**
+     * 判断有没有Activity能处理指定Intent，防止程序崩溃
+     * @param intent 待检测的Intent
+     * @return 有或没有
+     */
+    private boolean isHadresolveActivity(Intent intent) {
+        if (intent.resolveActivity(getPackageManager()) != null) {
+            return true;
+        } else {
+            return  false;
         }
     }
 
