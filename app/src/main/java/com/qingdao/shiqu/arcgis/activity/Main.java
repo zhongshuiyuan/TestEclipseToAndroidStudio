@@ -28,6 +28,7 @@ import android.media.Image;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
 import android.provider.MediaStore;
@@ -1257,6 +1258,12 @@ public class Main extends Activity implements OnMapListener
                 onBtnPickImageClick();
                 break;
             case R.id.main_iv_marking_image:
+                Intent intent = new Intent(Intent.ACTION_VIEW);
+                java.io.File file = Environment.getExternalStoragePublicDirectory(
+                        Environment.DIRECTORY_PICTURES + "/GIS");
+                Uri uri = Uri.fromFile(file);
+                intent.setDataAndType(uri, "image/*");
+                startActivity(intent);
                 break;
             case R.id.main_btn_marking_delete: // 关闭标注工具栏
                 onBtnDeleteMarkClick();
@@ -1316,7 +1323,6 @@ public class Main extends Activity implements OnMapListener
                     }
                     mMarkingToolbarImage = ImageUtil.getBitmap(fileName);
                     mIvMarkingImage.setImageBitmap(mMarkingToolbarImage);
-                    fileName = "file:" + mMarkingToolbarImageFile.getAbsolutePath();
                     ImageUtil.galleryAddPic(this, fileName);
                     mMarkingToolbarImageFile = null;
                 }
