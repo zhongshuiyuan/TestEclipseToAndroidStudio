@@ -216,6 +216,8 @@ public class Main extends Activity implements OnMapListener
 
     /** 实时更新位置模式专用线程 **/
     private Thread mUpdatePositionThread;
+    /** 实时更新位置模式专用线程 **/
+    private boolean mIsUpdatePositionThreadRun = false;
     /** 最近通过GPS定位获取的位置 **/
     private Location mLastLocationFromGps;
 
@@ -2524,6 +2526,8 @@ public class Main extends Activity implements OnMapListener
     private void stopUpdatePositionMode() {
         locationManager.removeGpsStatusListener(mGpsStatusListener);
         locationManager.removeUpdates(mLocationListener);
+        mIsUpdatePositionThreadRun = false;
+        mUpdatePositionThread = null;
     }
 
     /** 开启实时更新位置模式（只更新位置图标，不会移动屏幕位置） **/
@@ -2557,6 +2561,36 @@ public class Main extends Activity implements OnMapListener
             locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 0, mLocationListener);
         } else {
             Toast.makeText(Main.this, "定位失败", Toast.LENGTH_SHORT).show();
+            startUpdateLocationThread();
+        }
+    }
+
+    private void startUpdateLocationThread() {
+        mIsUpdatePositionThreadRun = true;
+        if (mUpdatePositionThread == null) {
+            mUpdatePositionThread = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    while (mIsUpdatePositionThreadRun) {
+                        try {
+                            Thread.sleep(500);
+                        } catch (InterruptedException e) {
+                            Log.e(TAG, "定位子线程休眠时发生错误:" + e.getMessage());
+                        }
+                        locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+                        String bestProvider = locationManager.getBestProvider(getCriteria(), true);
+                        Location location = locationManager.getLastKnownLocation(bestProvider);
+                        //Location location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+                        if (location != null) {
+                            mUpdatePositionHandler.sendEmptyMessage(1);
+                            Log.i(TAG, "GPS定位成功");
+                        } else {
+                            Log.v(TAG, "定位中");
+                        }
+                    }
+                }
+            });
+            mUpdatePositionThread.start();
         }
     }
 
@@ -2568,7 +2602,7 @@ public class Main extends Activity implements OnMapListener
             mLastLocationFromGps = location;
             updateUi();
             boolean isMovingMap;
-            isMovingMap = mLocationMode == LocationMode.FOLLOWING ? true : false;
+            isMovingMap = mLocationMode == LocationMode.FOLLOWING;
             updateLocation(location, isMovingMap);
 
             Log.v(TAG, "时间：" + location.getTime());
@@ -2646,7 +2680,7 @@ public class Main extends Activity implements OnMapListener
 
     /**
      * 返回查询条件
-     * @return
+     * @return Criteria
      */
     private Criteria getCriteria(){
         Criteria criteria = new Criteria();
@@ -2655,14 +2689,26 @@ public class Main extends Activity implements OnMapListener
         //设置是否要求速度
         criteria.setSpeedRequired(false);
         // 设置是否允许运营商收费
-        criteria.setCostAllowed(false);
+        criteria.setCostAllowed(true                   );
         //设置是否需要方位信息
         criteria.setBearingRequired(false);
         //设置是否需要海拔信息
         criteria.setAltitudeRequired(false);
         // 设置对电源的需求
-        criteria.setPowerRequirement(Criteria.POWER_LOW);
+        criteria.setPowerRequirement(Criteria.POWER_HIGH);
         return criteria;
     }
+
+    private Handler mUpdatePositionHandler = new Handler() {
+        public final int LOCATION_GOT = 1;
+        @Override
+        public void handleMessage(Message msg) {
+            super.handleMessage(msg);
+            if (msg.what == LOCATION_GOT) {
+                mIsUpdatePositionThreadRun = false;
+                startUpdatePositionMode();
+            }
+        }
+    };
 
 }
