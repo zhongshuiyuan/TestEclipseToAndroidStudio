@@ -485,7 +485,7 @@ public class MapTouchListener extends MapOnTouchListener implements OnZoomListen
 			return true;
 		}
 
-		// 新增管道
+		// 新增管井
 		if(addNode){
 			Point currentPoint  = null;
 			if(isSelectedGraphic(event.getX(), event.getY(), newNodeLayer)){

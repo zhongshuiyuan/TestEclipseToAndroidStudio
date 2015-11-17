@@ -72,10 +72,11 @@ import com.esri.core.symbol.SimpleLineSymbol;
 import com.gc.materialdesign.views.ButtonFloat;
 import com.gc.materialdesign.views.ButtonIcon;
 import com.getbase.floatingactionbutton.FloatingActionsMenu;
+import com.qingdao.shiqu.arcgis.BuildConfig;
 import com.qingdao.shiqu.arcgis.R;
 import com.qingdao.shiqu.arcgis.adapter.ContentAdapter;
 import com.qingdao.shiqu.arcgis.adapter.TocExpandableListAdapter;
-import com.qingdao.shiqu.arcgis.control.MaterialDialog;
+import com.qingdao.shiqu.arcgis.control.MaterialDesignDialog;
 import com.qingdao.shiqu.arcgis.dialog.Dialog;
 import com.qingdao.shiqu.arcgis.helper.FunctionHelper;
 import com.qingdao.shiqu.arcgis.layer.LayerOpter;
@@ -128,9 +129,8 @@ import at.markushi.ui.action.DrawerAction;
  */
 public class Main extends Activity implements OnMapListener
 {
-
     // 大部分变量都重新命名，补全了注释，原来连注释都没有，变量命名超级随意你敢信？ by Qin
-
+    public final static boolean DEBUG = BuildConfig.DEBUG;
     /** Log Tag **/
     private final String TAG = Main.this.getClass().getSimpleName();
     // request code
@@ -346,7 +346,7 @@ public class Main extends Activity implements OnMapListener
     private void showNewVersionChanglog() {
         boolean show = sharedPreferences.getBoolean(getString(R.string.preference_file_key_main_boolean_show_changelog), true);
         if (show) {
-            final MaterialDialog materialDialog = new MaterialDialog(this);
+            final MaterialDesignDialog materialDialog = new MaterialDesignDialog(this);
             String title = getString(R.string.app_version) + "版本变化";
             String message = "1、使用谷歌的Material Design重新设计整个app，虽然暂未完成，但是希望你会喜欢\n"
                     + "2、重新设计定位的显示，实时更新所在位置\n"
@@ -1326,14 +1326,14 @@ public class Main extends Activity implements OnMapListener
                     ImageUtil.galleryAddPic(this, fileName);
                     mMarkingToolbarImageFile = null;
                 }
-            } else if (requestCode == REQUEST_PICK_IMAGE_NORMAL) {
+            } else if (requestCode == REQUEST_PICK_IMAGE_NORMAL) {//选择图片
                 String fileName = ImageUtil.getDataColumn(this, data.getData(), null, null);
                 if (mMarkingToolbarImage != null) {
                     mMarkingToolbarImage.recycle();
                 }
                 mMarkingToolbarImage = ImageUtil.getBitmap(fileName);
                 mIvMarkingImage.setImageBitmap(mMarkingToolbarImage);
-            } else if (requestCode == REQUEST_PICK_IMAGE_KITKAT) {
+            } else if (requestCode == REQUEST_PICK_IMAGE_KITKAT) {//选择图片（当版本高于4.4）
                 String fileName = ImageUtil.getPath(this, data.getData());
                 if (mMarkingToolbarImage != null) {
                     mMarkingToolbarImage.recycle();
@@ -2132,7 +2132,7 @@ public class Main extends Activity implements OnMapListener
             if (c.moveToFirst()) {
                 if (c.getCount() == 1) {
                     isDeleteMark = true;
-                    final MaterialDialog deleteDialog = new MaterialDialog(this);
+                    final MaterialDesignDialog deleteDialog = new MaterialDesignDialog(this);
                     String title = "删除自定义标注";
                     String message = "确定要删除所选自定义标注吗？\n"
                             + "标注名称：" + mCurrentMark.getTitle();
