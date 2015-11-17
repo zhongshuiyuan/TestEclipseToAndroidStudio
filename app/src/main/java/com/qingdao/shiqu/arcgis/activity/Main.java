@@ -24,11 +24,9 @@ import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.location.LocationProvider;
-import android.media.Image;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
 import android.provider.MediaStore;
@@ -45,12 +43,15 @@ import android.widget.AdapterView.OnItemClickListener;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ExpandableListView;
-import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.daimajia.slider.library.SliderLayout;
+import com.daimajia.slider.library.SliderTypes.BaseSliderView;
+import com.daimajia.slider.library.SliderTypes.DefaultSliderView;
+import com.daimajia.slider.library.SliderTypes.TextSliderView;
 import com.esri.android.map.FeatureLayer;
 import com.esri.android.map.GraphicsLayer;
 import com.esri.android.map.Layer;
@@ -99,7 +100,7 @@ import com.qingdao.shiqu.arcgis.utils.Session;
 import com.qingdao.shiqu.arcgis.utils.Util;
 import com.qingdao.shiqu.arcgis.utils.drawtool.DrawEvent;
 import com.qingdao.shiqu.arcgis.utils.drawtool.DrawTool;
-import com.qingdao.shiqu.arcgis.utils.drawtool.ImageUtil;
+import com.qingdao.shiqu.arcgis.utils.ImageUtil;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -274,7 +275,7 @@ public class Main extends Activity implements OnMapListener
     private TextView mTvMarkingContent;
     private EditText mEtMarkingTitle;
     private EditText mEtMarkingContent;
-    private ImageView mIvMarkingImage;
+    private SliderLayout mIvMarkingImage;
     private ButtonFloat mBtnMarkingEditOrSave;
     private ButtonFloat mBtnMarkingTakePhoto;
     private ButtonFloat mBtnMarkingPiakImage;
@@ -430,7 +431,7 @@ public class Main extends Activity implements OnMapListener
         mTvMarkingContent.setMovementMethod(ScrollingMovementMethod.getInstance());
         mEtMarkingTitle = (EditText) findViewById(R.id.main_et_marking_title);
         mEtMarkingContent = (EditText) findViewById(R.id.main_et_marking_content);
-        mIvMarkingImage = (ImageView) findViewById(R.id.main_iv_marking_image);
+        mIvMarkingImage = (SliderLayout) findViewById(R.id.main_iv_marking_image);
         mBtnMarkingEditOrSave = (ButtonFloat) findViewById(R.id.main_btn_marking_edit_or_save);
         mBtnMarkingTakePhoto = (ButtonFloat) findViewById(R.id.main_btn_marking_take_photo);
         mBtnMarkingPiakImage = (ButtonFloat) findViewById(R.id.main_btn_marking_pick_image);
@@ -896,6 +897,12 @@ public class Main extends Activity implements OnMapListener
         stopUpdatePositionMode();
     }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        mSQLiteDatabase.close();
+    }
+
     private void saveTocSetting() {
         if (sharedPreferences == null) {
             sharedPreferences = getPreferences(Context.MODE_PRIVATE);
@@ -1258,12 +1265,7 @@ public class Main extends Activity implements OnMapListener
                 onBtnPickImageClick();
                 break;
             case R.id.main_iv_marking_image:
-                Intent intent = new Intent(Intent.ACTION_VIEW);
-                java.io.File file = Environment.getExternalStoragePublicDirectory(
-                        Environment.DIRECTORY_PICTURES + "/GIS");
-                Uri uri = Uri.fromFile(file);
-                intent.setDataAndType(uri, "image/*");
-                startActivity(intent);
+                showMarkingImage();
                 break;
             case R.id.main_btn_marking_delete: // 关闭标注工具栏
                 onBtnDeleteMarkClick();
@@ -1317,29 +1319,33 @@ public class Main extends Activity implements OnMapListener
                 }
             } else if (requestCode == REQUEST_TAKE_PHOTO) {// 照相回调
                 if (mMarkingToolbarImageFile != null) {
-                    String fileName = mMarkingToolbarImageFile.getAbsolutePath();
+                    mMarkingToolbarImagePath = mMarkingToolbarImageFile.getAbsolutePath();
                     if (mMarkingToolbarImage != null) {
                         mMarkingToolbarImage.recycle();
                     }
-                    mMarkingToolbarImage = ImageUtil.getBitmap(fileName);
-                    mIvMarkingImage.setImageBitmap(mMarkingToolbarImage);
-                    ImageUtil.galleryAddPic(this, fileName);
-                    mMarkingToolbarImageFile = null;
+                    mMarkingToolbarImage = ImageUtil.getBitmap(mMarkingToolbarImagePath);
+                    addImageToImageSlider(mMarkingToolbarImageFile);
+                    //mIvMarkingImage.setImageBitmap(mMarkingToolbarImage);
+                    ImageUtil.galleryAddPic(this, mMarkingToolbarImagePath);
                 }
             } else if (requestCode == REQUEST_PICK_IMAGE_NORMAL) {//选择图片
-                String fileName = ImageUtil.getDataColumn(this, data.getData(), null, null);
+                mMarkingToolbarImagePath = ImageUtil.getDataColumn(this, data.getData(), null, null);
+                mMarkingToolbarImageFile = new java.io.File(mMarkingToolbarImagePath);
                 if (mMarkingToolbarImage != null) {
                     mMarkingToolbarImage.recycle();
                 }
-                mMarkingToolbarImage = ImageUtil.getBitmap(fileName);
-                mIvMarkingImage.setImageBitmap(mMarkingToolbarImage);
+                mMarkingToolbarImage = ImageUtil.getBitmap(mMarkingToolbarImagePath);
+                addImageToImageSlider(mMarkingToolbarImageFile);
+                //mIvMarkingImage.setImageBitmap(mMarkingToolbarImage);
             } else if (requestCode == REQUEST_PICK_IMAGE_KITKAT) {//选择图片（当版本高于4.4）
-                String fileName = ImageUtil.getPath(this, data.getData());
+                mMarkingToolbarImagePath = ImageUtil.getPath(this, data.getData());
+                mMarkingToolbarImageFile = new java.io.File(mMarkingToolbarImagePath);
                 if (mMarkingToolbarImage != null) {
                     mMarkingToolbarImage.recycle();
                 }
-                mMarkingToolbarImage = ImageUtil.getBitmap(fileName);
-                mIvMarkingImage.setImageBitmap(mMarkingToolbarImage);
+                mMarkingToolbarImage = ImageUtil.getBitmap(mMarkingToolbarImagePath);
+                addImageToImageSlider(mMarkingToolbarImageFile);
+                //mIvMarkingImage.setImageBitmap(mMarkingToolbarImage);
             }
         }
 		/*if(!data.getStringExtra("jtype").equals("")){
@@ -1351,6 +1357,26 @@ public class Main extends Activity implements OnMapListener
 				break;
 			}
 		}else{*/
+    }
+
+    private String getCurrentImageFileName() {
+        int index = mMarkingToolbarImagePath.lastIndexOf("GIS");
+        return mMarkingToolbarImagePath.substring(index + 4, index + 19);
+    }
+
+    private void addImageToImageSlider(java.io.File file) {
+        TextSliderView textSliderView = new TextSliderView(this);
+        DefaultSliderView s = new DefaultSliderView(this);
+        String description = getCurrentImageFileName();
+        textSliderView.description(description)
+                .image(file);
+        textSliderView.setOnSliderClickListener(new BaseSliderView.OnSliderClickListener() {
+            @Override
+            public void onSliderClick(BaseSliderView slider) {
+                showMarkingImage();
+            }
+        });
+        mIvMarkingImage.addSlider(textSliderView);
     }
 
     /**
@@ -2141,7 +2167,7 @@ public class Main extends Activity implements OnMapListener
                             .setPositiveButton("确定", new View.OnClickListener() {
                                 @Override
                                 public void onClick(View v) {
-                                    SQLiteAction.delectMark(mSQLiteDatabase, mCurrentMark.getGeometry());
+                                    SQLiteAction.deleteMark(mSQLiteDatabase, mCurrentMark.getGeometry());
                                     stopMarkingMode();
                                     mNewMarkLayer.removeAll();
                                     loadMark();
@@ -2195,6 +2221,42 @@ public class Main extends Activity implements OnMapListener
             intent.setType("image/*");
             startActivityForResult(intent, REQUEST_PICK_IMAGE_NORMAL);
         }
+    }
+
+    private void showMarkingImage() {
+        final SliderLayout sliderLayout = new SliderLayout(this);
+        //sliderLayout.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+        int screenWidth = getResources().getDisplayMetrics().widthPixels;
+        int screenHeight = getResources().getDisplayMetrics().heightPixels;
+        sliderLayout.setMinimumWidth((int) (screenWidth * 0.75));
+        sliderLayout.setMinimumHeight((int) (screenHeight * 0.75));
+        //sliderLayout.setMinimumHeight(Util.dip2px(this, 240));
+        final java.io.File f = new java.io.File(mMarkingToolbarImagePath);
+        for (int i = 0; i < 2; ++i) {
+            TextSliderView v = new TextSliderView(this);
+            v.image(f).description("现场图");
+            v.setOnSliderClickListener(new BaseSliderView.OnSliderClickListener() {
+                @Override
+                public void onSliderClick(BaseSliderView slider) {
+                    Intent intent = new Intent(Intent.ACTION_VIEW);
+                    Uri uri = Uri.fromFile(f);
+                    intent.setDataAndType(uri, "image/*");
+                    Main.this.startActivity(intent);
+                }
+            });
+            sliderLayout.addSlider(v);
+        }
+        final MaterialDesignDialog dialog = new MaterialDesignDialog(this);
+        dialog.setContentView(sliderLayout)
+                .setPositiveButton("OK", new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        sliderLayout.stopAutoCycle();
+                        dialog.dismiss();
+                    }
+                });
+        dialog.show();
+
     }
 
     /**

@@ -27,7 +27,7 @@ import com.qingdao.shiqu.arcgis.R;
 /**
  * Created by CelerySoft on 2015-11-12.
  * Material Design Dialog
- * GitHub地址：https://github.com/celerysoft/MaterialDesignDialog
+ * s
  */
 public class MaterialDesignDialog {
     private Context mContext;
@@ -279,6 +279,14 @@ public class MaterialDesignDialog {
         listView.setLayoutParams(params);
     }
 
+    public Window getWindow() {
+        if (mDialog != null) {
+            return mDialog.getWindow();
+        } else {
+            return null;
+        }
+    }
+
     private int dip2px(float dpValue) {
         final float scale = mContext.getResources().getDisplayMetrics().density;
         return (int) (dpValue * scale + 0.5f);
@@ -322,7 +330,7 @@ public class MaterialDesignDialog {
             mAlertDialogWindow.setContentView(contentView);
 
             // define view
-            mTitleView = (TextView) mAlertDialogWindow.findViewById(R.id.title);
+            mTitleView = (TextView) mAlertDialogWindow.findViewById(R.id.dialog_tv_title);
             mMessageView = (TextView) mAlertDialogWindow.findViewById(R.id.dialog_tv_message);
             mButtonLayout = (LinearLayout) mAlertDialogWindow.findViewById(R.id.dialog_button_layout);
             // set up dialog

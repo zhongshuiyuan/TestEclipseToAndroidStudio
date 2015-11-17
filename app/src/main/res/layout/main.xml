@@ -541,19 +541,17 @@
                         android:layout_marginTop="44dp">
 
                         <TextView
-                            android:layout_width="fill_parent"
-                            android:layout_height="fill_parent"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
                             android:gravity="center"
                             android:background="@color/app_design_shadow"
                             android:text="暂无现场图"
                             android:textSize="@dimen/text_size_body"/>
-                        <ImageView
+                        <com.daimajia.slider.library.SliderLayout
                             android:id="@+id/main_iv_marking_image"
-                            android:layout_width="fill_parent"
-                            android:layout_height="fill_parent"
-                            android:onClick="click"
-                            android:contentDescription="现场图"/>
-
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:onClick="click"/>
                     </FrameLayout>
 
                 </RelativeLayout>

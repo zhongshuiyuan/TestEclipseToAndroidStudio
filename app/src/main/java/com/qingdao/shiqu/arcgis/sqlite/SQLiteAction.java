@@ -41,7 +41,13 @@ public class SQLiteAction {
         ContentValues cv = new ContentValues();
         cv.put("geometry", geometryByte);
         cv.put("id", id.toString());
-        database.insert("glly", null, cv);
+        database.beginTransaction();
+        try {
+            database.insert("glly", null, cv);
+            database.setTransactionSuccessful();
+        } finally {
+            database.endTransaction();
+        }
     }
 
     /**
@@ -63,7 +69,13 @@ public class SQLiteAction {
         ContentValues cv = new ContentValues();
         cv.put("geometry", geometryByte);
         cv.put("id", id.toString());
-        database.insert("dlly", null, cv);
+        database.beginTransaction();
+        try {
+            database.insert("dlly", null, cv);
+            database.setTransactionSuccessful();
+        } finally {
+            database.endTransaction();
+        }
     }
 
     /**
@@ -93,25 +105,42 @@ public class SQLiteAction {
         String[] selectionArgs = {id.toString()};
         Cursor c = database.query("mark", null, "id=?", selectionArgs, null, null, null, null);
         if (c != null) {
-            if (c.getCount() > 0) {
-                isNewData = false;
+            try {
+                if (c.getCount() > 0) {
+                    isNewData = false;
+                }
+            } finally {
+                c.close();
             }
-        }
 
-        if (isNewData) {
-            database.insert("mark", null, cv);
-        } else {
-            String whereClause = "id=?";
-            String[] whereArgs = {id.toString()};
-            database.update("mark", cv, whereClause, whereArgs);
+        }
+        database.beginTransaction();
+        try {
+            if (isNewData) {
+                database.insert("mark", null, cv);
+            } else {
+                String whereClause = "id=?";
+                String[] whereArgs = {id.toString()};
+                database.update("mark", cv, whereClause, whereArgs);
+            }
+            database.setTransactionSuccessful();
+        } finally {
+            database.endTransaction();
         }
     }
 
-    public static void delectMark(SQLiteDatabase database, Geometry geometry) {
+    public static void deleteMark(SQLiteDatabase database, Geometry geometry) {
         Integer id = geometry.hashCode();
         String whereClause = "id=?";
         String[] whereArgs = {id.toString()};
-        database.delete("mark", whereClause, whereArgs);
+        database.beginTransaction();
+        try {
+            database.delete("mark", whereClause, whereArgs);
+            database.setTransactionSuccessful();
+        } finally {
+            database.endTransaction();
+        }
+
     }
 
     /**

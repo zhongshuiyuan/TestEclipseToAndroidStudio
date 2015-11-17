@@ -165,4 +165,15 @@ public class Util extends Object
 			e.printStackTrace();
 		}
 	}
+
+	/**
+	 * dip转像素
+	 * @param context Context
+	 * @param dpValue dip值
+	 * @return 像素值
+	 */
+	public static int dip2px(Context context, float dpValue) {
+		final float density = context.getResources().getDisplayMetrics().density;
+		return (int) (dpValue * density + 0.5f);
+	}
 }

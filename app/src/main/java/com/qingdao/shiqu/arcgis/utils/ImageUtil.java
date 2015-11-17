@@ -1,4 +1,4 @@
-package com.qingdao.shiqu.arcgis.utils.drawtool;
+package com.qingdao.shiqu.arcgis.utils;
 
 import android.annotation.TargetApi;
 import android.content.ContentUris;
