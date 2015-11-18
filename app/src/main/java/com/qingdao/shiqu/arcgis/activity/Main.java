@@ -30,6 +30,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.provider.MediaStore;
+import android.provider.Settings;
 import android.support.v4.widget.DrawerLayout;
 import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
@@ -216,8 +217,12 @@ public class Main extends Activity implements OnMapListener
 
     /** 实时更新位置模式专用线程 **/
     private Thread mUpdatePositionThread;
-    /** 实时更新位置模式专用线程 **/
+    /** 实时更新位置模式专用线程是否在运行的标志位 **/
     private boolean mIsUpdatePositionThreadRun = false;
+    /** 定位成功的位置提供方式 **/
+    private String mLocationProvider = LocationManager.GPS_PROVIDER;
+    /** 是否首次定位成功 **/
+    private boolean mIsFirstFixedLocation = false;
     /** 最近通过GPS定位获取的位置 **/
     private Location mLastLocationFromGps;
 
@@ -2304,6 +2309,16 @@ public class Main extends Activity implements OnMapListener
 
     /** 按下定位按钮 **/
     private void onBtnNavigationClick() {
+        if (mIsFirstFixedLocation) {
+            if (!mIsUpdatePositionThreadRun) {
+                restartUpdatePositionMode();
+                Toast.makeText(this, "正在重新开始定位", Toast.LENGTH_SHORT).show();
+                return;
+            }
+        } else {
+            Toast.makeText(this, "正在定位，请稍后", Toast.LENGTH_SHORT).show();
+            return;
+        }
         if (mLocationMode == LocationMode.NORMAL) {
             updateLocation(mLastLocationFromGps, true);
             startNavigationMode();
@@ -2530,19 +2545,19 @@ public class Main extends Activity implements OnMapListener
         mUpdatePositionThread = null;
     }
 
-    /** 开启实时更新位置模式（只更新位置图标，不会移动屏幕位置） **/
-    private void startUpdatePositionMode() {
-        locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-        if(!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)){
-            Intent intent = new Intent(Main.this, Dialog.class);
-            startActivity(intent);
-            return;
-        }
+    /** 重新开启实时更新位置模式 **/
+    private void restartUpdatePositionMode() {
+        stopUpdatePositionMode();
+        startUpdatePositionMode();
+    }
 
-        String bestProvider = locationManager.getBestProvider(getCriteria(), true);
+    private void updatePositionMode(String locationProvider) {
+        locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+
         //获取位置信息
         //如果不设置查询要求，getLastKnownLocation方法传人的参数为LocationManager.GPS_PROVIDER
-        Location location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+        //Location location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+        Location location = locationManager.getLastKnownLocation(locationProvider);
         if (location != null) {
             mLastLocationFromGps = location;
             updateLocation(location, false);
@@ -2558,35 +2573,126 @@ public class Main extends Activity implements OnMapListener
             // 备注：参数2和3，如果参数3不为0，则以参数3为准；参数3为0，则通过时间来定时更新；两者为0，则随时刷新
             // 1秒更新一次，或最小位移变化超过1米更新一次；
             // 注意：此处更新准确度非常低，推荐在service里面启动一个Thread，在run中sleep(10000);然后执行handler.sendMessage(),更新位置
-            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 0, mLocationListener);
-        } else {
-            Toast.makeText(Main.this, "定位失败", Toast.LENGTH_SHORT).show();
-            startUpdateLocationThread();
+            if (locationProvider == LocationManager.GPS_PROVIDER) {
+                locationManager.requestLocationUpdates(locationProvider, 1000, 0, mLocationListener);
+            }
         }
+    }
+
+    /** 开启实时更新位置模式（只更新位置图标，不会移动屏幕位置） **/
+    private void startUpdatePositionMode() {
+        locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+
+        if(!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)){
+            //Intent intent = new Intent(Main.this, Dialog.class);
+            //startActivity(intent);
+            final MaterialDesignDialog dialog = new MaterialDesignDialog(this);
+            dialog.setTitle("提高“我的位置”精确度")
+                    .setMessage("如需获取精确的位置服务，请你在室外操作时打开GPS")
+                    .setNegativeButton("忽略", new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            dialog.dismiss();
+                        }
+                    })
+                    .setPositiveButton("打开GPS", new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            dialog.dismiss();
+                            startActivity(new Intent(Settings.ACTION_SETTINGS));
+                        }
+                    });
+            dialog.show();
+        }
+
+        Toast.makeText(Main.this, "正在定位", Toast.LENGTH_SHORT).show();
+        startUpdateLocationThread();
     }
 
     private void startUpdateLocationThread() {
         mIsUpdatePositionThreadRun = true;
         if (mUpdatePositionThread == null) {
             mUpdatePositionThread = new Thread(new Runnable() {
+                int i = 0;
                 @Override
                 public void run() {
                     while (mIsUpdatePositionThreadRun) {
                         try {
-                            Thread.sleep(500);
+                            Thread.sleep(2000);
                         } catch (InterruptedException e) {
                             Log.e(TAG, "定位子线程休眠时发生错误:" + e.getMessage());
                         }
                         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-                        String bestProvider = locationManager.getBestProvider(getCriteria(), true);
-                        Location location = locationManager.getLastKnownLocation(bestProvider);
-                        //Location location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-                        if (location != null) {
-                            mUpdatePositionHandler.sendEmptyMessage(1);
-                            Log.i(TAG, "GPS定位成功");
+                        Location location;
+                        // 如果通过其他方式定位成功了，则进行GPS定位
+                        if (mIsFirstFixedLocation) {
+                            if (i > 5) {
+                                String message = "在卫星信号不良的地方（例如：室内、隧道以及高楼大厦林立的城市街区等），"
+                                        + "或者处于运动状态下GPS往往很难定位。建议您："
+                                        + "\n到空旷的地方使用GPS，并尽可能在静止状态下完成定位，定位成功后，"
+                                        + "就可以随意移动了";
+                                final MaterialDesignDialog dialog = new MaterialDesignDialog(Main.this.getApplicationContext());
+                                dialog.setTitle("GPS定位失败")
+                                        .setMessage(message)
+                                        .setNegativeButton("停止定位", new View.OnClickListener() {
+                                            @Override
+                                            public void onClick(View v) {
+                                                mUpdatePositionHandler.sendEmptyMessage(3);
+                                                dialog.dismiss();
+                                            }
+                                        })
+                                        .setPositiveButton("继续定位", new View.OnClickListener() {
+                                            @Override
+                                            public void onClick(View v) {
+                                                i = 0;
+                                                dialog.dismiss();
+                                            }
+                                        });
+                                dialog.show();
+                            }
+                            location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+                            if (location != null) {
+                                mUpdatePositionHandler.sendEmptyMessage(2);
+                                Log.i(TAG, "GPS定位成功");
+                            } else {
+                                Log.v(TAG, "正在使用GPS进行定位");
+                            }
                         } else {
-                            Log.v(TAG, "定位中");
+                            String provider;
+                            switch (i) {
+                                case 0:
+                                    location = locationManager.getLastKnownLocation(LocationManager.PASSIVE_PROVIDER);
+                                    provider = LocationManager.PASSIVE_PROVIDER;
+                                    break;
+                                case 1:
+                                    location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+                                    provider = LocationManager.GPS_PROVIDER;
+                                    break;
+                                case 2:
+                                    location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+                                    provider = LocationManager.NETWORK_PROVIDER;
+                                    break;
+                                default:
+                                    String bestProvider = locationManager.getBestProvider(getCriteria(), true);
+                                    location = locationManager.getLastKnownLocation(bestProvider);
+                                    provider = "custom";
+                                    i = -1;
+                                    break;
+                            }
+                            if (location != null) {
+                                mLocationProvider = provider;
+                                if (provider.equals(LocationManager.GPS_PROVIDER)) {
+                                    mUpdatePositionHandler.sendEmptyMessage(2);
+                                    Log.i(TAG, "GPS定位成功");
+                                } else {
+                                    mUpdatePositionHandler.sendEmptyMessage(1);
+                                    Log.i(TAG, "定位成功" + " 定位方式：" + provider);
+                                }
+                            } else {
+                                Log.v(TAG, "正在选取合适的定位方式定位中， 上一方式：" + provider);
+                            }
                         }
+                        ++i;
                     }
                 }
             });
@@ -2648,7 +2754,8 @@ public class Main extends Activity implements OnMapListener
             switch (event) {
                 // 第一次定位成功
                 case GpsStatus.GPS_EVENT_FIRST_FIX:
-                    Log.i(TAG, "第一次定位");
+                    updatePositionMode(LocationManager.GPS_PROVIDER);
+                    Log.i(TAG, "GPS第一次定位成功");
                     break;
                 // 卫星状态改变
                 case GpsStatus.GPS_EVENT_SATELLITE_STATUS:
@@ -2668,11 +2775,11 @@ public class Main extends Activity implements OnMapListener
                     break;
                 // 启动定位
                 case GpsStatus.GPS_EVENT_STARTED:
-                    Log.v(TAG, "启动定位");
+                    Log.i(TAG, "启动GPS定位");
                     break;
                 // 中止定位
                 case GpsStatus.GPS_EVENT_STOPPED:
-                    Log.v(TAG, "中止定位");
+                    Log.i(TAG, "中止GPS定位");
                     break;
             }
         }
@@ -2689,7 +2796,7 @@ public class Main extends Activity implements OnMapListener
         //设置是否要求速度
         criteria.setSpeedRequired(false);
         // 设置是否允许运营商收费
-        criteria.setCostAllowed(true                   );
+        criteria.setCostAllowed(true);
         //设置是否需要方位信息
         criteria.setBearingRequired(false);
         //设置是否需要海拔信息
@@ -2699,14 +2806,26 @@ public class Main extends Activity implements OnMapListener
         return criteria;
     }
 
+
     private Handler mUpdatePositionHandler = new Handler() {
-        public final int LOCATION_GOT = 1;
+        private final int LOCATION_GOT = 1;
+        private final int LOCATION_GOT_BY_GPS = 2;
+        private final int STOP = 3;
         @Override
         public void handleMessage(Message msg) {
             super.handleMessage(msg);
             if (msg.what == LOCATION_GOT) {
+                mIsFirstFixedLocation = true;
+                //Toast.makeText(Main.this, "定位成功", Toast.LENGTH_LONG).show();
+                updatePositionMode(mLocationProvider);
+            } else if (msg.what == LOCATION_GOT_BY_GPS) {
+                mIsFirstFixedLocation = true;
                 mIsUpdatePositionThreadRun = false;
-                startUpdatePositionMode();
+                Toast.makeText(Main.this, "GPS定位成功", Toast.LENGTH_LONG).show();
+                updatePositionMode(LocationManager.GPS_PROVIDER);
+            } else if (msg.what == STOP) {
+                stopUpdatePositionMode();
+                Toast.makeText(Main.this, "定位停止，点击定位按钮能开启定位", Toast.LENGTH_LONG).show();
             }
         }
     };
