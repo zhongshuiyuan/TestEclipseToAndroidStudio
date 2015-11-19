@@ -2626,29 +2626,8 @@ public class Main extends Activity implements OnMapListener
                         Location location;
                         // 如果通过其他方式定位成功了，则进行GPS定位
                         if (mIsFirstFixedLocation) {
-                            if (i > 5) {
-                                String message = "在卫星信号不良的地方（例如：室内、隧道以及高楼大厦林立的城市街区等），"
-                                        + "或者处于运动状态下GPS往往很难定位。建议您："
-                                        + "\n到空旷的地方使用GPS，并尽可能在静止状态下完成定位，定位成功后，"
-                                        + "就可以随意移动了";
-                                final MaterialDesignDialog dialog = new MaterialDesignDialog(Main.this.getApplicationContext());
-                                dialog.setTitle("GPS定位失败")
-                                        .setMessage(message)
-                                        .setNegativeButton("停止定位", new View.OnClickListener() {
-                                            @Override
-                                            public void onClick(View v) {
-                                                mUpdatePositionHandler.sendEmptyMessage(3);
-                                                dialog.dismiss();
-                                            }
-                                        })
-                                        .setPositiveButton("继续定位", new View.OnClickListener() {
-                                            @Override
-                                            public void onClick(View v) {
-                                                i = 0;
-                                                dialog.dismiss();
-                                            }
-                                        });
-                                dialog.show();
+                            if (i > 30) {
+                                mUpdatePositionHandler.sendEmptyMessage(3);
                             }
                             location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
                             if (location != null) {
@@ -2816,7 +2795,7 @@ public class Main extends Activity implements OnMapListener
             super.handleMessage(msg);
             if (msg.what == LOCATION_GOT) {
                 mIsFirstFixedLocation = true;
-                //Toast.makeText(Main.this, "定位成功", Toast.LENGTH_LONG).show();
+                Toast.makeText(Main.this, "模糊定位成功，正在进行GPS定位", Toast.LENGTH_LONG).show();
                 updatePositionMode(mLocationProvider);
             } else if (msg.what == LOCATION_GOT_BY_GPS) {
                 mIsFirstFixedLocation = true;
@@ -2825,7 +2804,28 @@ public class Main extends Activity implements OnMapListener
                 updatePositionMode(LocationManager.GPS_PROVIDER);
             } else if (msg.what == STOP) {
                 stopUpdatePositionMode();
-                Toast.makeText(Main.this, "定位停止，点击定位按钮能开启定位", Toast.LENGTH_LONG).show();
+                String message = "在卫星信号不良的地方（例如：室内、隧道以及高楼大厦林立的城市街区等），"
+                        + "或者处于运动状态下GPS往往很难定位。建议您："
+                        + "\n到空旷的地方使用GPS，并尽可能在静止状态下完成定位，定位成功后，"
+                        + "就可以随意移动了";
+                final MaterialDesignDialog dialog = new MaterialDesignDialog(Main.this);
+                dialog.setTitle("GPS定位失败")
+                        .setMessage(message)
+                        .setNegativeButton("停止定位", new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                Toast.makeText(Main.this, "定位停止，点击定位按钮能开启定位", Toast.LENGTH_LONG).show();
+                                dialog.dismiss();
+                            }
+                        })
+                        .setPositiveButton("继续定位", new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                startUpdatePositionMode();
+                                dialog.dismiss();
+                            }
+                        });
+                dialog.show();
             }
         }
     };
