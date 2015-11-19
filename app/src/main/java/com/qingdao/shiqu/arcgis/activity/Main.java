@@ -223,8 +223,10 @@ public class Main extends Activity implements OnMapListener
     private String mLocationProvider = LocationManager.GPS_PROVIDER;
     /** 是否首次定位成功 **/
     private boolean mIsFirstFixedLocation = false;
-    /** 最近通过GPS定位获取的位置 **/
-    private Location mLastLocationFromGps;
+    /** 是否通过GPS定位成功 **/
+    private boolean mIsGetLocationFromGps = false;
+    /** 最近通过定位获取的位置 **/
+    private Location mLastLocation;
 
     /** 定位标志图层 **/
     GraphicsLayer mLocationGraphicsLayer;
@@ -2310,17 +2312,20 @@ public class Main extends Activity implements OnMapListener
     /** 按下定位按钮 **/
     private void onBtnNavigationClick() {
         if (mIsFirstFixedLocation) {
-            if (!mIsUpdatePositionThreadRun) {
-                restartUpdatePositionMode();
-                Toast.makeText(this, "正在重新开始定位", Toast.LENGTH_SHORT).show();
+            if (!mIsGetLocationFromGps) {
+                if (!mIsUpdatePositionThreadRun) {
+                    restartUpdatePositionMode();
+                }
+                updateLocation(mLastLocation, true);
                 return;
             }
         } else {
             Toast.makeText(this, "正在定位，请稍后", Toast.LENGTH_SHORT).show();
             return;
         }
+
         if (mLocationMode == LocationMode.NORMAL) {
-            updateLocation(mLastLocationFromGps, true);
+            updateLocation(mLastLocation, true);
             startNavigationMode();
         } else if (mLocationMode == LocationMode.FOLLOWING) {
             stopNavigationMode();
@@ -2461,8 +2466,8 @@ public class Main extends Activity implements OnMapListener
 
     /** 更新经度 **/
     private void updateLongitude() {
-        if (mLastLocationFromGps != null) {
-            double longitude = mLastLocationFromGps.getLongitude();
+        if (mLastLocation != null) {
+            double longitude = mLastLocation.getLongitude();
             String longitudeStr = String.valueOf(longitude).substring(0, 9);
             if (longitude > 0) {
                 longitudeStr += "°E";
@@ -2476,8 +2481,8 @@ public class Main extends Activity implements OnMapListener
 
     /** 更新纬度 **/
     private void updateLatitude() {
-        if (mLastLocationFromGps != null) {
-            double latitude = mLastLocationFromGps.getLatitude();
+        if (mLastLocation != null) {
+            double latitude = mLastLocation.getLatitude();
             String latitudeStr = String.valueOf(latitude).substring(0, 8);
             if (latitude > 0) {
                 latitudeStr += "°N";
@@ -2543,6 +2548,7 @@ public class Main extends Activity implements OnMapListener
         locationManager.removeUpdates(mLocationListener);
         mIsUpdatePositionThreadRun = false;
         mUpdatePositionThread = null;
+        mIsGetLocationFromGps = false;
     }
 
     /** 重新开启实时更新位置模式 **/
@@ -2559,7 +2565,7 @@ public class Main extends Activity implements OnMapListener
         //Location location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
         Location location = locationManager.getLastKnownLocation(locationProvider);
         if (location != null) {
-            mLastLocationFromGps = location;
+            mLastLocation = location;
             updateLocation(location, false);
             updateUi();
             //监听状态
@@ -2684,7 +2690,7 @@ public class Main extends Activity implements OnMapListener
 
         /** 位置信息变化时触发 **/
         public void onLocationChanged(Location location) {
-            mLastLocationFromGps = location;
+            mLastLocation = location;
             updateUi();
             boolean isMovingMap;
             isMovingMap = mLocationMode == LocationMode.FOLLOWING;
@@ -2800,6 +2806,7 @@ public class Main extends Activity implements OnMapListener
             } else if (msg.what == LOCATION_GOT_BY_GPS) {
                 mIsFirstFixedLocation = true;
                 mIsUpdatePositionThreadRun = false;
+                mIsGetLocationFromGps = true;
                 Toast.makeText(Main.this, "GPS定位成功", Toast.LENGTH_LONG).show();
                 updatePositionMode(LocationManager.GPS_PROVIDER);
             } else if (msg.what == STOP) {
@@ -2815,6 +2822,8 @@ public class Main extends Activity implements OnMapListener
                             @Override
                             public void onClick(View v) {
                                 Toast.makeText(Main.this, "定位停止，点击定位按钮能开启定位", Toast.LENGTH_LONG).show();
+                                mLocationMode = LocationMode.NORMAL;
+                                updateUi();
                                 dialog.dismiss();
                             }
                         })
