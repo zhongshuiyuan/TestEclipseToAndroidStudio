@@ -896,6 +896,10 @@ public class Main extends Activity implements OnMapListener
         loadTocSetting();
 
         loadMyDraw();
+
+        if (DEBUG) {
+            Log.d(TAG, "onResume结束");
+        }
     }
 
     @Override
@@ -1338,7 +1342,8 @@ public class Main extends Activity implements OnMapListener
                         mMarkingToolbarImage.recycle();
                     }
                     mMarkingToolbarImage = ImageUtil.getBitmap(mMarkingToolbarImagePath);
-                    addImageToImageSlider(mMarkingToolbarImageFile);
+                    addSenceImage(mCurrentMark, mMarkingToolbarImagePath);
+                    //addImageToImageSlider(mMarkingToolbarImagePath);
                     //mIvMarkingImage.setImageBitmap(mMarkingToolbarImage);
                     ImageUtil.galleryAddPic(this, mMarkingToolbarImagePath);
                 }
@@ -1349,7 +1354,8 @@ public class Main extends Activity implements OnMapListener
                     mMarkingToolbarImage.recycle();
                 }
                 mMarkingToolbarImage = ImageUtil.getBitmap(mMarkingToolbarImagePath);
-                addImageToImageSlider(mMarkingToolbarImageFile);
+                addSenceImage(mCurrentMark, mMarkingToolbarImagePath);
+                //addImageToImageSlider(mMarkingToolbarImagePath);
                 //mIvMarkingImage.setImageBitmap(mMarkingToolbarImage);
             } else if (requestCode == REQUEST_PICK_IMAGE_KITKAT) {//选择图片（当版本高于4.4）
                 mMarkingToolbarImagePath = ImageUtil.getPath(this, data.getData());
@@ -1358,7 +1364,8 @@ public class Main extends Activity implements OnMapListener
                     mMarkingToolbarImage.recycle();
                 }
                 mMarkingToolbarImage = ImageUtil.getBitmap(mMarkingToolbarImagePath);
-                addImageToImageSlider(mMarkingToolbarImageFile);
+                addSenceImage(mCurrentMark, mMarkingToolbarImagePath);
+                //addImageToImageSlider(mMarkingToolbarImageFile);
                 //mIvMarkingImage.setImageBitmap(mMarkingToolbarImage);
             }
         }
@@ -1373,15 +1380,45 @@ public class Main extends Activity implements OnMapListener
 		}else{*/
     }
 
-    private String getCurrentImageFileName() {
-        int index = mMarkingToolbarImagePath.lastIndexOf("GIS");
-        return mMarkingToolbarImagePath.substring(index + 4, index + 19);
+    private String getCurrentImageFileName(String imagePath) {
+        int index = imagePath.indexOf("GIS");
+        return imagePath.substring(index + 4, index + 19);
     }
 
-    private void addImageToImageSlider(java.io.File file) {
+    private void addSenceImage(MarkObject markObject, String imagePath) {
+        addImageToImageSlider(imagePath);
+        String[] oldImageIds = markObject.getImageIds();
+        String[] imageIds;
+        if (oldImageIds != null) {
+            int imageCount = oldImageIds.length + 1;
+            imageIds = new String[imageCount];
+            for (int i = 0; i < imageCount; ++i) {
+                if (i == imageCount - 1) {
+                    imageIds[i] = Integer.toString(imagePath.hashCode());
+                    SQLiteAction.storeImage(mSQLiteDatabase, imagePath);
+                }
+                else {
+                    imageIds[i] = oldImageIds[i];
+                }
+            }
+        } else {
+            imageIds = new String[1];
+            imageIds[0] = Integer.toString(imagePath.hashCode());
+            SQLiteAction.storeImage(mSQLiteDatabase, imagePath);
+        }
+        markObject.setImageIds(imageIds);
+        SQLiteAction.storeMark(mSQLiteDatabase,
+                mCurrentMark.getGeometry(),
+                mCurrentMark.getTitle(),
+                mCurrentMark.getContent(),
+                mCurrentMark.getImageIds());
+    }
+
+    private void addImageToImageSlider(String imagePath) {
+        java.io.File file = new java.io.File(imagePath);
         TextSliderView textSliderView = new TextSliderView(this);
         DefaultSliderView s = new DefaultSliderView(this);
-        String description = getCurrentImageFileName();
+        String description = getCurrentImageFileName(imagePath);
         textSliderView.description(description)
                 .image(file);
         textSliderView.setOnSliderClickListener(new BaseSliderView.OnSliderClickListener() {
@@ -1447,7 +1484,7 @@ public class Main extends Activity implements OnMapListener
                 Graphic graphic = new Graphic(mCurrentLocationPoint, pictureMarkerSymbol);
                 mLocationGraphicsLayer.updateGraphic(mLocationGraphicId, graphic);
             }
-        };
+        }
     };
 
     /********************* OnMapListener ******************/
@@ -1953,8 +1990,8 @@ public class Main extends Activity implements OnMapListener
     /** 从数据库查询该标注的数据并显示到标注工具栏 **/
     private void fillDataToMarkingToolbar(MarkObject mark) {
         Integer id = mark.getGeometry().hashCode();
-        String[] ids = {id.toString()};
-        Cursor c = SQLiteAction.queryMarkViaIds(mSQLiteDatabase, ids);
+        String ids = id.toString();
+        Cursor c = SQLiteAction.queryMarkViaId(mSQLiteDatabase, ids);
         if (c != null) {
             if (c.moveToFirst()) {
                 int recordCount = c.getCount();
@@ -1967,9 +2004,13 @@ public class Main extends Activity implements OnMapListener
                 } else {
                     String title = c.getString(c.getColumnIndex("title"));
                     String content = c.getString(c.getColumnIndex("content"));
+                    String imageId = c.getString(c.getColumnIndex("imageIds"));
+                    if (imageId != null) {
+                        String[] imageIds = imageId.split("#");
+                        mark.setImageIds(imageIds);
+                    }
                     mark.setTitle(title);
                     mark.setContent(content);
-                    updateUi();
                 }
             }
         }
@@ -2000,6 +2041,42 @@ public class Main extends Activity implements OnMapListener
         mEtMarkingContent.setText(mCurrentMark.getContent());
     }
 
+    /** 显示现场图 **/
+    private void displaySceneImage() {
+        if (DEBUG) {
+            Log.d(TAG, "更新显示现场图");
+        }
+        mIvMarkingImage.removeAllSliders();
+
+        if (mCurrentMark != null) {
+            String[] imageIds = mCurrentMark.getImageIds();
+            if (imageIds != null && imageIds.length > 0) {
+                int imageCount = imageIds.length;
+                for (int i = 0; i < imageCount; ++i) {
+                    String imageId = imageIds[i];
+                    Cursor c = SQLiteAction.queryImageViaId(mSQLiteDatabase, imageId);
+                    if (c != null) {
+                        if (c.moveToFirst()) {
+                            int recordCount = c.getCount();
+                            if (recordCount != 1) {
+                                if (recordCount == 0) {
+                                    Log.w(TAG, "没有查询到已有的图片信息，可能图片已被删除");
+                                } else if (recordCount > 1) {
+                                    Log.w(TAG, "有" + recordCount + "个图片对象具有相同的id");
+                                }
+                            } else {
+                                String imagePath = c.getString(c.getColumnIndex("path"));
+                                addImageToImageSlider(imagePath);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        mIvMarkingImage.startAutoCycle();
+    }
+
     /** 清除标注工具栏的内容 **/
     private void resetMarkingToolbar() {
         mCurrentMark.setTitle("");
@@ -2008,6 +2085,8 @@ public class Main extends Activity implements OnMapListener
         mTvMarkingTitle.setText("");
         mEtMarkingContent.setText("");
         mTvMarkingContent.setText("");
+        mIvMarkingImage.removeAllSliders();
+        mIvMarkingImage.stopAutoCycle();
     }
 
     /** 停止标注模式并更新UI **/
@@ -2130,8 +2209,9 @@ public class Main extends Activity implements OnMapListener
 
             SQLiteAction.storeMark(mSQLiteDatabase,
                     mCurrentMark.getGeometry(),
-                    mEtMarkingTitle.getText().toString(),
-                    mEtMarkingContent.getText().toString());
+                    mCurrentMark.getTitle(),
+                    mCurrentMark.getContent(),
+                    mCurrentMark.getImageIds());
 
             boolean isNewGraphic = true;
             if (mCurrentMark.getGraphic() != null) {
@@ -2166,8 +2246,8 @@ public class Main extends Activity implements OnMapListener
     private void onBtnDeleteMarkClick() {
         boolean isDeleteMark = false;
         Integer id = mCurrentMark.getGeometry().hashCode();
-        String[] ids = {id.toString()};
-        Cursor c = SQLiteAction.queryMarkViaIds(mSQLiteDatabase, ids);
+        String ids = id.toString();
+        Cursor c = SQLiteAction.queryMarkViaId(mSQLiteDatabase, ids);
         if (c != null) {
             if (c.moveToFirst()) {
                 if (c.getCount() == 1) {
@@ -2238,38 +2318,6 @@ public class Main extends Activity implements OnMapListener
     }
 
     private void showMarkingImage() {
-        final SliderLayout sliderLayout = new SliderLayout(this);
-        //sliderLayout.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
-        int screenWidth = getResources().getDisplayMetrics().widthPixels;
-        int screenHeight = getResources().getDisplayMetrics().heightPixels;
-        sliderLayout.setMinimumWidth((int) (screenWidth * 0.75));
-        sliderLayout.setMinimumHeight((int) (screenHeight * 0.75));
-        //sliderLayout.setMinimumHeight(Util.dip2px(this, 240));
-        final java.io.File f = new java.io.File(mMarkingToolbarImagePath);
-        for (int i = 0; i < 2; ++i) {
-            TextSliderView v = new TextSliderView(this);
-            v.image(f).description("现场图");
-            v.setOnSliderClickListener(new BaseSliderView.OnSliderClickListener() {
-                @Override
-                public void onSliderClick(BaseSliderView slider) {
-                    Intent intent = new Intent(Intent.ACTION_VIEW);
-                    Uri uri = Uri.fromFile(f);
-                    intent.setDataAndType(uri, "image/*");
-                    Main.this.startActivity(intent);
-                }
-            });
-            sliderLayout.addSlider(v);
-        }
-        final MaterialDesignDialog dialog = new MaterialDesignDialog(this);
-        dialog.setContentView(sliderLayout)
-                .setPositiveButton("OK", new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        sliderLayout.stopAutoCycle();
-                        dialog.dismiss();
-                    }
-                });
-        dialog.show();
 
     }
 
@@ -2425,13 +2473,15 @@ public class Main extends Activity implements OnMapListener
                 });
                 mRlMarkingToolbar.startAnimation(animation);
             }
-            mRlMarkingToolbar.setVisibility(View.VISIBLE);
+            //mRlMarkingToolbar.setVisibility(View.VISIBLE);
             if (mMarkingToolbarState == MarkingMode.NULL) {
                 setMarkingToolbarToNormalState();
                 mTempMarkingLayer.removeAll();
             } else if (mMarkingToolbarState == MarkingMode.EDIT) {
                 setMarkingToolbarToEditingState();
             }
+            //TODO 现场图轮转
+            displaySceneImage();
         } else {
             if (mRlMarkingToolbar.getVisibility() == View.VISIBLE) {
                 Animation animation = AnimationUtils.loadAnimation(this, R.anim.marking_toolbar_hide);
@@ -2572,7 +2622,6 @@ public class Main extends Activity implements OnMapListener
         if (location != null) {
             mLastLocation = location;
             updateLocation(location, false);
-            updateUi();
             //监听状态
             locationManager.addGpsStatusListener(mGpsStatusListener);
 
@@ -2587,6 +2636,7 @@ public class Main extends Activity implements OnMapListener
             if (locationProvider == LocationManager.GPS_PROVIDER) {
                 locationManager.requestLocationUpdates(locationProvider, 1000, 0, mLocationListener);
             }
+            updateUi();
         }
     }
 
@@ -2642,8 +2692,8 @@ public class Main extends Activity implements OnMapListener
                             }
                             location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
                             if (location != null) {
-                                mUpdatePositionHandler.sendEmptyMessage(2);
                                 Log.i(TAG, "GPS定位成功");
+                                mUpdatePositionHandler.sendEmptyMessage(2);
                             } else {
                                 Log.v(TAG, "正在使用GPS进行定位");
                             }
@@ -2672,8 +2722,8 @@ public class Main extends Activity implements OnMapListener
                             if (location != null) {
                                 mLocationProvider = provider;
                                 if (provider.equals(LocationManager.GPS_PROVIDER)) {
-                                    mUpdatePositionHandler.sendEmptyMessage(2);
                                     Log.i(TAG, "GPS定位成功");
+                                    mUpdatePositionHandler.sendEmptyMessage(2);
                                 } else {
                                     mUpdatePositionHandler.sendEmptyMessage(1);
                                     Log.i(TAG, "定位成功" + " 定位方式：" + provider);
@@ -2696,7 +2746,6 @@ public class Main extends Activity implements OnMapListener
         /** 位置信息变化时触发 **/
         public void onLocationChanged(Location location) {
             mLastLocation = location;
-            updateUi();
             boolean isMovingMap;
             isMovingMap = mLocationMode == LocationMode.FOLLOWING;
             updateLocation(location, isMovingMap);

@@ -119,6 +119,9 @@
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
+        <!-- 查看现场图 -->
+        <activity android:name=".activity.DisplaySceneImageActivity">
+        </activity>
     </application>
 
 </manifest>

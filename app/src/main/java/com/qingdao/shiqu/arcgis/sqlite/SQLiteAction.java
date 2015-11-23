@@ -91,15 +91,30 @@ public class SQLiteAction {
      * 保存标注到数据库
      * @param database 数据库
      * @param geometry 标注的Geometry
+     * @param title 标注的标题
+     * @param content 标注的内容
      */
-    public static void storeMark(SQLiteDatabase database, Geometry geometry, String title, String content) {
+    public static void storeMark(SQLiteDatabase database, Geometry geometry, String title, String content, String[] imageIds) {
         Integer id = geometry.hashCode();
         byte[] geometryByte = GeometryEngine.geometryToEsriShape(geometry);
+        String imageId = null;
+        if (imageIds != null) {
+            int imageCount = imageIds.length;
+            imageId = "";
+            for (int i = 0; i < imageCount; ++i) {
+                if (i == 0) {
+                    imageId = imageIds[0];
+                } else {
+                    imageId += "#" + imageIds[i];
+                }
+            }
+        }
         ContentValues cv = new ContentValues();
         cv.put("id", id.toString());
         cv.put("geometry", geometryByte);
         cv.put("title", title);
         cv.put("content", content);
+        cv.put("imageIds", imageId);
 
         boolean isNewData = true;
         String[] selectionArgs = {id.toString()};
@@ -155,10 +170,85 @@ public class SQLiteAction {
     /**
      * 通过ID查询标注数据
      * @param database 数据库
-     * @param ids 所需查询的标注的id
+     * @param id 所需查询的标注的id
      * @return 查询结果
      */
-    public static Cursor queryMarkViaIds(SQLiteDatabase database, String[] ids) {
+    public static Cursor queryMarkViaId(SQLiteDatabase database, String id) {
+        String[] ids = {id.toString()};
         return query(database, "mark", null, "id=?", ids, null, null, null, null);
+    }
+
+    /**
+     * 保存标注现场图到数据库
+     * @param database 数据库
+     * @param imagePath 标注的Geometry
+     */
+    public static void storeImage(SQLiteDatabase database, String imagePath) {
+        Integer id = imagePath.hashCode();
+        ContentValues cv = new ContentValues();
+        cv.put("id", id.toString());
+        cv.put("path", imagePath);
+        //cv.put("image", imageBlob);
+
+        boolean isNewData = true;
+        String[] selectionArgs = {id.toString()};
+        Cursor c = database.query("image", null, "id=?", selectionArgs, null, null, null, null);
+        if (c != null) {
+            try {
+                if (c.getCount() > 0) {
+                    isNewData = false;
+                }
+            } finally {
+                c.close();
+            }
+
+        }
+        database.beginTransaction();
+        try {
+            if (isNewData) {
+                database.insert("image", null, cv);
+            } else {
+                String whereClause = "id=?";
+                String[] whereArgs = {id.toString()};
+                database.update("image", cv, whereClause, whereArgs);
+            }
+            database.setTransactionSuccessful();
+        } finally {
+            database.endTransaction();
+        }
+    }
+
+    public static void deleteImage(SQLiteDatabase database, String path) {
+        Integer id = path.hashCode();
+        String whereClause = "id=?";
+        String[] whereArgs = {id.toString()};
+        database.beginTransaction();
+        try {
+            database.delete("image", whereClause, whereArgs);
+            database.setTransactionSuccessful();
+        } finally {
+            database.endTransaction();
+        }
+
+    }
+
+    /**
+     * 查询所有的图片数据
+     * @param database 数据库
+     * @return 查询结果
+     */
+    public static Cursor queryImage(SQLiteDatabase database) {
+        return query(database, "image", null, null, null, null, null, null, null);
+    }
+
+    /**
+     * 通过ID查询图片数据
+     * @param database 数据库
+     * @param id 所需查询的标注的id
+     * @return 查询结果
+     */
+    public static Cursor queryImageViaId(SQLiteDatabase database, String id) {
+        String[] ids = {id.toString()};
+        return query(database, "image", null, "id=?", ids, null, null, null, null);
     }
 }

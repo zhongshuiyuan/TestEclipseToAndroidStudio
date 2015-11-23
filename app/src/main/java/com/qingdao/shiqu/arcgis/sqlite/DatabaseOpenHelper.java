@@ -32,7 +32,7 @@ public class DatabaseOpenHelper extends SQLiteOpenHelper {
         String creatMark = "create table mark(id TEXT not null, geometry blob not null, title TEXT, content TEXT, imageIds TEXT);";
         db.execSQL(creatMark);
         // 创建图片表
-        String creatImage = "create table image(id TEXT not null, image blob not null);";
+        String creatImage = "create table image(id TEXT not null, path TEXT, image blob);";
         db.execSQL(creatImage);
     }
 
