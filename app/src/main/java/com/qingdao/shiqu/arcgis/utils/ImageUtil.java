@@ -178,19 +178,19 @@ public class ImageUtil {
      */
     public static File createImageFile() throws IOException {
         // 定义图片名称
-        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-        String imageFileName = "GIS_" + timeStamp;
+        String imageFileName = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+        String imageFileSuffix = ".jpg";
         File storageDir = Environment.getExternalStoragePublicDirectory(
                 Environment.DIRECTORY_PICTURES + "/GIS");
         if (!storageDir.exists()) {
             storageDir.mkdirs();
         }
-        File image = File.createTempFile(
-                imageFileName,  /* 前缀 */
-                ".jpg",         /* 后缀 */
-                storageDir      /* 路径 */
-        );
-
+//        File image = File.createTempFile(
+//                imageFileName,  /* 前缀 */
+//                ".jpg",         /* 后缀 */
+//                storageDir      /* 路径 */
+//        );
+        File image = new File(storageDir.getPath() + "/" + imageFileName + imageFileSuffix);
         return image;
     }
 

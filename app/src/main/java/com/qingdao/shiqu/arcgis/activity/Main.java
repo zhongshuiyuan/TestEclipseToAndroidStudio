@@ -1292,6 +1292,11 @@ public class Main extends Activity implements OnMapListener
     {
         if (resultCode == RESULT_CANCELED) {
             Log.w(TAG, requestCode + "请求失败");
+            if (requestCode == REQUEST_TAKE_PHOTO) {
+                if (mMarkingToolbarImageFile != null) {
+                    mMarkingToolbarImageFile.delete();
+                }
+            }
         } else if (resultCode == RESULT_OK) {
             if (requestCode == this.requestCode) {// 搜索回调，进行画线或者画点操作，不知道谁写的逻辑，都并在一起了
                 String value = data.getStringExtra("value");
