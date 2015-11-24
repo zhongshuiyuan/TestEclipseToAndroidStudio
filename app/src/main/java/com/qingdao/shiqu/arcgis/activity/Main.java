@@ -72,6 +72,7 @@ import com.esri.core.symbol.MarkerSymbol;
 import com.esri.core.symbol.PictureMarkerSymbol;
 import com.esri.core.symbol.SimpleLineSymbol;
 import com.gc.materialdesign.views.ButtonFloat;
+import com.gc.materialdesign.views.ButtonFloatSmall;
 import com.gc.materialdesign.views.ButtonIcon;
 import com.getbase.floatingactionbutton.FloatingActionsMenu;
 import com.qingdao.shiqu.arcgis.BuildConfig;
@@ -260,6 +261,8 @@ public class Main extends Activity implements OnMapListener
     private ButtonIcon mBtnToc;
 
     ButtonFloat mBtnLocation;
+    ButtonFloatSmall mBtnZoomin;
+    ButtonFloatSmall mBtnZoomout;
     TextView mTvNumSatellites;
 
     ButtonFloat mBtnActionMenu;
@@ -349,6 +352,8 @@ public class Main extends Activity implements OnMapListener
         seeAll();
 
         showNewVersionChanglog();
+
+        updateUi();
 
         super.onCreate(savedInstanceState);
     }
@@ -449,6 +454,8 @@ public class Main extends Activity implements OnMapListener
 
         mBtnLocation = (ButtonFloat) findViewById(R.id.btn_location);
         mBtnLocation.setDrawableIcon(getResources().getDrawable(R.drawable.ic_my_location_white_48dp));
+        mBtnZoomin = (ButtonFloatSmall) findViewById(R.id.main_btn_zoomin);
+        mBtnZoomout = (ButtonFloatSmall) findViewById(R.id.main_btn_zoomout);
 
         // 按钮菜单
         mActionMenu = (FloatingActionsMenu) findViewById(R.id.main_multiple_actions);
@@ -769,8 +776,6 @@ public class Main extends Activity implements OnMapListener
     @Override
     protected void onStart() {
         super.onStart();
-
-
     }
 
     @Override
@@ -1281,7 +1286,7 @@ public class Main extends Activity implements OnMapListener
             case R.id.main_iv_marking_image:
                 showMarkingImage();
                 break;
-            case R.id.main_btn_marking_delete: // 关闭标注工具栏
+            case R.id.main_btn_marking_delete: // 按下删除标注按钮
                 onBtnDeleteMarkClick();
                 break;
             default:
@@ -1382,8 +1387,9 @@ public class Main extends Activity implements OnMapListener
     }
 
     private String getCurrentImageFileName(String imagePath) {
-        int index = imagePath.indexOf("GIS");
-        return imagePath.substring(index + 4, index + 19);
+        int startIndex = imagePath.lastIndexOf("/");
+        int stopIndex = imagePath.lastIndexOf(".jpg");
+        return imagePath.substring(startIndex + 1, stopIndex);
     }
 
     private void addSenceImage(MarkObject markObject, String imagePath) {
@@ -1497,8 +1503,6 @@ public class Main extends Activity implements OnMapListener
     {
         // 退出实时导航模式
         stopNavigationMode();
-
-        updateUi();
 
         // 保存地图操作
         try {
@@ -2402,29 +2406,49 @@ public class Main extends Activity implements OnMapListener
     /** 关闭导航（实时跟踪位置）模式 **/
     private void stopNavigationMode() {
         mLocationMode = LocationMode.NORMAL;
-        updateUi();
+        updateLocationBarUi();
+        updateButtonsUi();;
     }
 
     /** 更新Activity的UI **/
     private void updateUi() {
-        updateLocationBar();
-        updateDrawingToolbar();
-        updateMarkingToolbar();
-        updateButtons();
+        updateLocationBarUi();
+        updateButtonsUi();
+        updateDrawingToolbarUi();
+        updateMarkingToolbarUi();
     }
 
     /** 更新各个按钮的UI **/
-    private void updateButtons() {
-        // 导航按钮
+    private void updateButtonsUi() {
+        // 定位模式
         if (mLocationMode == LocationMode.NORMAL) {
             mBtnLocation.setDrawableIcon(getResources().getDrawable(R.drawable.ic_my_location_white_48dp));
         } else if (mLocationMode == LocationMode.FOLLOWING) {
             mBtnLocation.setDrawableIcon(getResources().getDrawable(R.drawable.ic_navigation_white_48dp));
         }
+
+        // 地图模式
+        if (mMapState == MapState.NORMAL) {
+            mBtnLocation.setVisibility(View.VISIBLE);
+            mBtnZoomin.setVisibility(View.VISIBLE);
+            mBtnZoomout.setVisibility(View.VISIBLE);
+            mBtnActionMenu.setVisibility(View.VISIBLE);
+            //mActionMenu.collapse();
+            mActionMenu.setVisibility(View.VISIBLE);
+        } else if (mMapState == MapState.DRAWING) {
+            mActionMenu.collapse();
+        } else if (mMapState == MapState.MARKING) {
+            mBtnLocation.setVisibility(View.INVISIBLE);
+            mBtnZoomin.setVisibility(View.INVISIBLE);
+            mBtnZoomout.setVisibility(View.INVISIBLE);
+            mBtnActionMenu.setVisibility(View.INVISIBLE);
+            mActionMenu.collapse();
+            mActionMenu.setVisibility(View.INVISIBLE);
+        }
     }
 
     /** 更新位置信息栏的UI **/
-    private void updateLocationBar() {
+    private void updateLocationBarUi() {
         if (mLocationMode != LocationMode.FOLLOWING) {
             updateCoordinate();
             updateScale();
@@ -2434,7 +2458,7 @@ public class Main extends Activity implements OnMapListener
     }
 
     /** 更新绘图工具栏的UI **/
-    private void updateDrawingToolbar() {
+    private void updateDrawingToolbarUi() {
         if (mMapState == MapState.DRAWING) {
             if (mDrawingToolbar.getVisibility() == View.GONE) {
                 Animation animation = AnimationUtils.loadAnimation(this, R.anim.drawing_toolbar_show);
@@ -2469,7 +2493,7 @@ public class Main extends Activity implements OnMapListener
     }
 
     /** 更新标注工具栏的UI **/
-    private void updateMarkingToolbar() {
+    private void updateMarkingToolbarUi() {
         if (mMapState == MapState.MARKING) {
             if (mRlMarkingToolbar.getVisibility() == View.GONE) {
                 Animation animation = AnimationUtils.loadAnimation(this, R.anim.marking_toolbar_show);
@@ -2598,9 +2622,8 @@ public class Main extends Activity implements OnMapListener
                 forceUpdateScale(1200);
                 forceUpdateCoordinate(mCurrentLocationPoint.getX(), mCurrentLocationPoint.getY());
             } else {
-                updateUi();
+                updateLocationBarUi();
             }
-
         }
     }
 
@@ -2640,10 +2663,9 @@ public class Main extends Activity implements OnMapListener
             // 备注：参数2和3，如果参数3不为0，则以参数3为准；参数3为0，则通过时间来定时更新；两者为0，则随时刷新
             // 1秒更新一次，或最小位移变化超过1米更新一次；
             // 注意：此处更新准确度非常低，推荐在service里面启动一个Thread，在run中sleep(10000);然后执行handler.sendMessage(),更新位置
-            if (locationProvider == LocationManager.GPS_PROVIDER) {
+            if (locationProvider.equals(LocationManager.GPS_PROVIDER)) {
                 locationManager.requestLocationUpdates(locationProvider, 1000, 0, mLocationListener);
             }
-            updateUi();
         }
     }
 
