@@ -146,10 +146,34 @@ public class SQLiteAction {
 
     public static void deleteMark(SQLiteDatabase database, Geometry geometry) {
         Integer id = geometry.hashCode();
+
+        // 删除mark上的图片
+        Cursor c = queryMarkViaId(database, id.toString());
+        if (c != null) {
+            if (c.moveToFirst()) {
+                String imageId = c.getString(c.getColumnIndex("imageIds"));
+                if (imageId != null) {
+                    String[] imageIds = imageId.split("#");
+                    int imageCount = imageIds.length;
+                    database.beginTransaction();
+                    try {
+                        for (int i = 0; i < imageCount; ++i) {
+                            deleteImage(database, imageIds[i]);
+                            database.setTransactionSuccessful();
+                        }
+                    } finally {
+                        database.endTransaction();
+                    }
+                }
+            }
+        }
+
+        // 删除mark
         String whereClause = "id=?";
         String[] whereArgs = {id.toString()};
         database.beginTransaction();
         try {
+
             database.delete("mark", whereClause, whereArgs);
             database.setTransactionSuccessful();
         } finally {
@@ -218,10 +242,10 @@ public class SQLiteAction {
         }
     }
 
-    public static void deleteImage(SQLiteDatabase database, String path) {
-        Integer id = path.hashCode();
+    public static void deleteImage(SQLiteDatabase database, String id) {
+        //Integer id = path.hashCode();
         String whereClause = "id=?";
-        String[] whereArgs = {id.toString()};
+        String[] whereArgs = {id};
         database.beginTransaction();
         try {
             database.delete("image", whereClause, whereArgs);
