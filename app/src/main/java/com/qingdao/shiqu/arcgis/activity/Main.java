@@ -110,6 +110,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -137,7 +138,7 @@ public class Main extends Activity implements OnMapListener
     /** Log Tag **/
     private final String TAG = Main.this.getClass().getSimpleName();
     // request code
-    private int requestCode = 100;
+    private final int requestCode = 100;
     /** 拍照 **/
     private static final int REQUEST_TAKE_PHOTO = 106;
     private static final int REQUEST_PICK_IMAGE_NORMAL = 107;
@@ -1309,6 +1310,7 @@ public class Main extends Activity implements OnMapListener
             }
         } else if (resultCode == RESULT_OK) {
             if (requestCode == this.requestCode) {// 搜索回调，进行画线或者画点操作，不知道谁写的逻辑，都并在一起了
+                // this.requestCode 这个不敢随便重构，so...
                 String value = data.getStringExtra("value");
                 String type = data.getStringExtra("type");
                 String jtype = data.getStringExtra("jtype");
@@ -1341,55 +1343,60 @@ public class Main extends Activity implements OnMapListener
                     }
 
                 }
-            } else if (requestCode == REQUEST_TAKE_PHOTO) {// 照相回调
-                if (mMarkingToolbarImageFile != null) {
-                    mMarkingToolbarImagePath = mMarkingToolbarImageFile.getAbsolutePath();
-                    if (mMarkingToolbarImage != null) {
-                        mMarkingToolbarImage.recycle();
+            } else {
+                switch (requestCode) {
+                    case REQUEST_TAKE_PHOTO: {
+                        if (mMarkingToolbarImageFile != null) {
+                            mMarkingToolbarImagePath = mMarkingToolbarImageFile.getAbsolutePath();
+                            if (mMarkingToolbarImage != null) {
+                                mMarkingToolbarImage.recycle();
+                            }
+                            mMarkingToolbarImage = ImageUtil.getBitmap(mMarkingToolbarImagePath);
+                            addSenceImage(mCurrentMark, mMarkingToolbarImagePath);
+                            //addImageToImageSlider(mMarkingToolbarImagePath);
+                            //mIvMarkingImage.setImageBitmap(mMarkingToolbarImage);
+                            ImageUtil.galleryAddPic(this, mMarkingToolbarImagePath);
+                        }
+                        break;
                     }
-                    mMarkingToolbarImage = ImageUtil.getBitmap(mMarkingToolbarImagePath);
-                    addSenceImage(mCurrentMark, mMarkingToolbarImagePath);
-                    //addImageToImageSlider(mMarkingToolbarImagePath);
-                    //mIvMarkingImage.setImageBitmap(mMarkingToolbarImage);
-                    ImageUtil.galleryAddPic(this, mMarkingToolbarImagePath);
+                    case REQUEST_PICK_IMAGE_NORMAL: {
+                        mMarkingToolbarImagePath = ImageUtil.getDataColumn(this, data.getData(), null, null);
+                        mMarkingToolbarImageFile = new java.io.File(mMarkingToolbarImagePath);
+                        if (mMarkingToolbarImage != null) {
+                            mMarkingToolbarImage.recycle();
+                        }
+                        mMarkingToolbarImage = ImageUtil.getBitmap(mMarkingToolbarImagePath);
+                        addSenceImage(mCurrentMark, mMarkingToolbarImagePath);
+                        //addImageToImageSlider(mMarkingToolbarImagePath);
+                        //mIvMarkingImage.setImageBitmap(mMarkingToolbarImage);
+                        break;
+                    }
+                    case REQUEST_PICK_IMAGE_KITKAT: {
+                        mMarkingToolbarImagePath = ImageUtil.getPath(this, data.getData());
+                        mMarkingToolbarImageFile = new java.io.File(mMarkingToolbarImagePath);
+                        if (mMarkingToolbarImage != null) {
+                            mMarkingToolbarImage.recycle();
+                        }
+                        mMarkingToolbarImage = ImageUtil.getBitmap(mMarkingToolbarImagePath);
+                        addSenceImage(mCurrentMark, mMarkingToolbarImagePath);
+                        //addImageToImageSlider(mMarkingToolbarImageFile);
+                        //mIvMarkingImage.setImageBitmap(mMarkingToolbarImage);
+                        break;
+                    }
+                    case REQUEST_SHOW_MARKING_IMAGE: {
+                        String[] oldImageIds = mCurrentMark.getImageIds();
+                        if (data != null) {
+                            String[] imageIds = data.getStringArrayExtra("imageIds");
+                            if (!Arrays.equals(oldImageIds, imageIds)) {
+                                mCurrentMark.setImageIds(imageIds);
+                                SQLiteAction.storeMark(mSQLiteDatabase, mCurrentMark);
+                            }
+                        }
+                        break;
+                    }
                 }
-            } else if (requestCode == REQUEST_PICK_IMAGE_NORMAL) {//选择图片
-                mMarkingToolbarImagePath = ImageUtil.getDataColumn(this, data.getData(), null, null);
-                mMarkingToolbarImageFile = new java.io.File(mMarkingToolbarImagePath);
-                if (mMarkingToolbarImage != null) {
-                    mMarkingToolbarImage.recycle();
-                }
-                mMarkingToolbarImage = ImageUtil.getBitmap(mMarkingToolbarImagePath);
-                addSenceImage(mCurrentMark, mMarkingToolbarImagePath);
-                //addImageToImageSlider(mMarkingToolbarImagePath);
-                //mIvMarkingImage.setImageBitmap(mMarkingToolbarImage);
-            } else if (requestCode == REQUEST_PICK_IMAGE_KITKAT) {//选择图片（当版本高于4.4）
-                mMarkingToolbarImagePath = ImageUtil.getPath(this, data.getData());
-                mMarkingToolbarImageFile = new java.io.File(mMarkingToolbarImagePath);
-                if (mMarkingToolbarImage != null) {
-                    mMarkingToolbarImage.recycle();
-                }
-                mMarkingToolbarImage = ImageUtil.getBitmap(mMarkingToolbarImagePath);
-                addSenceImage(mCurrentMark, mMarkingToolbarImagePath);
-                //addImageToImageSlider(mMarkingToolbarImageFile);
-                //mIvMarkingImage.setImageBitmap(mMarkingToolbarImage);
             }
         }
-		/*if(!data.getStringExtra("jtype").equals("")){
-			switch (resultCode)
-			{
-			case RESULT_OK:
-				String jtype = data.getStringExtra("jtype");
-				touchListener.setJtype(jtype);
-				break;
-			}
-		}else{*/
-    }
-
-    private String getCurrentImageFileName(String imagePath) {
-        int startIndex = imagePath.lastIndexOf("/");
-        int stopIndex = imagePath.lastIndexOf(".jpg");
-        return imagePath.substring(startIndex + 1, stopIndex);
     }
 
     private void addSenceImage(MarkObject markObject, String imagePath) {
@@ -1414,18 +1421,14 @@ public class Main extends Activity implements OnMapListener
             SQLiteAction.storeImage(mSQLiteDatabase, imagePath);
         }
         markObject.setImageIds(imageIds);
-        SQLiteAction.storeMark(mSQLiteDatabase,
-                mCurrentMark.getGeometry(),
-                mCurrentMark.getTitle(),
-                mCurrentMark.getContent(),
-                mCurrentMark.getImageIds());
+        SQLiteAction.storeMark(mSQLiteDatabase, mCurrentMark);
     }
 
     private void addImageToImageSlider(String imagePath) {
         java.io.File file = new java.io.File(imagePath);
         TextSliderView textSliderView = new TextSliderView(this);
         DefaultSliderView s = new DefaultSliderView(this);
-        String description = getCurrentImageFileName(imagePath);
+        String description = ImageUtil.getImageNameFromPath(imagePath);
         textSliderView.description(description)
                 .image(file);
         textSliderView.setOnSliderClickListener(new BaseSliderView.OnSliderClickListener() {
@@ -2212,11 +2215,7 @@ public class Main extends Activity implements OnMapListener
             mCurrentMark.setTitle(mEtMarkingTitle.getText().toString());
             mCurrentMark.setContent(mEtMarkingContent.getText().toString());
 
-            SQLiteAction.storeMark(mSQLiteDatabase,
-                    mCurrentMark.getGeometry(),
-                    mCurrentMark.getTitle(),
-                    mCurrentMark.getContent(),
-                    mCurrentMark.getImageIds());
+            SQLiteAction.storeMark(mSQLiteDatabase, mCurrentMark);
 
             boolean isNewGraphic = true;
             if (mCurrentMark.getGraphic() != null) {
@@ -2324,7 +2323,6 @@ public class Main extends Activity implements OnMapListener
 
     /** 详细显示现场图 **/
     private void showMarkingImage() {
-        //TODO 详细显示现场图
         String[] imageIds = mCurrentMark.getImageIds();
         if (imageIds != null && imageIds.length > 0) {
             Intent intent = new Intent(this, DisplaySceneImageActivity.class);

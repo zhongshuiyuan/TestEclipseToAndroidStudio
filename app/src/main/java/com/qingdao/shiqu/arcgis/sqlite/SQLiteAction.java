@@ -6,6 +6,7 @@ import android.database.sqlite.SQLiteDatabase;
 
 import com.esri.core.geometry.Geometry;
 import com.esri.core.geometry.GeometryEngine;
+import com.qingdao.shiqu.arcgis.mode.MarkObject;
 
 /**
  * 包含了一些用于读写本地数据库的静态方法
@@ -85,6 +86,19 @@ public class SQLiteAction {
      */
     public static Cursor queryDlly(SQLiteDatabase database) {
         return query(database, "dlly", null, null, null, null, null, null, null);
+    }
+
+    /**
+     * 保存标注到数据库
+     * @param database 数据库
+     * @param markObject 标注对象
+     */
+    public static void storeMark(SQLiteDatabase database, MarkObject markObject) {
+        storeMark(database,
+                markObject.getGeometry(),
+                markObject.getTitle(),
+                markObject.getContent(),
+                markObject.getImageIds());
     }
 
     /**

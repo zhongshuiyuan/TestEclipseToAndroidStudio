@@ -201,4 +201,22 @@ public class ImageUtil {
         mediaScanIntent.setData(contentUri);
         context.sendBroadcast(mediaScanIntent);
     }
+
+    public static String getImageNameFromPath(String imagePath) {
+        String imageName = null;
+
+        int startIndex = imagePath.lastIndexOf("/") + 1;
+        int endIndex = imagePath.indexOf(".jpg");
+
+        if (endIndex == -1) {
+            endIndex = imagePath.length();
+        }
+        if (!(startIndex < endIndex)) {
+            startIndex = endIndex - 1;
+        }
+
+        imageName = imagePath.substring(startIndex, endIndex);
+
+        return imageName;
+    }
 }

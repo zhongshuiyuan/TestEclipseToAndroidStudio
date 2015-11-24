@@ -13,9 +13,9 @@ android {
         exclude 'META-INF/LICENSE'
         exclude 'META-INF/NOTICE'
     }
-    defaultConfig {
-        multiDexEnabled true
-    }
+//    defaultConfig {
+//        multiDexEnabled true
+//    }
     buildTypes {
         release {
             minifyEnabled false
