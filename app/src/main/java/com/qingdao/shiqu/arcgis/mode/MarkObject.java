@@ -7,12 +7,13 @@ import com.esri.core.map.Graphic;
 import com.esri.core.symbol.PictureMarkerSymbol;
 import com.esri.core.symbol.TextSymbol;
 
+import java.io.Serializable;
+
 /**
  * 地图标注对象
  */
-public class MarkObject {
-
-    private Context mContext;
+public class MarkObject implements Serializable {
+    private static final long serialVersionUID = 1101201192314L;
 
     private String mTitle;
     public String getTitle() {
@@ -52,7 +53,8 @@ public class MarkObject {
         return mTextSymbol;
     }
     private PictureMarkerSymbol mPictureMarkerSymbol;
-    public PictureMarkerSymbol getPictureMarkerSymbol() {
+    public PictureMarkerSymbol getPictureMarkerSymbol(Context context) {
+        mPictureMarkerSymbol = SimpleSymbolTemplate.getMarkPicture(context);
         return mPictureMarkerSymbol;
     }
 
@@ -64,28 +66,22 @@ public class MarkObject {
         mGraphic = graphic;
     }
 
-    public MarkObject(Context context) {
-        mContext = context;
-        mPictureMarkerSymbol = SimpleSymbolTemplate.getMarkPicture(context);
+    public MarkObject() {
     }
 
-    public MarkObject(Context context, String title, String content, Geometry geometry) {
-        mContext = context;
+    public MarkObject(String title, String content, Geometry geometry) {
         mTitle = title;
         mContent = content;
         mGeometry = geometry;
         mTextSymbol = SimpleSymbolTemplate.getMarkText(title);
-        mPictureMarkerSymbol = SimpleSymbolTemplate.getMarkPicture(context);
     }
 
-    public MarkObject(Context context, String title, String content, String[] imageIds, Geometry geometry) {
-        mContext = context;
+    public MarkObject(String title, String content, String[] imageIds, Geometry geometry) {
         mTitle = title;
         mContent = content;
         mImageIds = imageIds;
         mGeometry = geometry;
         mTextSymbol = SimpleSymbolTemplate.getMarkText(title);
-        mPictureMarkerSymbol = SimpleSymbolTemplate.getMarkPicture(context);
     }
 
     public void reset() {

@@ -138,9 +138,10 @@ public class Main extends Activity implements OnMapListener
     // request code
     private int requestCode = 100;
     /** 拍照 **/
-    static final int REQUEST_TAKE_PHOTO = 106;
-    static final int REQUEST_PICK_IMAGE_NORMAL = 107;
-    static final int REQUEST_PICK_IMAGE_KITKAT = 108;
+    private static final int REQUEST_TAKE_PHOTO = 106;
+    private static final int REQUEST_PICK_IMAGE_NORMAL = 107;
+    private static final int REQUEST_PICK_IMAGE_KITKAT = 108;
+    private static final int REQUEST_SHOW_MARKING_IMAGE = 109;
     private final boolean mIsKitKat = Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT;
     int index = 1;
     double xmin,xmax,ymin,ymax;
@@ -592,7 +593,7 @@ public class Main extends Activity implements OnMapListener
         DatabaseOpenHelper databaseOpenHelper = new DatabaseOpenHelper(this);
         mSQLiteDatabase = databaseOpenHelper.getWritableDatabase();
 
-        mCurrentMark = new MarkObject(this);
+        mCurrentMark = new MarkObject();
 
         mLocationDrawable = this.getResources().getDrawable(R.drawable.icon_track_map_bar);
 
@@ -1518,7 +1519,7 @@ public class Main extends Activity implements OnMapListener
     /** 在地图上长按标注该位置 **/
     @Override
     public void onLocationMarked(Geometry markedLocation) {
-        mCurrentMark = new MarkObject(this);
+        mCurrentMark = new MarkObject();
         mCurrentMark.setGeometry(markedLocation);
         startMarkingMode(true);
     }
@@ -1526,7 +1527,7 @@ public class Main extends Activity implements OnMapListener
     /** 在地图上选中标注时 **/
     @Override
     public void onMarkSelected(Graphic mark) {
-        mCurrentMark = new MarkObject(this);
+        mCurrentMark = new MarkObject();
         mCurrentMark.setGeometry(mark.getGeometry());
         mCurrentMark.setGraphic(mark);
         startMarkingMode(false);
@@ -2221,7 +2222,7 @@ public class Main extends Activity implements OnMapListener
             }
 
             if (isNewGraphic) {
-                Graphic graphic = new Graphic(mCurrentMark.getGeometry(), mCurrentMark.getPictureMarkerSymbol());
+                Graphic graphic = new Graphic(mCurrentMark.getGeometry(), mCurrentMark.getPictureMarkerSymbol(this));
                 mNewMarkLayer.addGraphic(graphic);
                 graphic = new Graphic(mCurrentMark.getGeometry(), mCurrentMark.getTextSymbol());
                 mNewMarkLayer.addGraphic(graphic);
@@ -2317,8 +2318,15 @@ public class Main extends Activity implements OnMapListener
         }
     }
 
+    /** 详细显示现场图 **/
     private void showMarkingImage() {
-
+        //TODO 详细显示现场图
+        String[] imageIds = mCurrentMark.getImageIds();
+        if (imageIds != null && imageIds.length > 0) {
+            Intent intent = new Intent(this, DisplaySceneImageActivity.class);
+            intent.putExtra("imageIds", imageIds);
+            startActivityForResult(intent, REQUEST_SHOW_MARKING_IMAGE);
+        }
     }
 
     /**
@@ -2480,7 +2488,6 @@ public class Main extends Activity implements OnMapListener
             } else if (mMarkingToolbarState == MarkingMode.EDIT) {
                 setMarkingToolbarToEditingState();
             }
-            //TODO 现场图轮转
             displaySceneImage();
         } else {
             if (mRlMarkingToolbar.getVisibility() == View.VISIBLE) {
