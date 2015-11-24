@@ -1390,6 +1390,7 @@ public class Main extends Activity implements OnMapListener
                             if (!Arrays.equals(oldImageIds, imageIds)) {
                                 mCurrentMark.setImageIds(imageIds);
                                 SQLiteAction.storeMark(mSQLiteDatabase, mCurrentMark);
+                                updateMarkingToolbarUi();
                             }
                         }
                         break;

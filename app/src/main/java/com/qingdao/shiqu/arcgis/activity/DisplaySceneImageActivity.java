@@ -10,6 +10,7 @@ import android.widget.TextView;
 import com.celerysoft.imagepager.ImagePager;
 import com.celerysoft.imagepager.adapter.SimpleImagePagerAdapter;
 import com.qingdao.shiqu.arcgis.R;
+import com.qingdao.shiqu.arcgis.control.MaterialDesignDialog;
 import com.qingdao.shiqu.arcgis.sqlite.DatabaseOpenHelper;
 import com.qingdao.shiqu.arcgis.sqlite.SQLiteAction;
 import com.qingdao.shiqu.arcgis.utils.ImageUtil;
@@ -25,8 +26,11 @@ public class DisplaySceneImageActivity extends Activity {
     android.database.sqlite.SQLiteDatabase mSQLiteDatabase;
 
     private String[] mImageIds;
+    private int mImagePosition = 0;
 
     private ImagePager mImagePager;
+    SimpleImagePagerAdapter mAdapter;
+
     private View mActionBar;
     private View mActionBarShadow;
     private View mBtnBack;
@@ -45,9 +49,7 @@ public class DisplaySceneImageActivity extends Activity {
 
     @Override
     public void onBackPressed() {
-        //super.onBackPressed();
-        setResult(RESULT_OK);
-        finish();
+        setResultAndFinish(RESULT_OK);
     }
 
     @Override
@@ -72,7 +74,7 @@ public class DisplaySceneImageActivity extends Activity {
         mBtnDelete.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                deleteImage();
+                showDeleteImageDialog();
             }
         });
 
@@ -99,26 +101,14 @@ public class DisplaySceneImageActivity extends Activity {
             @Override
             public void onPageSelected(int i) {
                 updateImageTitle(i);
+                mImagePosition = i;
             }
         });
 
         Intent intent = getIntent();
         if (intent != null) {
             mImageIds = (String[]) intent.getSerializableExtra("imageIds");
-            if (mImageIds != null) {
-                int imageCount = mImageIds.length;
-                String[] imagePaths = new String[imageCount];
-
-                for (int i = 0; i < imageCount; ++i) {
-                    String imageId = mImageIds[i];
-                    String imagePath = queryImagePath(imageId);
-                    imagePaths[i] = imagePath;
-                }
-
-                SimpleImagePagerAdapter adapter = new SimpleImagePagerAdapter(this);
-                adapter.setImagePaths(imagePaths);
-                mImagePager.setAdapter(adapter);
-            }
+            updateAdapter();
         }
 
         updateImageTitle(0);
@@ -128,8 +118,29 @@ public class DisplaySceneImageActivity extends Activity {
         super.onCreateView();
     }
 
-    private void deleteImage() {
+    private void showDeleteImageDialog() {
+        final MaterialDesignDialog dialog = new MaterialDesignDialog(this);
+        dialog.setTitle("删除图片")
+                .setMessage("要在从标注点删除本张现场图吗？")
+                .setPositiveButton("删除", new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        deleteImage();
+                        dialog.dismiss();
+                    }
+                })
+                .setNegativeButton("取消", new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        dialog.dismiss();
+                    }
+                });
+        dialog.show();
+    }
 
+    private void deleteImage() {
+        mImageIds = removeImageIdAtPosition(mImagePosition);
+        updateAdapter();
     }
 
     private void shareImage() {
@@ -185,5 +196,51 @@ public class DisplaySceneImageActivity extends Activity {
         String imagePath = queryImagePath(imageId);
         String imageName = ImageUtil.getImageNameFromPath(imagePath);
         mTvTitle.setText(imageName);
+    }
+
+    private String[] removeImageIdAtPosition(int position) {
+        String[] imageIds = null;
+
+        if (position < mImageIds.length) {
+            imageIds = new String[mImageIds.length - 1];
+            int imageCount = imageIds.length;
+            for (int i = 0; i < imageCount; ++i) {
+                if (i < position) {
+                    imageIds[i] = mImageIds[i];
+                } else {
+                    imageIds[i] = mImageIds[i+1];
+                }
+            }
+        }
+
+        return imageIds;
+    }
+
+    private void setResultAndFinish(int resultCode) {
+        if (resultCode == RESULT_OK) {
+            Intent intent = new Intent(this, DisplaySceneImageActivity.class);
+            intent.putExtra("imageIds", mImageIds);
+            setResult(RESULT_OK, intent);
+        } else if (resultCode == RESULT_CANCELED) {
+            setResult(RESULT_CANCELED);
+        }
+        finish();
+    }
+
+    private void updateAdapter() {
+        if (mImageIds != null) {
+            int imageCount = mImageIds.length;
+            String[] imagePaths = new String[imageCount];
+
+            for (int i = 0; i < imageCount; ++i) {
+                String imageId = mImageIds[i];
+                String imagePath = queryImagePath(imageId);
+                imagePaths[i] = imagePath;
+            }
+
+            mAdapter = new SimpleImagePagerAdapter(this);
+            mAdapter.setImagePaths(imagePaths);
+            mImagePager.setAdapter(mAdapter);
+        }
     }
 }
