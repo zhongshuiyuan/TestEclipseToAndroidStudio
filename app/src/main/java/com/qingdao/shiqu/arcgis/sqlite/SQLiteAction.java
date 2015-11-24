@@ -150,21 +150,18 @@ public class SQLiteAction {
         // 删除mark上的图片
         Cursor c = queryMarkViaId(database, id.toString());
         if (c != null) {
-            if (c.moveToFirst()) {
-                String imageId = c.getString(c.getColumnIndex("imageIds"));
-                if (imageId != null) {
-                    String[] imageIds = imageId.split("#");
-                    int imageCount = imageIds.length;
-                    database.beginTransaction();
-                    try {
-                        for (int i = 0; i < imageCount; ++i) {
-                            deleteImage(database, imageIds[i]);
-                            database.setTransactionSuccessful();
+            try {
+                if (c.moveToFirst()) {
+                    String imageIdString = c.getString(c.getColumnIndex("imageIds"));
+                    if (imageIdString != null) {
+                        String[] imageIds = imageIdString.split("#");
+                        for (String imageId : imageIds) {
+                            deleteImage(database, imageId);
                         }
-                    } finally {
-                        database.endTransaction();
                     }
                 }
+            } finally {
+                c.close();
             }
         }
 
@@ -179,7 +176,6 @@ public class SQLiteAction {
         } finally {
             database.endTransaction();
         }
-
     }
 
     /**
@@ -225,8 +221,8 @@ public class SQLiteAction {
             } finally {
                 c.close();
             }
-
         }
+
         database.beginTransaction();
         try {
             if (isNewData) {
@@ -242,10 +238,15 @@ public class SQLiteAction {
         }
     }
 
+    /**
+     * 从数据库删除图片
+     * @param database 数据库
+     * @param id 图片ID
+     */
     public static void deleteImage(SQLiteDatabase database, String id) {
-        //Integer id = path.hashCode();
         String whereClause = "id=?";
         String[] whereArgs = {id};
+
         database.beginTransaction();
         try {
             database.delete("image", whereClause, whereArgs);
@@ -253,7 +254,6 @@ public class SQLiteAction {
         } finally {
             database.endTransaction();
         }
-
     }
 
     /**
@@ -272,7 +272,7 @@ public class SQLiteAction {
      * @return 查询结果
      */
     public static Cursor queryImageViaId(SQLiteDatabase database, String id) {
-        String[] ids = {id.toString()};
+        String[] ids = {id};
         return query(database, "image", null, "id=?", ids, null, null, null, null);
     }
 }
