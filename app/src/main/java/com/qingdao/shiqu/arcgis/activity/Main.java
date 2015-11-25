@@ -172,6 +172,8 @@ public class Main extends Activity implements OnMapListener
 
     /** 第一次加载地图时需要全图显示 **/
     private boolean mIsFullExtentNeeded = true;
+    /** 第一次进行定位时，显示定位详情 **/
+    private boolean mIsFirstTimeGotLocationService = true;
 
     /** 定位模式 **/
     private LocationMode mLocationMode;
@@ -2694,7 +2696,9 @@ public class Main extends Activity implements OnMapListener
             dialog.show();
         }
 
-        Toast.makeText(Main.this, "正在定位", Toast.LENGTH_SHORT).show();
+        if (mIsFirstTimeGotLocationService) {
+            Toast.makeText(Main.this, "正在定位", Toast.LENGTH_SHORT).show();
+        }
         startUpdateLocationThread();
     }
 
@@ -2883,13 +2887,19 @@ public class Main extends Activity implements OnMapListener
             super.handleMessage(msg);
             if (msg.what == LOCATION_GOT) {
                 mIsFirstFixedLocation = true;
-                Toast.makeText(Main.this, "模糊定位成功，正在进行GPS定位", Toast.LENGTH_LONG).show();
+                if (mIsFirstTimeGotLocationService) {
+                    Toast.makeText(Main.this, "模糊定位成功，正在进行GPS定位", Toast.LENGTH_LONG).show();
+                }
                 updatePositionMode(mLocationProvider);
             } else if (msg.what == LOCATION_GOT_BY_GPS) {
                 mIsFirstFixedLocation = true;
                 mIsUpdatePositionThreadRun = false;
                 mIsGetLocationFromGps = true;
-                Toast.makeText(Main.this, "GPS定位成功", Toast.LENGTH_LONG).show();
+                if (mIsFirstTimeGotLocationService) {
+                    Toast.makeText(Main.this, "GPS定位成功", Toast.LENGTH_LONG).show();
+                    mIsFirstTimeGotLocationService = false;
+                }
+
                 updatePositionMode(LocationManager.GPS_PROVIDER);
             } else if (msg.what == STOP) {
                 stopUpdatePositionMode();
