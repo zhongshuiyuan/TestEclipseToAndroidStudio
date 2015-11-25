@@ -1424,7 +1424,9 @@ public class Main extends Activity implements OnMapListener
             SQLiteAction.storeImage(mSQLiteDatabase, imagePath);
         }
         markObject.setImageIds(imageIds);
-        SQLiteAction.storeMark(mSQLiteDatabase, mCurrentMark);
+        mMarkingToolbarState = MarkingMode.EDIT;
+        updateMarkingToolbarUi();
+        //SQLiteAction.storeMark(mSQLiteDatabase, mCurrentMark);
     }
 
     private void addImageToImageSlider(String imagePath) {

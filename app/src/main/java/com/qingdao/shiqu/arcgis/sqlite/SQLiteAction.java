@@ -3,6 +3,7 @@ package com.qingdao.shiqu.arcgis.sqlite;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.util.Log;
 
 import com.esri.core.geometry.Geometry;
 import com.esri.core.geometry.GeometryEngine;
@@ -12,6 +13,8 @@ import com.qingdao.shiqu.arcgis.mode.MarkObject;
  * 包含了一些用于读写本地数据库的静态方法
  */
 public class SQLiteAction {
+    private static final String TAG = SQLiteAction.class.getSimpleName();
+
     /**
      * 查询本地数据库
      * @param database 数据库对象
@@ -258,6 +261,10 @@ public class SQLiteAction {
      * @param id 图片ID
      */
     public static void deleteImage(SQLiteDatabase database, String id) {
+        if (getImageUsageCount(database, id) > 1) {
+            return;
+        }
+
         String whereClause = "id=?";
         String[] whereArgs = {id};
 
@@ -288,5 +295,32 @@ public class SQLiteAction {
     public static Cursor queryImageViaId(SQLiteDatabase database, String id) {
         String[] ids = {id};
         return query(database, "image", null, "id=?", ids, null, null, null, null);
+    }
+
+    private static int getImageUsageCount(SQLiteDatabase database, String imageId) {
+        int count = 0;
+
+        Cursor c = queryMark(database);
+        if (c != null) {
+            if (c.moveToFirst()) {
+                int markCount = c.getCount();
+                for (int i = 0; i < markCount; ++i) {
+                    c.moveToPosition(i);
+                    String imageIdString = c.getString(c.getColumnIndex("imageIds"));
+                    if (imageIdString != null) {
+                        String[] imageIds = imageIdString.split("#");
+                        for (String id : imageIds) {
+                            if (id.equals(imageId)) {
+                                count++;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        Log.i(TAG, "image id: " + imageId + ", usage found: " + count + ".");
+
+        return count;
     }
 }

@@ -9,11 +9,14 @@ import android.widget.TextView;
 
 import com.celerysoft.imagepager.ImagePager;
 import com.celerysoft.imagepager.adapter.SimpleImagePagerAdapter;
+import com.celerysoft.imagepager.animation.DepthPageTransformer;
 import com.qingdao.shiqu.arcgis.R;
 import com.qingdao.shiqu.arcgis.control.MaterialDesignDialog;
 import com.qingdao.shiqu.arcgis.sqlite.DatabaseOpenHelper;
 import com.qingdao.shiqu.arcgis.sqlite.SQLiteAction;
 import com.qingdao.shiqu.arcgis.utils.ImageUtil;
+
+import java.util.ArrayList;
 
 import Eruntech.BirthStone.Base.Forms.Activity;
 
@@ -95,15 +98,20 @@ public class DisplaySceneImageActivity extends Activity {
         });
         mImagePager.setOnImageChangeListener(new ImagePager.OnImageChangeListener() {
             @Override
-            public void onPageScrolled(int i, float v, int i1) {}
+            public void onPageScrolled(int i, float v, int i1) {
+            }
+
             @Override
-            public void onPageScrollStateChanged(int i) {}
+            public void onPageScrollStateChanged(int i) {
+            }
+
             @Override
             public void onPageSelected(int i) {
                 updateImageTitle(i);
                 mImagePosition = i;
             }
         });
+        mImagePager.setPageTransformer(true, new DepthPageTransformer());
 
         Intent intent = getIntent();
         if (intent != null) {
@@ -229,18 +237,29 @@ public class DisplaySceneImageActivity extends Activity {
 
     private void updateAdapter() {
         if (mImageIds != null) {
-            int imageCount = mImageIds.length;
-            String[] imagePaths = new String[imageCount];
-
-            for (int i = 0; i < imageCount; ++i) {
-                String imageId = mImageIds[i];
-                String imagePath = queryImagePath(imageId);
-                imagePaths[i] = imagePath;
+            if (mAdapter == null ) {
+                createAdapter();
+            } else {
+                mAdapter.removeImage(mImagePager.getCurrentImagePosition());
             }
+        }
+    }
 
+    private void createAdapter() {
+        int imageCount = mImageIds.length;
+        ArrayList<String> imagePaths = new ArrayList<>();
+
+        for (int i = 0; i < imageCount; ++i) {
+            String imageId = mImageIds[i];
+            String imagePath = queryImagePath(imageId);
+            imagePaths.add(imagePath);
+        }
+
+        if (mAdapter == null ) {
             mAdapter = new SimpleImagePagerAdapter(this);
             mAdapter.setImagePaths(imagePaths);
-            mImagePager.setAdapter(mAdapter);
         }
+
+        mImagePager.setAdapter(mAdapter);
     }
 }
