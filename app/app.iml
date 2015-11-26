@@ -95,6 +95,7 @@
     </content>
     <orderEntry type="jdk" jdkName="Android API 22 Platform" jdkType="Android SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="library" exported="" name="Tencent_open_sdk_r5509" level="project" />
     <orderEntry type="library" exported="" name="MaterialDesign-" level="project" />
     <orderEntry type="library" exported="" name="library-2.4.0" level="project" />
     <orderEntry type="library" exported="" name="Eruntech.BirthStone.Core" level="project" />

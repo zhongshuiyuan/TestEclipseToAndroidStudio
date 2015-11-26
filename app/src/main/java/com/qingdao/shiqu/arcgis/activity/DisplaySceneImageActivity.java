@@ -12,9 +12,12 @@ import com.celerysoft.imagepager.adapter.SimpleImagePagerAdapter;
 import com.celerysoft.imagepager.animation.DepthPageTransformer;
 import com.qingdao.shiqu.arcgis.R;
 import com.qingdao.shiqu.arcgis.control.MaterialDesignDialog;
+import com.qingdao.shiqu.arcgis.listener.TencentUiListener;
 import com.qingdao.shiqu.arcgis.sqlite.DatabaseOpenHelper;
 import com.qingdao.shiqu.arcgis.sqlite.SQLiteAction;
 import com.qingdao.shiqu.arcgis.utils.ImageUtil;
+import com.tencent.open.GameAppOperation;
+import com.tencent.tauth.Tencent;
 
 import java.util.ArrayList;
 
@@ -27,8 +30,10 @@ public class DisplaySceneImageActivity extends Activity {
     private static final String TAG = DisplaySceneImageActivity.class.getSimpleName();
 
     android.database.sqlite.SQLiteDatabase mSQLiteDatabase;
+    Tencent mTencent;
 
     private String[] mImageIds;
+    private ArrayList<String> mImagePaths;
     private int mImagePosition = 0;
 
     private ImagePager mImagePager;
@@ -59,6 +64,8 @@ public class DisplaySceneImageActivity extends Activity {
     public void onCreateView() {
         DatabaseOpenHelper databaseOpenHelper = new DatabaseOpenHelper(this);
         mSQLiteDatabase = databaseOpenHelper.getWritableDatabase();
+
+        mTencent = Tencent.createInstance("1104989728", getApplicationContext());
 
         mActionBar = findViewById(R.id.display_scene_actionbar);
         mActionBarShadow = findViewById(R.id.display_scene_actionbar_shadow);
@@ -152,7 +159,19 @@ public class DisplaySceneImageActivity extends Activity {
     }
 
     private void shareImage() {
+        String currentImagePath = mImagePaths.get(mImagePager.getCurrentImagePosition());
+        if (currentImagePath != null) {
+            ArrayList<String> fileDataList = new ArrayList<>();
+            fileDataList.add(currentImagePath);
 
+            final Bundle params = new Bundle();
+            params.putString(GameAppOperation.QQFAV_DATALINE_APPNAME, "青岛广电GIS系统");
+            params.putString(GameAppOperation.QQFAV_DATALINE_TITLE, "图片");
+            params.putInt(GameAppOperation.QQFAV_DATALINE_REQTYPE,GameAppOperation.QQFAV_DATALINE_TYPE_IMAGE_TEXT);
+            params.putString(GameAppOperation.QQFAV_DATALINE_DESCRIPTION, "图片描述");
+            params.putStringArrayList(GameAppOperation.QQFAV_DATALINE_FILEDATA, fileDataList);
+            mTencent.sendToMyComputer(this, params, new TencentUiListener());
+        }
     }
 
     private void toggleActionBarVisibility() {
@@ -247,17 +266,17 @@ public class DisplaySceneImageActivity extends Activity {
 
     private void createAdapter() {
         int imageCount = mImageIds.length;
-        ArrayList<String> imagePaths = new ArrayList<>();
+        mImagePaths = new ArrayList<>();
 
         for (int i = 0; i < imageCount; ++i) {
             String imageId = mImageIds[i];
             String imagePath = queryImagePath(imageId);
-            imagePaths.add(imagePath);
+            mImagePaths.add(imagePath);
         }
 
         if (mAdapter == null ) {
             mAdapter = new SimpleImagePagerAdapter(this);
-            mAdapter.setImagePaths(imagePaths);
+            mAdapter.setImagePaths(mImagePaths);
         }
 
         mImagePager.setAdapter(mAdapter);
