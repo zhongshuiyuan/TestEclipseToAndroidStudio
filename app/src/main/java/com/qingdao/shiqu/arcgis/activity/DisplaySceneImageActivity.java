@@ -3,6 +3,7 @@ package com.qingdao.shiqu.arcgis.activity;
 import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Color;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -20,9 +21,17 @@ import com.qingdao.shiqu.arcgis.listener.TencentUiListener;
 import com.qingdao.shiqu.arcgis.sqlite.DatabaseOpenHelper;
 import com.qingdao.shiqu.arcgis.sqlite.SQLiteAction;
 import com.qingdao.shiqu.arcgis.utils.ImageUtil;
+import com.tencent.mm.sdk.modelmsg.SendMessageToWX;
+import com.tencent.mm.sdk.modelmsg.WXFileObject;
+import com.tencent.mm.sdk.modelmsg.WXImageObject;
+import com.tencent.mm.sdk.modelmsg.WXMediaMessage;
+import com.tencent.mm.sdk.modelmsg.WXTextObject;
+import com.tencent.mm.sdk.openapi.IWXAPI;
+import com.tencent.mm.sdk.openapi.WXAPIFactory;
 import com.tencent.open.GameAppOperation;
 import com.tencent.tauth.Tencent;
 
+import java.io.File;
 import java.util.ArrayList;
 
 import Eruntech.BirthStone.Base.Forms.Activity;
@@ -33,8 +42,13 @@ import Eruntech.BirthStone.Base.Forms.Activity;
 public class DisplaySceneImageActivity extends Activity {
     private static final String TAG = DisplaySceneImageActivity.class.getSimpleName();
 
-    android.database.sqlite.SQLiteDatabase mSQLiteDatabase;
-    Tencent mTencent;
+    private static final String TENCENT_QQ_APP_ID = "1104989728";
+    private static final String TENCENT_WECHAT_APP_ID = "wx86ca47e20773e7d8";
+
+    private android.database.sqlite.SQLiteDatabase mSQLiteDatabase;
+    private Tencent mTencent;
+    private IWXAPI mWechat;
+
 
     private String[] mImageIds;
     private ArrayList<String> mImagePaths;
@@ -72,6 +86,8 @@ public class DisplaySceneImageActivity extends Activity {
         mSQLiteDatabase = databaseOpenHelper.getWritableDatabase();
 
         mTencent = Tencent.createInstance("1104989728", getApplicationContext());
+        mWechat = WXAPIFactory.createWXAPI(this, TENCENT_WECHAT_APP_ID, true);
+        mWechat.registerApp(TENCENT_WECHAT_APP_ID);
 
         mActionBar = findViewById(R.id.display_scene_actionbar);
         mActionBarShadow = findViewById(R.id.display_scene_actionbar_shadow);
@@ -176,22 +192,25 @@ public class DisplaySceneImageActivity extends Activity {
         ListView listView = new ListView(this);
 
         listView.setDividerHeight(0);
-        listView.setBackgroundColor(Color.argb(222, 50, 0, 0));
         listView.setAdapter(new ShareImageListViewAdapter(this));
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 switch ((int) id) {
                     case ShareImageListViewAdapter.WECHAT:
+                        shareImageToWechatFriend();
                         break;
                     case ShareImageListViewAdapter.WECHAT_DISCOVER:
+                        shareImageToWechat();
                         break;
                     case ShareImageListViewAdapter.QQ:
                         shareImageToMyComputerViaQQ();
                         break;
                     case ShareImageListViewAdapter.EMAIL:
+                        shareImageViaEmail();
                         break;
                     case ShareImageListViewAdapter.DATABASE:
+                        shareImageToDatabase();
                         break;
                     default:
                         break;
@@ -202,6 +221,30 @@ public class DisplaySceneImageActivity extends Activity {
 
         return listView;
     }
+
+    private void shareImageToWechatFriend() {
+        WXFileObject fileObject = new WXFileObject();
+        fileObject.filePath = mImagePaths.get(mImagePosition);
+        WXImageObject imageObject = new WXImageObject();
+        imageObject.imagePath = mImagePaths.get(mImagePosition);
+
+        WXMediaMessage msg = new WXMediaMessage();
+        msg.mediaObject = imageObject;
+        msg.mediaTagName = "name";
+        msg.description = "deicription";
+        msg.mediaTagName = "tag";
+
+        SendMessageToWX.Req req = new SendMessageToWX.Req();
+        req.transaction = String.valueOf(System.currentTimeMillis());
+        req.message = msg;
+
+        mWechat.sendReq(req);
+    }
+
+    private void shareImageToWechat() {
+
+    }
+
 
     private void shareImageToMyComputerViaQQ() {
         String currentImagePath = mImagePaths.get(mImagePager.getCurrentImagePosition());
@@ -217,6 +260,28 @@ public class DisplaySceneImageActivity extends Activity {
             params.putStringArrayList(GameAppOperation.QQFAV_DATALINE_FILEDATA, fileDataList);
             mTencent.sendToMyComputer(this, params, new TencentUiListener());
         }
+    }
+
+    private void shareImageViaEmail() {
+        Intent sendEmailIntent = new Intent(android.content.Intent.ACTION_SEND);
+
+        //sendEmailIntent.putExtra(android.content.Intent.EXTRA_EMAIL, to);
+        sendEmailIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, "现场图");
+        sendEmailIntent.putExtra(android.content.Intent.EXTRA_TEXT, "分享一张现场图给你");
+        String path = mImagePaths.get(mImagePosition);
+        File file = new File(path);
+        sendEmailIntent.putExtra(android.content.Intent.EXTRA_STREAM,
+                Uri.fromFile(file));
+        sendEmailIntent.setType("image/png");
+        sendEmailIntent.setType("message/rfc882");
+
+        startActivity(sendEmailIntent);
+        //startActivity(Intent.createChooser(sendEmailIntent, "请选择发送软件"));
+
+    }
+
+    private void shareImageToDatabase() {
+        // TODO 等待后台接口
     }
 
     private void toggleActionBarVisibility() {
