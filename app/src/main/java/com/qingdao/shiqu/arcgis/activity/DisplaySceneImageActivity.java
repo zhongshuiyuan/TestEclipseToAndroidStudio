@@ -2,9 +2,12 @@ package com.qingdao.shiqu.arcgis.activity;
 
 import android.content.Intent;
 import android.database.Cursor;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ListView;
 import android.widget.TextView;
 
 import com.celerysoft.imagepager.ImagePager;
@@ -12,6 +15,7 @@ import com.celerysoft.imagepager.adapter.SimpleImagePagerAdapter;
 import com.celerysoft.imagepager.animation.DepthPageTransformer;
 import com.celerysoft.materialdesigndialog.MaterialDesignDialog;
 import com.qingdao.shiqu.arcgis.R;
+import com.qingdao.shiqu.arcgis.adapter.ShareImageListViewAdapter;
 import com.qingdao.shiqu.arcgis.listener.TencentUiListener;
 import com.qingdao.shiqu.arcgis.sqlite.DatabaseOpenHelper;
 import com.qingdao.shiqu.arcgis.sqlite.SQLiteAction;
@@ -38,6 +42,8 @@ public class DisplaySceneImageActivity extends Activity {
 
     private ImagePager mImagePager;
     SimpleImagePagerAdapter mAdapter;
+
+    private MaterialDesignDialog mShareDialog;
 
     private View mActionBar;
     private View mActionBarShadow;
@@ -92,7 +98,7 @@ public class DisplaySceneImageActivity extends Activity {
         mBtnShare.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                shareImage();
+                showShareImageDialog();
             }
         });
 
@@ -158,7 +164,46 @@ public class DisplaySceneImageActivity extends Activity {
         updateAdapter();
     }
 
-    private void shareImage() {
+    private void showShareImageDialog() {
+        mShareDialog = new MaterialDesignDialog(this);
+        mShareDialog.setTitle("分享现场图片")
+                .setCanceledOnTouchOutside(true)
+                .setContentView(createShareImageListView());
+        mShareDialog.show();
+    }
+
+    private ListView createShareImageListView() {
+        ListView listView = new ListView(this);
+
+        listView.setDividerHeight(0);
+        listView.setBackgroundColor(Color.argb(222, 50, 0, 0));
+        listView.setAdapter(new ShareImageListViewAdapter(this));
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                switch ((int) id) {
+                    case ShareImageListViewAdapter.WECHAT:
+                        break;
+                    case ShareImageListViewAdapter.WECHAT_DISCOVER:
+                        break;
+                    case ShareImageListViewAdapter.QQ:
+                        shareImageToMyComputerViaQQ();
+                        break;
+                    case ShareImageListViewAdapter.EMAIL:
+                        break;
+                    case ShareImageListViewAdapter.DATABASE:
+                        break;
+                    default:
+                        break;
+                }
+                mShareDialog.dismiss();
+            }
+        });
+
+        return listView;
+    }
+
+    private void shareImageToMyComputerViaQQ() {
         String currentImagePath = mImagePaths.get(mImagePager.getCurrentImagePosition());
         if (currentImagePath != null) {
             ArrayList<String> fileDataList = new ArrayList<>();
