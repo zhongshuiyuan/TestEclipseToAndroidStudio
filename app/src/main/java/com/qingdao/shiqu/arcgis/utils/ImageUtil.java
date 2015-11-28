@@ -12,6 +12,7 @@ import android.os.Build;
 import android.os.Environment;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
+import android.util.Log;
 
 import java.io.File;
 import java.io.IOException;
@@ -24,22 +25,85 @@ import java.util.Date;
  */
 public class ImageUtil {
 
+    private static final String TAG = ImageUtil.class.getSimpleName();
+
     /**
-     * 获取Bitmap
-     * @param fileName Bitmap文件名
-     * @return 获取Bitmap文件
+     * 获取缩略图
+     * @param filePath Bitmap文件路径
+     * @return Bitmap缩略图
      */
-    public static final Bitmap getBitmap(String fileName) {
+    public static Bitmap getBitmapThumb(String filePath) {
         Bitmap bitmap = null;
         try {
             BitmapFactory.Options options = new BitmapFactory.Options();
             options.inJustDecodeBounds = true;
-            BitmapFactory.decodeFile(fileName, options);
+            BitmapFactory.decodeFile(filePath, options);
+            options.inSampleSize = Math.max(1, (int) Math.ceil(Math.max(
+                    (double) options.outWidth / 120f,
+                    (double) options.outHeight / 160f)));
+            options.inJustDecodeBounds = false;
+            bitmap = BitmapFactory.decodeFile(filePath, options);
+        } catch (OutOfMemoryError error) {
+            error.printStackTrace();
+        }
+
+        return bitmap;
+    }
+
+    /**
+     * 获取Bitmap
+     * @param filePath Bitmap文件路径
+     * @return 获取Bitmap文件
+     */
+    public static Bitmap getBitmap(String filePath) {
+        Bitmap bitmap = null;
+        try {
+            BitmapFactory.Options options = new BitmapFactory.Options();
+            options.inJustDecodeBounds = true;
+            BitmapFactory.decodeFile(filePath, options);
             options.inSampleSize = Math.max(1, (int) Math.ceil(Math.max(
                     (double) options.outWidth / 1024f,
                     (double) options.outHeight / 1024f)));
             options.inJustDecodeBounds = false;
-            bitmap = BitmapFactory.decodeFile(fileName, options);
+            bitmap = BitmapFactory.decodeFile(filePath, options);
+        } catch (OutOfMemoryError error) {
+            error.printStackTrace();
+        }
+
+        return bitmap;
+    }
+
+    /**
+     * 获取自适应屏幕大小的Bitmap
+     * @param context 上下文
+     * @param filePath Bitmap文件路径
+     * @return 和屏幕大小适配的Bitmap
+     */
+    public static Bitmap getBitmap(Context context, String filePath) {
+        File f = new File(filePath);
+        if (f != null) {
+            if (!f.exists()) {
+                Log.w(TAG, "No such file: " + filePath);
+                return null;
+            }
+        }
+
+        Bitmap bitmap = null;
+        try {
+            int targetWidth = (int) (context.getResources().getDisplayMetrics().widthPixels * 0.8);
+            int targetHeight = context.getResources().getDisplayMetrics().heightPixels;
+
+            BitmapFactory.Options options = new BitmapFactory.Options();
+            options.inJustDecodeBounds = true;
+            BitmapFactory.decodeFile(filePath, options);
+
+            int photoWidth = options.outWidth;
+            int photoHeight = options.outHeight;
+
+            int scaleFactor = Math.min(photoWidth/targetWidth, photoHeight/targetHeight);
+            options.inSampleSize = scaleFactor;
+            options.inJustDecodeBounds = false;
+            bitmap = BitmapFactory.decodeFile(filePath, options);
         } catch (OutOfMemoryError error) {
             error.printStackTrace();
         }

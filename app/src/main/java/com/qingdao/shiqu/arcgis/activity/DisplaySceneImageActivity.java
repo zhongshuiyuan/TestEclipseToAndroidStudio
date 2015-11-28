@@ -2,7 +2,7 @@ package com.qingdao.shiqu.arcgis.activity;
 
 import android.content.Intent;
 import android.database.Cursor;
-import android.graphics.Color;
+import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
@@ -25,7 +25,6 @@ import com.tencent.mm.sdk.modelmsg.SendMessageToWX;
 import com.tencent.mm.sdk.modelmsg.WXFileObject;
 import com.tencent.mm.sdk.modelmsg.WXImageObject;
 import com.tencent.mm.sdk.modelmsg.WXMediaMessage;
-import com.tencent.mm.sdk.modelmsg.WXTextObject;
 import com.tencent.mm.sdk.openapi.IWXAPI;
 import com.tencent.mm.sdk.openapi.WXAPIFactory;
 import com.tencent.open.GameAppOperation;
@@ -85,7 +84,7 @@ public class DisplaySceneImageActivity extends Activity {
         DatabaseOpenHelper databaseOpenHelper = new DatabaseOpenHelper(this);
         mSQLiteDatabase = databaseOpenHelper.getWritableDatabase();
 
-        mTencent = Tencent.createInstance("1104989728", getApplicationContext());
+        mTencent = Tencent.createInstance(TENCENT_QQ_APP_ID, getApplicationContext());
         mWechat = WXAPIFactory.createWXAPI(this, TENCENT_WECHAT_APP_ID, true);
         mWechat.registerApp(TENCENT_WECHAT_APP_ID);
 
@@ -200,8 +199,8 @@ public class DisplaySceneImageActivity extends Activity {
                     case ShareImageListViewAdapter.WECHAT:
                         shareImageToWechatFriend();
                         break;
-                    case ShareImageListViewAdapter.WECHAT_DISCOVER:
-                        shareImageToWechat();
+                    case ShareImageListViewAdapter.WECHAT_TIMELINE:
+                        shareImageToWechatTimeline();
                         break;
                     case ShareImageListViewAdapter.QQ:
                         shareImageToMyComputerViaQQ();
@@ -211,6 +210,9 @@ public class DisplaySceneImageActivity extends Activity {
                         break;
                     case ShareImageListViewAdapter.DATABASE:
                         shareImageToDatabase();
+                        break;
+                    case ShareImageListViewAdapter.OTHER:
+                        shareImage();
                         break;
                     default:
                         break;
@@ -223,26 +225,68 @@ public class DisplaySceneImageActivity extends Activity {
     }
 
     private void shareImageToWechatFriend() {
+        shareImageToWechat(true);
+    }
+
+    private void shareImageToWechatTimeline() {
+        shareImageToWechat(false);
+    }
+
+    /**
+     * 分享图片到微信
+     * @param isToFriend true分享给朋友，false分享到朋友圈
+     */
+    private void shareImageToWechat(boolean isToFriend) {
+
+        if (!mWechat.isWXAppInstalled()) {
+            showInstallWechatDialog();
+            return;
+        }
+
+        String imagePath = mImagePaths.get(mImagePosition);
+
         WXFileObject fileObject = new WXFileObject();
-        fileObject.filePath = mImagePaths.get(mImagePosition);
+        fileObject.filePath = imagePath;
         WXImageObject imageObject = new WXImageObject();
-        imageObject.imagePath = mImagePaths.get(mImagePosition);
+        imageObject.imagePath = imagePath;
 
         WXMediaMessage msg = new WXMediaMessage();
         msg.mediaObject = imageObject;
         msg.mediaTagName = "name";
         msg.description = "deicription";
         msg.mediaTagName = "tag";
+        Bitmap thumb = ImageUtil.getBitmapThumb(imagePath);
+        msg.setThumbImage(thumb);
 
         SendMessageToWX.Req req = new SendMessageToWX.Req();
         req.transaction = String.valueOf(System.currentTimeMillis());
+
         req.message = msg;
+        if (isToFriend) {
+            req.scene = SendMessageToWX.Req.WXSceneSession;
+        } else {
+            req.scene = SendMessageToWX.Req.WXSceneTimeline;
+        }
+
 
         mWechat.sendReq(req);
+
+//        if (!thumb.isRecycled()) {
+//            thumb.recycle();
+//        }
     }
 
-    private void shareImageToWechat() {
-
+    private void showInstallWechatDialog() {
+        final MaterialDesignDialog dialog = new MaterialDesignDialog(this);
+        dialog.setTitle("尚未安装微信")
+                .setMessage("您尚未安装微信，请先安装微信再通过微信分享本现场图")
+                .setPositiveButton("知道了", new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        dialog.dismiss();
+                    }
+                });
+        dialog.show();
     }
 
 
@@ -262,6 +306,16 @@ public class DisplaySceneImageActivity extends Activity {
         }
     }
 
+    private void shareImage() {
+        Intent sendIntent = new Intent(android.content.Intent.ACTION_SEND);
+        String path = mImagePaths.get(mImagePosition);
+        File file = new File(path);
+        sendIntent.putExtra(android.content.Intent.EXTRA_STREAM,
+                Uri.fromFile(file));
+        sendIntent.setType("image/*");
+        startActivity(sendIntent);
+    }
+
     private void shareImageViaEmail() {
         Intent sendEmailIntent = new Intent(android.content.Intent.ACTION_SEND);
 
@@ -272,7 +326,7 @@ public class DisplaySceneImageActivity extends Activity {
         File file = new File(path);
         sendEmailIntent.putExtra(android.content.Intent.EXTRA_STREAM,
                 Uri.fromFile(file));
-        sendEmailIntent.setType("image/png");
+        sendEmailIntent.setType("image/*");
         sendEmailIntent.setType("message/rfc882");
 
         startActivity(sendEmailIntent);

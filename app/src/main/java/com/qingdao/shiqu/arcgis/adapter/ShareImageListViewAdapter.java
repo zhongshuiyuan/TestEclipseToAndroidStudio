@@ -6,7 +6,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.ImageView;
-import android.widget.ListAdapter;
 import android.widget.TextView;
 
 import com.qingdao.shiqu.arcgis.R;
@@ -19,10 +18,11 @@ import java.util.ArrayList;
 public class ShareImageListViewAdapter extends BaseAdapter {
 
     public static final int WECHAT = 0;
-    public static final int WECHAT_DISCOVER = 1;
+    public static final int WECHAT_TIMELINE = 1;
     public static final int QQ = 2;
     public static final int EMAIL = 3;
     public static final int DATABASE = 4;
+    public static final int OTHER = 5;
 
     private Context mContext;
 
@@ -46,7 +46,7 @@ public class ShareImageListViewAdapter extends BaseAdapter {
         items.add(item0);
 
         ListItem item1 = new ListItem();
-        item1.id = WECHAT_DISCOVER;
+        item1.id = WECHAT_TIMELINE;
         item1.title = "分享到微信朋友圈";
         item1.iconResId = R.drawable.ic_wechat_discover;
         items.add(item1);
@@ -68,6 +68,12 @@ public class ShareImageListViewAdapter extends BaseAdapter {
         item4.title = "发送到数据库";
         item4.iconResId = R.drawable.ic_database_plus;
         items.add(item4);
+
+        ListItem item5 = new ListItem();
+        item5.id = OTHER;
+        item5.title = "通过其他方式分享";
+        item5.iconResId = R.drawable.ic_share_variant;
+        items.add(item5);
 
         return items;
     }
