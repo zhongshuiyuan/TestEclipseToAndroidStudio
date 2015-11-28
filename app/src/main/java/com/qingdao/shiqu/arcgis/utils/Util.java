@@ -11,6 +11,8 @@ import java.util.StringTokenizer;
 
 import android.app.Activity;
 import android.content.Context;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.util.DisplayMetrics;
 import android.view.View;
 import android.widget.AdapterView;
@@ -175,5 +177,20 @@ public class Util extends Object
 	public static int dip2px(Context context, float dpValue) {
 		final float density = context.getResources().getDisplayMetrics().density;
 		return (int) (dpValue * density + 0.5f);
+	}
+
+	/**
+	 * 判断设备是否联网
+	 * @param context 上下文
+	 * @return true表示已联网，false表示没有联网
+	 */
+	public static boolean isConnectToInternet(Context context) {
+		ConnectivityManager connMgr = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+		NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
+		if (networkInfo != null && networkInfo.isConnected()) {
+			return true;
+		} else {
+			return false;
+		}
 	}
 }

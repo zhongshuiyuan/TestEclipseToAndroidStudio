@@ -21,6 +21,7 @@ import com.qingdao.shiqu.arcgis.listener.TencentUiListener;
 import com.qingdao.shiqu.arcgis.sqlite.DatabaseOpenHelper;
 import com.qingdao.shiqu.arcgis.sqlite.SQLiteAction;
 import com.qingdao.shiqu.arcgis.utils.ImageUtil;
+import com.qingdao.shiqu.arcgis.utils.Util;
 import com.tencent.mm.sdk.modelmsg.SendMessageToWX;
 import com.tencent.mm.sdk.modelmsg.WXFileObject;
 import com.tencent.mm.sdk.modelmsg.WXImageObject;
@@ -47,6 +48,7 @@ public class DisplaySceneImageActivity extends Activity {
     private android.database.sqlite.SQLiteDatabase mSQLiteDatabase;
     private Tencent mTencent;
     private IWXAPI mWechat;
+    private Bitmap mShareToWechatThumb;
 
 
     private String[] mImageIds;
@@ -175,6 +177,7 @@ public class DisplaySceneImageActivity extends Activity {
     }
 
     private void deleteImage() {
+        // TODO 为Adater类里的集合获取get方法
         mImageIds = removeImageIdAtPosition(mImagePosition);
         updateAdapter();
     }
@@ -238,6 +241,11 @@ public class DisplaySceneImageActivity extends Activity {
      */
     private void shareImageToWechat(boolean isToFriend) {
 
+        if (!Util.isConnectToInternet(this)) {
+            showConnectToInternetDialog();
+            return;
+        }
+
         if (!mWechat.isWXAppInstalled()) {
             showInstallWechatDialog();
             return;
@@ -255,8 +263,11 @@ public class DisplaySceneImageActivity extends Activity {
         msg.mediaTagName = "name";
         msg.description = "deicription";
         msg.mediaTagName = "tag";
-        Bitmap thumb = ImageUtil.getBitmapThumb(imagePath);
-        msg.setThumbImage(thumb);
+        if (mShareToWechatThumb != null && !mShareToWechatThumb.isRecycled()) {
+            mShareToWechatThumb.recycle();
+        }
+        mShareToWechatThumb = ImageUtil.getBitmapThumb(imagePath);
+        msg.setThumbImage(mShareToWechatThumb);
 
         SendMessageToWX.Req req = new SendMessageToWX.Req();
         req.transaction = String.valueOf(System.currentTimeMillis());
@@ -270,27 +281,16 @@ public class DisplaySceneImageActivity extends Activity {
 
 
         mWechat.sendReq(req);
-
-//        if (!thumb.isRecycled()) {
-//            thumb.recycle();
-//        }
-    }
-
-    private void showInstallWechatDialog() {
-        final MaterialDesignDialog dialog = new MaterialDesignDialog(this);
-        dialog.setTitle("尚未安装微信")
-                .setMessage("您尚未安装微信，请先安装微信再通过微信分享本现场图")
-                .setPositiveButton("知道了", new View.OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
-                        dialog.dismiss();
-                    }
-                });
-        dialog.show();
     }
 
 
     private void shareImageToMyComputerViaQQ() {
+
+        if (!Util.isConnectToInternet(this)) {
+            showConnectToInternetDialog();
+            return;
+        }
+
         String currentImagePath = mImagePaths.get(mImagePager.getCurrentImagePosition());
         if (currentImagePath != null) {
             ArrayList<String> fileDataList = new ArrayList<>();
@@ -444,5 +444,31 @@ public class DisplaySceneImageActivity extends Activity {
         }
 
         mImagePager.setAdapter(mAdapter);
+    }
+
+    private void showInstallWechatDialog() {
+        final MaterialDesignDialog dialog = new MaterialDesignDialog(this);
+        dialog.setTitle("尚未安装微信")
+                .setMessage("您尚未安装微信，请先安装微信再通过微信分享本现场图")
+                .setPositiveButton("知道了", new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        dialog.dismiss();
+                    }
+                });
+        dialog.show();
+    }
+
+    private void showConnectToInternetDialog() {
+        final MaterialDesignDialog dialog = new MaterialDesignDialog(this);
+        dialog.setTitle("需要连接到互联网")
+                .setMessage("您通过QQ，微信分享现场图片需要连接到互联网，建议在WIFI环境下再分享")
+                .setPositiveButton("知道了", new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        dialog.dismiss();
+                    }
+                });
+        dialog.show();
     }
 }
