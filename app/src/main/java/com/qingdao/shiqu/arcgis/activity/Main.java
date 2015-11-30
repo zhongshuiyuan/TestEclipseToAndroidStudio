@@ -2296,6 +2296,11 @@ public class Main extends Activity implements OnMapListener
     }
 
     private void onBtnTakePhotoClick() {
+        if (mMarkingToolbarState == MarkingMode.EDIT) {
+            mCurrentMark.setTitle(mEtMarkingTitle.getText().toString());
+            mCurrentMark.setContent(mEtMarkingContent.getText().toString());
+        }
+
         Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         if (isHadresolveActivity(takePictureIntent)) {
             java.io.File photoFile = null;
@@ -2314,6 +2319,11 @@ public class Main extends Activity implements OnMapListener
     }
 
     private void onBtnPickImageClick() {
+        if (mMarkingToolbarState == MarkingMode.EDIT) {
+            mCurrentMark.setTitle(mEtMarkingTitle.getText().toString());
+            mCurrentMark.setContent(mEtMarkingContent.getText().toString());
+        }
+
         if (mIsKitKat) {
             //Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
             Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
@@ -2331,6 +2341,7 @@ public class Main extends Activity implements OnMapListener
         String[] imageIds = mCurrentMark.getImageIds();
         if (imageIds != null && imageIds.length > 0) {
             Intent intent = new Intent(this, DisplaySceneImageActivity.class);
+            intent.putExtra("title", mCurrentMark.getTitle());
             intent.putExtra("imageIds", imageIds);
             startActivityForResult(intent, REQUEST_SHOW_MARKING_IMAGE);
         }
